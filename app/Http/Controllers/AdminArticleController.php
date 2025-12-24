@@ -9,6 +9,7 @@ use App\Models\Tag;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use App\Helpers\CacheHelper;
 
 class AdminArticleController extends Controller
 {
@@ -32,6 +33,11 @@ class AdminArticleController extends Controller
         // Filter by category
         if ($request->has('category') && $request->category !== '') {
             $query->where('category_id', $request->category);
+        }
+
+        // Filter by featured
+        if ($request->has('featured') && $request->featured !== '') {
+            $query->where('is_featured', $request->featured == '1');
         }
 
         // Search by title
@@ -211,7 +217,19 @@ class AdminArticleController extends Controller
     {
         $article->update(['is_featured' => !$article->is_featured]);
         
+        // Clear article cache to reflect changes immediately
+        CacheHelper::clearArticleCache();
+        
         $status = $article->is_featured ? 'ditandai sebagai' : 'dihapus dari';
+        
+        // Return JSON response for AJAX requests
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Artikel {$status} featured!",
+                'is_featured' => $article->is_featured
+            ]);
+        }
         
         return back()->with('success', "Artikel {$status} featured!");
     }
@@ -223,7 +241,19 @@ class AdminArticleController extends Controller
     {
         $article->update(['is_breaking' => !$article->is_breaking]);
         
+        // Clear article cache to reflect changes immediately
+        CacheHelper::clearArticleCache();
+        
         $status = $article->is_breaking ? 'ditandai sebagai' : 'dihapus dari';
+        
+        // Return JSON response for AJAX requests
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Artikel {$status} breaking news!",
+                'is_breaking' => $article->is_breaking
+            ]);
+        }
         
         return back()->with('success', "Artikel {$status} breaking news!");
     }

@@ -6,6 +6,7 @@ use App\Http\Controllers\AdminArticleController;
 use App\Http\Controllers\AdminSettingsController;
 use App\Http\Controllers\PenulisDashboardController;
 use App\Http\Controllers\UserProfileController;
+use App\Http\Controllers\UserDashboardController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ArticleController;
@@ -82,12 +83,13 @@ Route::get('/dashboard', function () {
     } elseif ($user->isPenulis()) {
         return redirect()->route('penulis.dashboard');
     } else {
-        return redirect()->route('home');
+        return redirect()->route('user.dashboard');
     }
 })->middleware(['auth'])->name('dashboard');
 
-// User upgrade request routes
+// User routes
 Route::middleware(['auth'])->group(function () {
+    Route::get('/user/dashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
     Route::get('/upgrade-request', [UserProfileController::class, 'upgradeRequest'])->name('user.upgrade-request');
     Route::post('/upgrade-request', [UserProfileController::class, 'submitUpgradeRequest'])->name('user.submit-upgrade-request');
 });

@@ -28,7 +28,7 @@
 
     <!-- Filters -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <form method="GET" class="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                 <select name="status" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -37,6 +37,14 @@
                     <option value="pending_review" {{ request('status') === 'pending_review' ? 'selected' : '' }}>Menunggu Review</option>
                     <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Ditolak</option>
                     <option value="draft" {{ request('status') === 'draft' ? 'selected' : '' }}>Draft</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Featured</label>
+                <select name="featured" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Semua</option>
+                    <option value="1" {{ request('featured') === '1' ? 'selected' : '' }}>Featured</option>
+                    <option value="0" {{ request('featured') === '0' ? 'selected' : '' }}>Non-Featured</option>
                 </select>
             </div>
             <div>
@@ -115,6 +123,9 @@
                             Dibuat
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Featured/Breaking
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Alasan Penolakan
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -190,6 +201,28 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {{ $article->created_at->format('d-m-Y H:i') }}
                         </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center space-x-2">
+                                <form action="{{ route('admin.articles.toggle-featured', $article) }}" method="POST" class="inline toggle-featured-form" data-article-id="{{ $article->id }}">
+                                    @csrf
+                                    <button type="submit" 
+                                            class="inline-flex items-center px-2.5 py-1.5 rounded-md text-xs font-medium transition-all duration-200 {{ $article->is_featured ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}"
+                                            title="{{ $article->is_featured ? 'Hapus Featured' : 'Tandai Featured' }}">
+                                        <i class="fas fa-star {{ $article->is_featured ? 'text-yellow-500' : 'text-gray-400' }}"></i>
+                                        <span class="ml-1">{{ $article->is_featured ? 'Featured' : 'Featured' }}</span>
+                                    </button>
+                                </form>
+                                <form action="{{ route('admin.articles.toggle-breaking', $article) }}" method="POST" class="inline toggle-breaking-form" data-article-id="{{ $article->id }}">
+                                    @csrf
+                                    <button type="submit" 
+                                            class="inline-flex items-center px-2.5 py-1.5 rounded-md text-xs font-medium transition-all duration-200 {{ $article->is_breaking ? 'bg-red-100 text-red-800 hover:bg-red-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}"
+                                            title="{{ $article->is_breaking ? 'Hapus Breaking' : 'Tandai Breaking' }}">
+                                        <i class="fas fa-bolt {{ $article->is_breaking ? 'text-red-500' : 'text-gray-400' }}"></i>
+                                        <span class="ml-1">{{ $article->is_breaking ? 'Breaking' : 'Breaking' }}</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             @if($article->status === 'rejected' && $article->rejection_reason)
                                 <span class="text-red-600" title="{{ $article->rejection_reason }}">
@@ -201,7 +234,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex items-center space-x-2">
-                                <a href="{{ route('admin.articles.detail', $article) }}" 
+                                <a href="{{ route('admin.articles.show', $article) }}" 
                                    class="text-blue-600 hover:text-blue-900 p-2 rounded-md transition-colors" 
                                    title="Lihat Detail">
                                     <i class="fas fa-eye"></i>
@@ -227,7 +260,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-12 text-center">
+                        <td colspan="8" class="px-6 py-12 text-center">
                             <div class="text-gray-500">
                                 <i class="fas fa-newspaper text-4xl mb-4"></i>
                                 <p class="text-lg font-medium">Belum ada artikel</p>
@@ -309,6 +342,90 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
         }
+    });
+
+    // Toggle Featured with AJAX for better UX
+    document.querySelectorAll('.toggle-featured-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const form = this;
+            const button = form.querySelector('button');
+            const articleId = form.dataset.articleId;
+            const originalHTML = button.innerHTML;
+            
+            // Show loading state
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+            
+            const formData = new FormData(form);
+            
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json().catch(() => ({ success: true }));
+                }
+                throw new Error('Network response was not ok');
+            })
+            .then(data => {
+                // Reload page to show updated state
+                location.reload();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                button.disabled = false;
+                button.innerHTML = originalHTML;
+                alert('Terjadi kesalahan saat memperbarui status featured');
+            });
+        });
+    });
+
+    // Toggle Breaking with AJAX for better UX
+    document.querySelectorAll('.toggle-breaking-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const form = this;
+            const button = form.querySelector('button');
+            const articleId = form.dataset.articleId;
+            const originalHTML = button.innerHTML;
+            
+            // Show loading state
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+            
+            const formData = new FormData(form);
+            
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json().catch(() => ({ success: true }));
+                }
+                throw new Error('Network response was not ok');
+            })
+            .then(data => {
+                // Reload page to show updated state
+                location.reload();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                button.disabled = false;
+                button.innerHTML = originalHTML;
+                alert('Terjadi kesalahan saat memperbarui status breaking');
+            });
+        });
     });
 });
 

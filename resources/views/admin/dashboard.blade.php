@@ -97,7 +97,7 @@
         </div>
 
             <!-- Total Artikel Card -->
-            <div class="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-white/20 overflow-hidden">
+            <a href="{{ route('admin.articles.index') }}" class="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-white/20 overflow-hidden block">
                 <div class="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div class="relative p-6">
                     <div class="flex items-center justify-between mb-4">
@@ -115,11 +115,12 @@
                     <div class="mt-2 w-full bg-gray-200 rounded-full h-1.5">
                         <div class="bg-gradient-to-r from-purple-500 to-purple-600 h-1.5 rounded-full" style="width: {{ min(($stats['total_articles'] / 200) * 100, 100) }}%"></div>
                     </div>
-            </div>
+                </div>
+            </a>
         </div>
 
             <!-- Menunggu Review Card -->
-            <div class="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-white/20 overflow-hidden">
+            <a href="{{ route('admin.articles.pending') }}" class="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-white/20 overflow-hidden block">
                 <div class="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div class="relative p-6">
                     <div class="flex items-center justify-between mb-4">
@@ -137,7 +138,8 @@
                     <div class="mt-2 w-full bg-gray-200 rounded-full h-1.5">
                         <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 h-1.5 rounded-full" style="width: {{ min(($stats['pending_articles'] / 20) * 100, 100) }}%"></div>
                     </div>
-            </div>
+                </div>
+            </a>
         </div>
     </div>
 
@@ -324,11 +326,17 @@
             <div class="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
                 <div class="flex items-center justify-between">
                     <h2 class="text-lg font-semibold text-gray-900">Artikel Terbaru</h2>
-                    <div class="flex items-center text-sm text-gray-500">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        Terakhir diperbarui
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center text-sm text-gray-500">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Terakhir diperbarui
+                        </div>
+                        <a href="{{ route('admin.articles.index') }}" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg">
+                            <i class="fas fa-newspaper mr-2"></i>
+                            Lihat Semua Artikel
+                        </a>
                     </div>
                 </div>
         </div>
@@ -344,10 +352,12 @@
                 </thead>
                     <tbody class="bg-white/50 divide-y divide-gray-200">
                         @forelse($recent_articles as $article)
-                        <tr class="hover:bg-gray-50/80 transition-colors duration-200">
+                        <tr class="hover:bg-gray-50/80 transition-colors duration-200 cursor-pointer" onclick="window.location.href='{{ route('admin.articles.show', $article) }}'">
                             <td class="px-6 py-4">
-                                <div class="text-sm font-medium text-gray-900">{{ Str::limit($article->title, 50) }}</div>
-                                <div class="text-xs text-gray-500 mt-1">{{ Str::limit($article->excerpt ?? '', 60) }}</div>
+                                <a href="{{ route('admin.articles.show', $article) }}" class="block hover:text-blue-600 transition-colors">
+                                    <div class="text-sm font-medium text-gray-900">{{ Str::limit($article->title, 50) }}</div>
+                                    <div class="text-xs text-gray-500 mt-1">{{ Str::limit($article->excerpt ?? '', 60) }}</div>
+                                </a>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">

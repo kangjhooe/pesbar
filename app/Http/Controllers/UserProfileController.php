@@ -41,6 +41,8 @@ class UserProfileController extends Controller
     public function submitUpgradeRequest(Request $request)
     {
         $request->validate([
+            'verification_type' => 'required|in:perorangan,lembaga',
+            'verification_document' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120', // Max 5MB
             'bio' => 'required|string|max:1000',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'website' => 'nullable|url',
@@ -54,6 +56,24 @@ class UserProfileController extends Controller
             return redirect()->back()->with('error', 'Anda sudah memiliki role yang lebih tinggi!');
         }
 
+        // Handle verification document upload
+        $verificationDocumentPath = null;
+        if ($request->hasFile('verification_document')) {
+            // Delete old document if exists
+            if ($user->verification_document && Storage::disk('public')->exists($user->verification_document)) {
+                Storage::disk('public')->delete($user->verification_document);
+            }
+            
+            $verificationDocumentPath = $request->file('verification_document')->store('upgrade-documents', 'public');
+        }
+
+        // Update user with verification type and document
+        $user->update([
+            'verification_type' => $request->verification_type,
+            'verification_document' => $verificationDocumentPath,
+        ]);
+
+        // Update or create profile
         $data = [
             'user_id' => $user->id,
             'bio' => $request->bio,
@@ -63,10 +83,12 @@ class UserProfileController extends Controller
         ];
 
         if ($request->hasFile('avatar')) {
+            if ($user->profile && $user->profile->avatar) {
+                Storage::disk('public')->delete($user->profile->avatar);
+            }
             $data['avatar'] = $request->file('avatar')->store('avatars', 'public');
         }
 
-        // Update atau create profile
         if ($user->profile) {
             $user->profile->update($data);
         } else {
