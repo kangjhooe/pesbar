@@ -155,9 +155,85 @@ class AdminDashboardController extends Controller
         }
     }
 
-    public function toggleVerified(User $user)
+    public function verificationRequests()
+    {
+        $requests = User::where('role', 'penulis')
+            ->where('verification_request_status', 'pending')
+            ->with('profile')
+            ->orderBy('verification_requested_at', 'desc')
+            ->paginate(15);
+
+        return view('admin.verification-requests', compact('requests'));
+    }
+
+    public function approveVerification(User $user)
     {
         try {
+            // Validasi: hanya penulis dengan pending request yang bisa di-approve
+            if ($user->role !== 'penulis' || $user->verification_request_status !== 'pending') {
+                return redirect()->back()->with('error', 'Permintaan verifikasi tidak valid!');
+            }
+
+            $user->update([
+                'verified' => true,
+                'verification_request_status' => 'approved',
+            ]);
+
+            // Auto-publish artikel pending_review milik penulis ini
+            $user->articles()
+                ->where('status', 'pending_review')
+                ->update([
+                    'status' => 'published',
+                    'published_at' => now(),
+                ]);
+
+            ActivityLogHelper::logUser('verification.approved', $user, "Verifikasi penulis {$user->name} disetujui");
+            ActivityLogHelper::logSecurity('verification.approved', 'Verifikasi penulis disetujui', ['user_id' => $user->id]);
+
+            // TODO: Kirim notifikasi ke penulis
+
+            return redirect()->back()->with('success', 'Verifikasi penulis berhasil disetujui!');
+        } catch (\Exception $e) {
+            \Log::error('Approve Verification Error: ' . $e->getMessage());
+            ActivityLogHelper::logSecurity('verification.approve.failed', 'Gagal approve verifikasi', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat menyetujui verifikasi.');
+        }
+    }
+
+    public function rejectVerification(Request $request, User $user)
+    {
+        try {
+            // Validasi: hanya penulis dengan pending request yang bisa di-reject
+            if ($user->role !== 'penulis' || $user->verification_request_status !== 'pending') {
+                return redirect()->back()->with('error', 'Permintaan verifikasi tidak valid!');
+            }
+
+            $user->update([
+                'verification_request_status' => 'rejected',
+            ]);
+
+            ActivityLogHelper::logUser('verification.rejected', $user, "Verifikasi penulis {$user->name} ditolak" . ($request->reason ? ". Alasan: {$request->reason}" : ""));
+            ActivityLogHelper::logSecurity('verification.rejected', 'Verifikasi penulis ditolak', ['user_id' => $user->id, 'reason' => $request->reason ?? null]);
+
+            // TODO: Kirim notifikasi ke penulis
+
+            return redirect()->back()->with('success', 'Permintaan verifikasi ditolak.');
+        } catch (\Exception $e) {
+            \Log::error('Reject Verification Error: ' . $e->getMessage());
+            ActivityLogHelper::logSecurity('verification.reject.failed', 'Gagal reject verifikasi', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat menolak verifikasi.');
+        }
+    }
+
+    public function toggleVerified(User $user)
+    {
+        // Method ini tetap ada untuk backward compatibility, tapi sekarang hanya untuk penulis yang sudah verified
+        // Untuk request baru, gunakan approveVerification/rejectVerification
+        try {
+            if ($user->role !== 'penulis') {
+                return redirect()->back()->with('error', 'Hanya penulis yang bisa diverifikasi!');
+            }
+
             $user->update(['verified' => !$user->verified]);
             $status = $user->verified ? 'diverifikasi' : 'tidak diverifikasi';
             ActivityLogHelper::logUser('user.verification.toggled', $user, "User {$user->name} {$status}");

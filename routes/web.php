@@ -97,6 +97,8 @@ Route::middleware(['auth', 'role:penulis'])->prefix('penulis')->name('penulis.')
     Route::get('/dashboard', [PenulisDashboardController::class, 'index'])->name('dashboard');
     Route::get('/profile', [PenulisDashboardController::class, 'profile'])->name('profile');
     Route::post('/profile', [PenulisDashboardController::class, 'updateProfile'])->name('profile.update');
+    Route::get('/verification/request', [PenulisDashboardController::class, 'requestVerification'])->name('verification.request');
+    Route::post('/verification/request', [PenulisDashboardController::class, 'submitVerificationRequest'])->name('verification.submit');
     
     // Article management
     Route::get('/articles/create', [PenulisDashboardController::class, 'create'])->name('articles.create');
@@ -132,6 +134,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/users', [AdminDashboardController::class, 'users'])->name('users');
     Route::post('/users/{user}/upgrade', [AdminDashboardController::class, 'upgradeUser'])->name('users.upgrade');
     Route::post('/users/{user}/toggle-verified', [AdminDashboardController::class, 'toggleVerified'])->name('users.toggle-verified');
+    Route::get('/verification-requests', [AdminDashboardController::class, 'verificationRequests'])->name('verification-requests');
+    Route::post('/verification-requests/{user}/approve', [AdminDashboardController::class, 'approveVerification'])->name('verification-requests.approve');
+    Route::post('/verification-requests/{user}/reject', [AdminDashboardController::class, 'rejectVerification'])->name('verification-requests.reject');
     Route::get('/articles/pending', [AdminDashboardController::class, 'pendingArticles'])->name('articles.pending');
     Route::post('/articles/{article}/approve', [AdminDashboardController::class, 'approveArticle'])->name('articles.approve');
     Route::post('/articles/{article}/reject', [AdminDashboardController::class, 'rejectArticle'])->name('articles.reject');

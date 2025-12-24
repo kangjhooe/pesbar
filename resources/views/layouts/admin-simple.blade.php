@@ -173,6 +173,19 @@
                             <i class="fas fa-user-edit mr-3 text-sm lg:text-base"></i>
                             <span class="text-sm lg:text-base">Penulis</span>
                         </a>
+                        
+                        <a href="{{ route('admin.verification-requests') }}" class="flex items-center px-3 lg:px-4 py-3 text-gray-700 rounded-lg hover:bg-primary-50 hover:text-primary-600 transition-colors touch-target {{ request()->routeIs('admin.verification-requests*') ? 'bg-primary-50 text-primary-600' : '' }}">
+                            <i class="fas fa-user-check mr-3 text-sm lg:text-base"></i>
+                            <span class="text-sm lg:text-base">Permintaan Verifikasi</span>
+                            @php
+                                $pendingCount = \App\Models\User::where('role', 'penulis')
+                                    ->where('verification_request_status', 'pending')
+                                    ->count();
+                            @endphp
+                            @if($pendingCount > 0)
+                                <span class="ml-auto bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded-full">{{ $pendingCount }}</span>
+                            @endif
+                        </a>
                     </div>
 
                     <!-- Media & Communication -->

@@ -15,6 +15,39 @@
         </div>
     @endif
 
+    @if(session('error'))
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+            {{ session('error') }}
+        </div>
+    @endif
+
+    @auth
+        @if(auth()->user()->isPenulis() && !auth()->user()->isVerified())
+            @if(auth()->user()->hasPendingVerificationRequest())
+                <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="fas fa-clock mr-2"></i>
+                            <span>Permintaan verifikasi Anda sedang dalam proses review oleh admin.</span>
+                        </div>
+                    </div>
+                </div>
+            @elseif(auth()->user()->canRequestVerification())
+                <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            <span>Anda belum terverifikasi. Ajukan permintaan verifikasi untuk bisa publish artikel langsung.</span>
+                        </div>
+                        <a href="{{ route('penulis.verification.request') }}" class="ml-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium">
+                            Ajukan Verifikasi
+                        </a>
+                    </div>
+                </div>
+            @endif
+        @endif
+    @endauth
+
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div class="bg-white rounded-lg shadow p-6">

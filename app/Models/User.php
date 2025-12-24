@@ -27,6 +27,10 @@ class User extends Authenticatable
         'verified',
         'provider',
         'provider_id',
+        'verification_requested_at',
+        'verification_request_status',
+        'verification_type',
+        'verification_document',
     ];
 
     /**
@@ -50,6 +54,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'verified' => 'boolean',
+            'verification_requested_at' => 'datetime',
         ];
     }
 
@@ -107,5 +112,23 @@ class User extends Authenticatable
     public function getUsernameAttribute(): string
     {
         return \Str::slug($this->name);
+    }
+
+    /**
+     * Check if user has pending verification request.
+     */
+    public function hasPendingVerificationRequest(): bool
+    {
+        return $this->verification_request_status === 'pending';
+    }
+
+    /**
+     * Check if user can request verification.
+     */
+    public function canRequestVerification(): bool
+    {
+        return $this->role === 'penulis' 
+            && !$this->verified 
+            && $this->verification_request_status !== 'pending';
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Article;
 use App\Models\Comment;
 use App\Models\UserProfile;
+use App\Helpers\ActivityLogHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -250,6 +251,58 @@ class PenulisDashboardController extends Controller
         }
 
         return redirect()->route('penulis.profile')->with('success', 'Profil berhasil diperbarui!');
+    }
+
+    public function requestVerification()
+    {
+        $user = Auth::user();
+        
+        if (!$user->canRequestVerification()) {
+            return redirect()->route('penulis.dashboard')
+                ->with('error', 'Anda tidak dapat mengajukan verifikasi saat ini.');
+        }
+
+        return view('penulis.request-verification');
+    }
+
+    public function submitVerificationRequest(Request $request)
+    {
+        $user = Auth::user();
+        
+        if (!$user->canRequestVerification()) {
+            return redirect()->route('penulis.dashboard')
+                ->with('error', 'Anda tidak dapat mengajukan verifikasi saat ini.');
+        }
+
+        $request->validate([
+            'reason' => 'nullable|string|max:1000',
+            'verification_type' => 'required|in:perorangan,lembaga',
+            'verification_document' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120', // Max 5MB
+        ]);
+
+        $updateData = [
+            'verification_requested_at' => now(),
+            'verification_request_status' => 'pending',
+            'verification_type' => $request->verification_type,
+        ];
+
+        // Handle file upload
+        if ($request->hasFile('verification_document')) {
+            // Delete old document if exists
+            if ($user->verification_document && Storage::disk('public')->exists($user->verification_document)) {
+                Storage::disk('public')->delete($user->verification_document);
+            }
+            
+            $updateData['verification_document'] = $request->file('verification_document')->store('verification-documents', 'public');
+        }
+
+        $user->update($updateData);
+
+        // Log activity
+        ActivityLogHelper::logUser('verification.requested', $user, "Penulis {$user->name} mengajukan permintaan verifikasi");
+
+        return redirect()->route('penulis.dashboard')
+            ->with('success', 'Permintaan verifikasi berhasil dikirim! Admin akan meninjau permintaan Anda.');
     }
 
     public function show(Article $article)
