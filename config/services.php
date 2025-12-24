@@ -41,4 +41,9 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'google_search_console' => [
+        'site_url' => env('GOOGLE_SEARCH_CONSOLE_SITE_URL'),
+        'auto_submit' => env('GOOGLE_SEARCH_CONSOLE_AUTO_SUBMIT', false),
+    ],
+
 ];

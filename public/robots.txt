@@ -1,2 +1,15 @@
 User-agent: *
-Disallow:
+Allow: /
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /penulis/
+Disallow: /profile/
+Disallow: /upgrade-request
+
+# Allow public API endpoints
+Allow: /api/widgets/
+
+# Sitemap location
+Sitemap: http://localhost/sitemap.xml

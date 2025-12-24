@@ -212,4 +212,49 @@ class CacheHelper
     {
         self::clearCache('dashboard_stats');
     }
+
+    /**
+     * Clear sitemap cache
+     */
+    public static function clearSitemapCache()
+    {
+        Cache::forget('sitemap');
+        Cache::forget('sitemap_index');
+        Cache::forget('sitemap_news');
+        
+        // Clear all sitemap parts
+        try {
+            $totalUrls = \App\Models\Article::published()->count() + 
+                        \App\Models\Category::where('is_active', true)->count() + 10;
+            if ($totalUrls > 50000) {
+                $parts = ceil($totalUrls / 50000);
+                for ($i = 1; $i <= $parts; $i++) {
+                    Cache::forget("sitemap_part_{$i}");
+                }
+            }
+        } catch (\Exception $e) {
+            // Ignore errors in cache clearing
+        }
+        
+        // Auto-submit sitemap to search engines if enabled
+        if (config('services.google_search_console.auto_submit', false)) {
+            try {
+                $sitemapService = app(\App\Services\GoogleSearchConsoleService::class);
+                $appUrl = config('app.url', url('/'));
+                
+                // Submit main sitemap
+                $sitemapUrl = rtrim($appUrl, '/') . '/sitemap.xml';
+                $sitemapService->pingSitemap($sitemapUrl);
+                
+                // Submit news sitemap
+                $newsSitemapUrl = rtrim($appUrl, '/') . '/sitemap-news.xml';
+                $sitemapService->pingSitemap($newsSitemapUrl);
+                
+                // Submit to Bing
+                $sitemapService->submitToBing($sitemapUrl);
+            } catch (\Exception $e) {
+                \Log::warning('Failed to auto-submit sitemap: ' . $e->getMessage());
+            }
+        }
+    }
 }

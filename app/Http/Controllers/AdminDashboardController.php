@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Article;
 use App\Models\User;
+use App\Helpers\ActivityLogHelper;
+use App\Services\BackupService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -138,49 +140,92 @@ class AdminDashboardController extends Controller
 
     public function upgradeUser(User $user)
     {
-        if ($user->role === 'user') {
-            $user->update(['role' => 'penulis']);
-            return redirect()->back()->with('success', 'User berhasil diupgrade menjadi penulis!');
+        try {
+            if ($user->role === 'user') {
+                $user->update(['role' => 'penulis']);
+                ActivityLogHelper::logUser('user.upgraded', $user, "User {$user->name} diupgrade menjadi penulis");
+                return redirect()->back()->with('success', 'User berhasil diupgrade menjadi penulis!');
+            }
+            
+            return redirect()->back()->with('error', 'User sudah memiliki role yang lebih tinggi!');
+        } catch (\Exception $e) {
+            \Log::error('Upgrade User Error: ' . $e->getMessage());
+            ActivityLogHelper::logSecurity('user.upgrade.failed', 'Gagal upgrade user', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat mengupgrade user.');
         }
-        
-        return redirect()->back()->with('error', 'User sudah memiliki role yang lebih tinggi!');
     }
 
     public function toggleVerified(User $user)
     {
-        $user->update(['verified' => !$user->verified]);
-        $status = $user->verified ? 'diverifikasi' : 'tidak diverifikasi';
-        
-        return redirect()->back()->with('success', "User berhasil {$status}!");
+        try {
+            $user->update(['verified' => !$user->verified]);
+            $status = $user->verified ? 'diverifikasi' : 'tidak diverifikasi';
+            ActivityLogHelper::logUser('user.verification.toggled', $user, "User {$user->name} {$status}");
+            
+            return redirect()->back()->with('success', "User berhasil {$status}!");
+        } catch (\Exception $e) {
+            \Log::error('Toggle Verified Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat mengubah status verifikasi.');
+        }
     }
 
     public function approveArticle(Request $request, Article $article)
     {
-        $article->update(['status' => 'published']);
-        
-        if ($request->expectsJson()) {
-            return response()->json(['success' => true, 'message' => 'Artikel berhasil disetujui!']);
+        try {
+            $article->update(['status' => 'published']);
+            ActivityLogHelper::logArticle('article.approved', $article, "Artikel '{$article->title}' disetujui dan dipublikasikan");
+            
+            if ($request->expectsJson()) {
+                return response()->json(['success' => true, 'message' => 'Artikel berhasil disetujui!']);
+            }
+            
+            return redirect()->back()->with('success', 'Artikel berhasil disetujui!');
+        } catch (\Exception $e) {
+            \Log::error('Approve Article Error: ' . $e->getMessage());
+            ActivityLogHelper::logSecurity('article.approve.failed', 'Gagal approve artikel', ['article_id' => $article->id, 'error' => $e->getMessage()]);
+            
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Terjadi kesalahan saat menyetujui artikel.'], 500);
+            }
+            
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat menyetujui artikel.');
         }
-        
-        return redirect()->back()->with('success', 'Artikel berhasil disetujui!');
     }
 
     public function rejectArticle(Request $request, Article $article)
     {
-        $request->validate([
-            'reason' => 'nullable|string|max:1000'
-        ]);
-        
-        $article->update([
-            'status' => 'rejected',
-            'rejection_reason' => $request->reason
-        ]);
-        
-        if ($request->expectsJson()) {
-            return response()->json(['success' => true, 'message' => 'Artikel berhasil ditolak!']);
+        try {
+            $request->validate([
+                'reason' => 'nullable|string|max:1000'
+            ]);
+            
+            $article->update([
+                'status' => 'rejected',
+                'rejection_reason' => $request->reason
+            ]);
+            
+            ActivityLogHelper::logArticle('article.rejected', $article, "Artikel '{$article->title}' ditolak. Alasan: " . ($request->reason ?? 'Tidak ada alasan'));
+            
+            if ($request->expectsJson()) {
+                return response()->json(['success' => true, 'message' => 'Artikel berhasil ditolak!']);
+            }
+            
+            return redirect()->back()->with('success', 'Artikel berhasil ditolak!');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'errors' => $e->errors()], 422);
+            }
+            return redirect()->back()->withErrors($e->errors());
+        } catch (\Exception $e) {
+            \Log::error('Reject Article Error: ' . $e->getMessage());
+            ActivityLogHelper::logSecurity('article.reject.failed', 'Gagal reject artikel', ['article_id' => $article->id, 'error' => $e->getMessage()]);
+            
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Terjadi kesalahan saat menolak artikel.'], 500);
+            }
+            
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat menolak artikel.');
         }
-        
-        return redirect()->back()->with('success', 'Artikel berhasil ditolak!');
     }
     
     public function articleDetail(Article $article)
@@ -487,8 +532,12 @@ class AdminDashboardController extends Controller
     }
 
     // Analytics
-    public function analytics()
+    public function analytics(AnalyticsService $analyticsService)
     {
+        // Get comprehensive analytics
+        $analytics = $analyticsService->getAnalyticsSummary();
+
+        // Basic stats for compatibility
         $stats = [
             'total_articles' => Article::count(),
             'published_articles' => Article::where('status', 'published')->count(),
@@ -497,18 +546,10 @@ class AdminDashboardController extends Controller
             'total_comments' => \App\Models\Comment::count(),
         ];
 
-        // Chart data for last 30 days
-        $chartData = [];
-        for ($i = 29; $i >= 0; $i--) {
-            $date = now()->subDays($i);
-            $chartData[] = [
-                'date' => $date->format('d/m'),
-                'articles' => Article::whereDate('created_at', $date)->count(),
-                'views' => Article::whereDate('created_at', $date)->sum('views'),
-            ];
-        }
+        // Chart data for last 30 days (engagement trends)
+        $chartData = $analytics['engagement']['trends'] ?? [];
 
-        return view('admin.analytics.index', compact('stats', 'chartData'));
+        return view('admin.analytics.index', compact('stats', 'chartData', 'analytics'));
     }
 
     // Reports
@@ -533,41 +574,82 @@ class AdminDashboardController extends Controller
     }
 
     // Backup
-    public function backup()
+    public function backup(BackupService $backupService)
     {
-        $backups = collect();
-        $backupPath = storage_path('app/backups');
-        
-        if (is_dir($backupPath)) {
-            $files = glob($backupPath . '/*.sql');
-            foreach ($files as $file) {
-                $backups->push([
-                    'name' => basename($file),
-                    'size' => filesize($file),
-                    'created' => filemtime($file),
-                ]);
+        $backups = $backupService->getBackups();
+        $storageInfo = $backupService->getBackupStorageSize();
+
+        return view('admin.backup.index', compact('backups', 'storageInfo'));
+    }
+
+    public function createBackup(Request $request, BackupService $backupService)
+    {
+        $type = $request->input('type', 'full');
+
+        try {
+            switch ($type) {
+                case 'database':
+                    $result = $backupService->createDatabaseBackup();
+                    if ($result) {
+                        ActivityLogHelper::log('backup', 'created', 'Database backup created: ' . basename($result));
+                        return redirect()->back()->with('success', 'Database backup berhasil dibuat!');
+                    }
+                    break;
+
+                case 'files':
+                    $result = $backupService->createFilesBackup();
+                    if ($result) {
+                        ActivityLogHelper::log('backup', 'created', 'Files backup created: ' . basename($result));
+                        return redirect()->back()->with('success', 'Files backup berhasil dibuat!');
+                    }
+                    break;
+
+                case 'full':
+                default:
+                    $results = $backupService->createFullBackup();
+                    if ($results['success']) {
+                        ActivityLogHelper::log('backup', 'created', 'Full backup created');
+                        return redirect()->back()->with('success', 'Full backup berhasil dibuat!');
+                    }
+                    break;
             }
-        }
 
-        return view('admin.backup.index', compact('backups'));
+            return redirect()->back()->with('error', 'Backup gagal dibuat!');
+        } catch (\Exception $e) {
+            ActivityLogHelper::log('backup', 'error', 'Backup failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat membuat backup: ' . $e->getMessage());
+        }
     }
 
-    public function createBackup()
+    public function downloadBackup($backup, BackupService $backupService)
     {
-        // Here you would implement the backup creation logic
-        // For now, just return success
-        return redirect()->back()->with('success', 'Backup berhasil dibuat!');
-    }
+        $backups = $backupService->getBackups();
+        $backupFile = collect($backups)->firstWhere('filename', $backup);
 
-    public function downloadBackup($backup)
-    {
-        $filePath = storage_path('app/backups/' . $backup);
-        
-        if (file_exists($filePath)) {
-            return response()->download($filePath);
+        if (!$backupFile || !file_exists($backupFile['path'])) {
+            return redirect()->back()->with('error', 'File backup tidak ditemukan!');
         }
 
-        return redirect()->back()->with('error', 'File backup tidak ditemukan!');
+        ActivityLogHelper::log('backup', 'downloaded', 'Backup downloaded: ' . $backup);
+
+        return response()->download($backupFile['path'], $backup);
+    }
+
+    public function deleteBackup($backup, BackupService $backupService)
+    {
+        $backups = $backupService->getBackups();
+        $backupFile = collect($backups)->firstWhere('filename', $backup);
+
+        if (!$backupFile || !file_exists($backupFile['path'])) {
+            return redirect()->back()->with('error', 'File backup tidak ditemukan!');
+        }
+
+        if (@unlink($backupFile['path'])) {
+            ActivityLogHelper::log('backup', 'deleted', 'Backup deleted: ' . $backup);
+            return redirect()->back()->with('success', 'Backup berhasil dihapus!');
+        }
+
+        return redirect()->back()->with('error', 'Gagal menghapus backup!');
     }
 
     // System Logs

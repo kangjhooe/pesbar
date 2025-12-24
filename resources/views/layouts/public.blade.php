@@ -337,7 +337,7 @@
                 </div>
 
                 <!-- Navigation Links -->
-                <div class="hidden md:flex items-center space-x-6">
+                {{-- <div class="hidden md:flex items-center space-x-6">
                     <a href="{{ route('home') }}" class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('home') ? 'text-blue-600 border-b-2 border-blue-600' : '' }}">
                         Beranda
                     </a>
@@ -350,7 +350,7 @@
                     <a href="{{ route('about') }}" class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('about') ? 'text-blue-600 border-b-2 border-blue-600' : '' }}">
                         Tentang
                     </a>
-                </div>
+                </div> --}}
 
                 <!-- Right Side - Search and Auth -->
                 <div class="flex items-center space-x-4">
@@ -436,7 +436,7 @@
                 </div>
                 
                 <!-- Navigation Links -->
-                <a href="{{ route('home') }}" @click="mobileMenuOpen = false" class="block px-3 py-2 text-gray-700 hover:text-blue-600 rounded-md text-base font-medium {{ request()->routeIs('home') ? 'text-blue-600 bg-blue-50' : '' }}">
+                {{-- <a href="{{ route('home') }}" @click="mobileMenuOpen = false" class="block px-3 py-2 text-gray-700 hover:text-blue-600 rounded-md text-base font-medium {{ request()->routeIs('home') ? 'text-blue-600 bg-blue-50' : '' }}">
                     Beranda
                 </a>
                 <a href="{{ route('articles.index') }}" @click="mobileMenuOpen = false" class="block px-3 py-2 text-gray-700 hover:text-blue-600 rounded-md text-base font-medium {{ request()->routeIs('articles.*') ? 'text-blue-600 bg-blue-50' : '' }}">
@@ -447,7 +447,7 @@
                 </a>
                 <a href="{{ route('about') }}" @click="mobileMenuOpen = false" class="block px-3 py-2 text-gray-700 hover:text-blue-600 rounded-md text-base font-medium {{ request()->routeIs('about') ? 'text-blue-600 bg-blue-50' : '' }}">
                     Tentang
-                </a>
+                </a> --}}
                 
                 @auth
                     <hr class="my-2">
@@ -495,7 +495,7 @@
                 <div class="flex justify-center space-x-6 mb-6">
                     <a href="{{ route('home') }}" class="text-gray-300 hover:text-white transition-colors text-sm">Beranda</a>
                     <a href="{{ route('articles.index') }}" class="text-gray-300 hover:text-white transition-colors text-sm">Berita</a>
-                    <a href="{{ route('about') }}" class="text-gray-300 hover:text-white transition-colors text-sm">Tentang Kami</a>
+                    {{-- <a href="{{ route('about') }}" class="text-gray-300 hover:text-white transition-colors text-sm">Tentang Kami</a> --}}
                 </div>
 
                 <!-- Social Media & Copyright -->

@@ -27,7 +27,7 @@
     <!-- Main Layout with Left and Right Sidebars -->
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-12">
         <!-- Left Sidebar -->
-        <div class="lg:col-span-1 space-y-4">
+        <div class="lg:col-span-1 space-y-4 order-2 lg:order-1">
             <!-- Trending News Widget -->
             <div class="widget">
                 <div class="p-4">
@@ -121,7 +121,7 @@
         </div>
 
         <!-- Main Content Area -->
-        <div class="lg:col-span-2">
+        <div class="lg:col-span-2 order-1 lg:order-2">
             <!-- Featured Articles Slider -->
             @if($featuredArticles->count() > 0)
                 <div class="relative">
@@ -305,7 +305,7 @@
         </div>
 
         <!-- Right Sidebar -->
-        <div class="lg:col-span-1 space-y-4">
+        <div class="lg:col-span-1 space-y-4 order-3 lg:order-3">
             <!-- Weather Widget -->
             <div class="widget">
                 <div class="p-4">

@@ -14,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'rate.limit.comments' => \App\Http\Middleware\RateLimitComments::class,
+            'rate.limit.api' => \App\Http\Middleware\RateLimitApi::class,
+            'rate.limit.auth' => \App\Http\Middleware\RateLimitAuth::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

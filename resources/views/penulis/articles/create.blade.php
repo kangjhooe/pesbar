@@ -145,13 +145,21 @@
                 </div>
             @endif
 
-            <div class="flex justify-end space-x-4">
-                <a href="{{ route('penulis.dashboard') }}" class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors">
-                    Batal
-                </a>
-                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-                    Simpan Artikel
-                </button>
+            <div class="flex justify-between items-center">
+                <div>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="save_as_draft" value="1" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <span class="ml-2 text-sm text-gray-700">Simpan sebagai draft</span>
+                    </label>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="{{ route('penulis.dashboard') }}" class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors">
+                        Batal
+                    </a>
+                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                        Simpan Artikel
+                    </button>
+                </div>
             </div>
         </div>
     </form>

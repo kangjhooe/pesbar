@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Api\BaseApiController;
 use App\Services\WeatherService;
 use App\Services\PrayerTimeService;
 use App\Services\EventService;
@@ -10,7 +11,7 @@ use App\Models\ContactImportant;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
-class WidgetController extends Controller
+class WidgetController extends BaseApiController
 {
     protected $weatherService;
     protected $prayerTimeService;
@@ -37,16 +38,10 @@ class WidgetController extends Controller
         try {
             $weatherData = $this->weatherService->getWeatherData();
             
-            return response()->json([
-                'success' => true,
-                'data' => $weatherData
-            ]);
+            return $this->successResponse($weatherData, 'Data cuaca berhasil diambil');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil data cuaca',
-                'error' => $e->getMessage()
-            ], 500);
+            \Log::error('Weather API Error: ' . $e->getMessage());
+            return $this->errorResponse('Gagal mengambil data cuaca', 500);
         }
     }
     
@@ -59,16 +54,10 @@ class WidgetController extends Controller
             $date = $request->get('date');
             $prayerData = $this->prayerTimeService->getPrayerTimes($date);
             
-            return response()->json([
-                'success' => true,
-                'data' => $prayerData
-            ]);
+            return $this->successResponse($prayerData, 'Data waktu sholat berhasil diambil');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil data waktu sholat',
-                'error' => $e->getMessage()
-            ], 500);
+            \Log::error('Prayer Times API Error: ' . $e->getMessage());
+            return $this->errorResponse('Gagal mengambil data waktu sholat', 500);
         }
     }
     
@@ -80,16 +69,10 @@ class WidgetController extends Controller
         try {
             $nextPrayer = $this->prayerTimeService->getNextPrayer();
             
-            return response()->json([
-                'success' => true,
-                'data' => $nextPrayer
-            ]);
+            return $this->successResponse($nextPrayer, 'Data sholat berikutnya berhasil diambil');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil data sholat berikutnya',
-                'error' => $e->getMessage()
-            ], 500);
+            \Log::error('Next Prayer API Error: ' . $e->getMessage());
+            return $this->errorResponse('Gagal mengambil data sholat berikutnya', 500);
         }
     }
     
@@ -101,16 +84,10 @@ class WidgetController extends Controller
         try {
             $contacts = ContactImportant::active()->ordered()->get();
             
-            return response()->json([
-                'success' => true,
-                'data' => $contacts
-            ]);
+            return $this->successResponse($contacts, 'Data kontak penting berhasil diambil');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil data kontak penting',
-                'error' => $e->getMessage()
-            ], 500);
+            \Log::error('Contact Importants API Error: ' . $e->getMessage());
+            return $this->errorResponse('Gagal mengambil data kontak penting', 500);
         }
     }
     
@@ -122,16 +99,10 @@ class WidgetController extends Controller
         try {
             $eventsData = $this->eventService->getWidgetEvents();
             
-            return response()->json([
-                'success' => true,
-                'data' => $eventsData
-            ]);
+            return $this->successResponse($eventsData, 'Data event berhasil diambil');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil data event',
-                'error' => $e->getMessage()
-            ], 500);
+            \Log::error('Events API Error: ' . $e->getMessage());
+            return $this->errorResponse('Gagal mengambil data event', 500);
         }
     }
 
@@ -143,16 +114,10 @@ class WidgetController extends Controller
         try {
             $pollData = $this->pollService->getActivePoll();
             
-            return response()->json([
-                'success' => true,
-                'data' => $pollData
-            ]);
+            return $this->successResponse($pollData, 'Data polling berhasil diambil');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil data polling',
-                'error' => $e->getMessage()
-            ], 500);
+            \Log::error('Active Poll API Error: ' . $e->getMessage());
+            return $this->errorResponse('Gagal mengambil data polling', 500);
         }
     }
 
@@ -162,7 +127,7 @@ class WidgetController extends Controller
     public function submitPollVote(Request $request): JsonResponse
     {
         try {
-            $request->validate([
+            $validated = $request->validate([
                 'poll_id' => 'required|exists:polls,id',
                 'option_ids' => 'required|array',
                 'option_ids.*' => 'exists:poll_options,id'
@@ -173,20 +138,23 @@ class WidgetController extends Controller
             $userAgent = $request->userAgent();
 
             $result = $this->pollService->submitVote(
-                $request->poll_id,
-                $request->option_ids,
+                $validated['poll_id'],
+                $validated['option_ids'],
                 $userId,
                 $ipAddress,
                 $userAgent
             );
 
-            return response()->json($result);
+            if ($result['success']) {
+                return $this->successResponse($result['data'], 'Suara berhasil disimpan');
+            }
+
+            return $this->errorResponse($result['message'] ?? 'Gagal menyimpan suara', 400);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return $this->validationErrorResponse($e->errors(), 'Validasi gagal');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal menyimpan suara',
-                'error' => $e->getMessage()
-            ], 500);
+            \Log::error('Submit Poll Vote Error: ' . $e->getMessage());
+            return $this->errorResponse('Gagal menyimpan suara', 500);
         }
     }
 
@@ -196,19 +164,22 @@ class WidgetController extends Controller
     public function getPollResults(Request $request): JsonResponse
     {
         try {
-            $request->validate([
+            $validated = $request->validate([
                 'poll_id' => 'required|exists:polls,id'
             ]);
 
-            $results = $this->pollService->getPollResults($request->poll_id);
+            $results = $this->pollService->getPollResults($validated['poll_id']);
             
-            return response()->json($results);
+            if ($results['success']) {
+                return $this->successResponse($results['data'], 'Hasil polling berhasil diambil');
+            }
+
+            return $this->errorResponse($results['message'] ?? 'Gagal mengambil hasil polling', 400);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return $this->validationErrorResponse($e->errors(), 'Validasi gagal');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil hasil polling',
-                'error' => $e->getMessage()
-            ], 500);
+            \Log::error('Get Poll Results Error: ' . $e->getMessage());
+            return $this->errorResponse('Gagal mengambil hasil polling', 500);
         }
     }
 
@@ -225,23 +196,17 @@ class WidgetController extends Controller
             $eventsData = $this->eventService->getWidgetEvents();
             $pollData = $this->pollService->getActivePoll();
             
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'weather' => $weatherData,
-                    'prayer_times' => $prayerData,
-                    'next_prayer' => $nextPrayer,
-                    'contact_importants' => $contactImportants,
-                    'events' => $eventsData,
-                    'active_poll' => $pollData
-                ]
-            ]);
+            return $this->successResponse([
+                'weather' => $weatherData,
+                'prayer_times' => $prayerData,
+                'next_prayer' => $nextPrayer,
+                'contact_importants' => $contactImportants,
+                'events' => $eventsData,
+                'active_poll' => $pollData
+            ], 'Data widget berhasil diambil');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil data widget',
-                'error' => $e->getMessage()
-            ], 500);
+            \Log::error('Get All Widgets Error: ' . $e->getMessage());
+            return $this->errorResponse('Gagal mengambil data widget', 500);
         }
     }
 

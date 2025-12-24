@@ -20,7 +20,15 @@ use Illuminate\Support\Facades\Route;
 
 // Public routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/tentang', [HomeController::class, 'about'])->name('about');
+// Route::get('/tentang', [HomeController::class, 'about'])->name('about'); // Disembunyikan dari publik
+
+// Sitemap
+Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
+Route::get('/sitemap-{part}.xml', [\App\Http\Controllers\SitemapController::class, 'part'])->name('sitemap.part')->where('part', '[0-9]+');
+Route::get('/sitemap-news.xml', [\App\Http\Controllers\SitemapController::class, 'news'])->name('sitemap.news');
+
+// Robots.txt (dynamic)
+Route::get('/robots.txt', [\App\Http\Controllers\RobotsController::class, 'index'])->name('robots');
 
 // Article routes
 Route::get('/berita', [ArticleController::class, 'index'])->name('articles.index');
@@ -38,6 +46,8 @@ Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])
 
 // Search routes
 Route::get('/search', [SearchController::class, 'index'])->name('search.index');
+Route::get('/search/suggestions', [SearchController::class, 'suggestions'])->name('search.suggestions');
+Route::get('/search/popular', [SearchController::class, 'popular'])->name('search.popular');
 
 // Comment routes
 Route::post('/comments', [CommentController::class, 'store'])
@@ -45,7 +55,7 @@ Route::post('/comments', [CommentController::class, 'store'])
     ->name('comments.store');
 
 // Widget API routes
-Route::prefix('api/widgets')->group(function () {
+Route::prefix('api/widgets')->middleware('rate.limit.api:60,60')->group(function () {
     Route::get('/weather', [WidgetController::class, 'getWeather'])->name('widgets.weather');
     Route::get('/prayer-times', [WidgetController::class, 'getPrayerTimes'])->name('widgets.prayer-times');
     Route::get('/next-prayer', [WidgetController::class, 'getNextPrayer'])->name('widgets.next-prayer');
@@ -91,9 +101,16 @@ Route::middleware(['auth', 'role:penulis'])->prefix('penulis')->name('penulis.')
     // Article management
     Route::get('/articles/create', [PenulisDashboardController::class, 'create'])->name('articles.create');
     Route::post('/articles', [PenulisDashboardController::class, 'store'])->name('articles.store');
+    Route::get('/articles/{article}', [PenulisDashboardController::class, 'show'])->name('articles.show');
     Route::get('/articles/{article}/edit', [PenulisDashboardController::class, 'edit'])->name('articles.edit');
     Route::put('/articles/{article}', [PenulisDashboardController::class, 'update'])->name('articles.update');
     Route::delete('/articles/{article}', [PenulisDashboardController::class, 'destroy'])->name('articles.destroy');
+    Route::post('/articles/{article}/save-draft', [PenulisDashboardController::class, 'saveDraft'])->name('articles.save-draft');
+    
+    // Comments management
+    Route::get('/articles/{article}/comments', [PenulisDashboardController::class, 'comments'])->name('articles.comments');
+    Route::post('/articles/{article}/comments/{comment}/status', [PenulisDashboardController::class, 'updateCommentStatus'])->name('articles.comments.status');
+    Route::delete('/articles/{article}/comments/{comment}', [PenulisDashboardController::class, 'deleteComment'])->name('articles.comments.delete');
 });
 
 // Public penulis profile route (must be after penulis group to avoid conflicts)
@@ -173,6 +190,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/backup', [AdminDashboardController::class, 'backup'])->name('backup.index');
     Route::post('/backup/create', [AdminDashboardController::class, 'createBackup'])->name('backup.create');
     Route::get('/backup/download/{backup}', [AdminDashboardController::class, 'downloadBackup'])->name('backup.download');
+    Route::delete('/backup/{backup}', [AdminDashboardController::class, 'deleteBackup'])->name('backup.delete');
     
     // System Logs
     Route::get('/logs', [AdminDashboardController::class, 'logs'])->name('logs.index');
