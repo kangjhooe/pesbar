@@ -1,6 +1,8 @@
-@extends('layouts.admin-simple')
+@extends('layouts.penulis')
 
 @section('title', 'Kelola Komentar')
+@section('page-title', 'Kelola Komentar')
+@section('page-subtitle', 'Kelola komentar pada artikel Anda')
 
 @section('content')
 <div class="container mx-auto px-4 py-8 max-w-6xl">

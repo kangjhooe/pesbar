@@ -152,7 +152,13 @@
                     <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                         <div class="flex items-center space-x-2">
                             <i class="fas fa-user text-primary-600"></i>
-                            <span>{{ $article->author->name ?? 'Admin' }}</span>
+                            @if($article->author && $article->author->isPenulis() && $article->author->username)
+                                <a href="{{ route('penulis.public-profile', $article->author->username) }}" class="hover:text-primary-700 font-medium">
+                                    {{ $article->author->name ?? 'Admin' }}
+                                </a>
+                            @else
+                                <span>{{ $article->author->name ?? 'Admin' }}</span>
+                            @endif
                         </div>
                         <div class="flex items-center space-x-2">
                             <i class="fas fa-calendar text-primary-600"></i>
@@ -241,44 +247,49 @@
                 <!-- Comment Form -->
                 <div class="mb-8">
                     <h4 class="text-lg font-semibold text-gray-800 mb-4">Tulis Komentar</h4>
-                    <form action="{{ route('comments.store') }}" method="POST" class="space-y-4">
-                        @csrf
-                        <input type="hidden" name="article_id" value="{{ $article->id }}">
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Nama *</label>
-                                <input type="text" 
-                                       name="name" 
-                                       id="name" 
-                                       required
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                    
+                    @auth
+                        <form action="{{ route('comments.store') }}" method="POST" class="space-y-4">
+                            @csrf
+                            <input type="hidden" name="article_id" value="{{ $article->id }}">
+                            
+                            <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                <p class="text-sm text-blue-800">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    Anda berkomentar sebagai <strong>{{ auth()->user()->name }}</strong>
+                                </p>
                             </div>
+                            
                             <div>
-                                <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                                <input type="email" 
-                                       name="email" 
-                                       id="email" 
-                                       required
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                <label for="comment" class="block text-sm font-medium text-gray-700 mb-2">Komentar *</label>
+                                <textarea name="comment" 
+                                          id="comment" 
+                                          rows="4" 
+                                          required
+                                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                          placeholder="Tulis komentar Anda di sini..."></textarea>
                             </div>
+                            
+                            <button type="submit" 
+                                    class="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium">
+                                Kirim Komentar
+                            </button>
+                        </form>
+                    @else
+                        <div class="p-6 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
+                            <i class="fas fa-lock text-yellow-600 text-3xl mb-3"></i>
+                            <p class="text-gray-700 mb-4">
+                                Anda harus <strong>login</strong> terlebih dahulu untuk berkomentar.
+                            </p>
+                            <a href="{{ route('login') }}" 
+                               class="inline-block bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium">
+                                <i class="fas fa-sign-in-alt mr-2"></i>Login Sekarang
+                            </a>
+                            <p class="text-sm text-gray-600 mt-3">
+                                Belum punya akun? <a href="{{ route('register') }}" class="text-primary-600 hover:text-primary-800 font-medium">Daftar di sini</a>
+                            </p>
                         </div>
-                        
-                        <div>
-                            <label for="comment" class="block text-sm font-medium text-gray-700 mb-2">Komentar *</label>
-                            <textarea name="comment" 
-                                      id="comment" 
-                                      rows="4" 
-                                      required
-                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                                      placeholder="Tulis komentar Anda di sini..."></textarea>
-                        </div>
-                        
-                        <button type="submit" 
-                                class="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium">
-                            Kirim Komentar
-                        </button>
-                    </form>
+                    @endauth
                 </div>
 
                 <!-- Comments List -->
@@ -290,8 +301,17 @@
                                 <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
                                     <i class="fas fa-user text-primary-600 text-sm"></i>
                                 </div>
-                                <div>
-                                    <h5 class="font-semibold text-gray-900">{{ $comment->name }}</h5>
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <h5 class="font-semibold text-gray-900">{{ $comment->name }}</h5>
+                                        @if($comment->user_id && $comment->user && $comment->user->username)
+                                            <a href="{{ route('penulis.public-profile', $comment->user->username) }}" 
+                                               class="text-xs text-primary-600 hover:text-primary-800 flex items-center gap-1">
+                                                <i class="fas fa-check-circle text-green-500" title="User Terverifikasi"></i>
+                                                <span>@{{ $comment->user->username }}</span>
+                                            </a>
+                                        @endif
+                                    </div>
                                     <p class="text-xs text-gray-500">{{ $comment->created_at->format('d-m-Y H:i') }}</p>
                                 </div>
                             </div>

@@ -30,6 +30,12 @@ class AdminDashboardController extends Controller
             'articles_today' => Article::whereDate('created_at', today())->count(),
             'views_today' => Article::whereDate('created_at', today())->sum('views'),
             'comments_today' => \App\Models\Comment::whereDate('created_at', today())->count(),
+            'pending_verification_requests' => User::where('role', 'penulis')
+                ->where('verification_request_status', 'pending')
+                ->count(),
+            'verified_penulis' => User::where('role', 'penulis')
+                ->where('verified', true)
+                ->count(),
         ];
 
         // Statistik bulanan

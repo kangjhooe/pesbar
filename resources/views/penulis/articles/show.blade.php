@@ -1,6 +1,8 @@
-@extends('layouts.admin-simple')
+@extends('layouts.penulis')
 
 @section('title', 'Detail Artikel')
+@section('page-title', 'Detail Artikel')
+@section('page-subtitle', 'Lihat detail dan kelola artikel Anda')
 
 @section('content')
 <div class="container mx-auto px-4 py-8 max-w-5xl">
@@ -40,7 +42,7 @@
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
                                 </svg>
-                                {{ $article->category->name }}
+                                {{ $article->category->name ?? 'Tidak ada kategori' }}
                             </span>
                             <span class="flex items-center">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -60,12 +62,21 @@
                                 Menunggu Review
                             </span>
                         @elseif($article->status === 'rejected')
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                                Ditolak
-                            </span>
-                            @if($article->rejection_reason)
-                                <p class="text-xs text-red-600 mt-2 max-w-xs">{{ $article->rejection_reason }}</p>
-                            @endif
+                            <div>
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                                    <i class="fas fa-times-circle mr-1"></i>
+                                    Ditolak
+                                </span>
+                                @if($article->rejection_reason)
+                                    <div class="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                        <p class="text-sm font-semibold text-red-900 mb-1">
+                                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                                            Alasan Penolakan:
+                                        </p>
+                                        <p class="text-sm text-red-700">{{ $article->rejection_reason }}</p>
+                                    </div>
+                                @endif
+                            </div>
                         @elseif($article->status === 'draft')
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
                                 Draft

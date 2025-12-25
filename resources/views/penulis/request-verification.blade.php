@@ -1,6 +1,8 @@
-@extends('layouts.admin-simple')
+@extends('layouts.penulis')
 
 @section('title', 'Ajukan Verifikasi')
+@section('page-title', 'Ajukan Verifikasi')
+@section('page-subtitle', 'Ajukan permintaan verifikasi untuk publish artikel langsung')
 
 @section('content')
 <div class="container mx-auto px-4 py-8">

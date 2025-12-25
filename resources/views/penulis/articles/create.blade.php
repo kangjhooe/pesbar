@@ -1,6 +1,8 @@
-@extends('layouts.admin-simple')
+@extends('layouts.penulis')
 
 @section('title', 'Buat Artikel Baru')
+@section('page-title', 'Buat Artikel Baru')
+@section('page-subtitle', 'Tulis artikel menarik untuk dibaca oleh pengunjung')
 
 @section('content')
 <div class="container mx-auto px-4 py-8 max-w-4xl">
@@ -80,17 +82,26 @@
                 <label for="content" class="block text-sm font-medium text-gray-700 mb-2">
                     Konten Artikel <span class="text-red-500">*</span>
                 </label>
+                <!-- Quill Editor Container -->
+                <div id="editor-container" class="border border-gray-300 rounded-md @error('content') border-red-500 @enderror" style="min-height: 400px;">
+                    <!-- Quill editor will be initialized here -->
+                </div>
+                <!-- Hidden textarea for form submission -->
                 <textarea 
                     id="content" 
                     name="content" 
-                    rows="15" 
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('content') border-red-500 @enderror"
-                    placeholder="Tulis konten artikel Anda di sini..."
+                    style="display: none;"
                     required
                 >{{ old('content') }}</textarea>
+                <!-- Hidden input for HTML content -->
+                <input type="hidden" id="content_html" name="content_html" value="{{ old('content') }}">
                 @error('content')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
+                <p class="mt-2 text-sm text-gray-500">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Gunakan toolbar di atas untuk memformat teks, menambahkan link, gambar, dan elemen lainnya.
+                </p>
             </div>
 
             <div class="mb-6">
@@ -109,6 +120,85 @@
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
                 <p class="mt-1 text-sm text-gray-500">Pisahkan tag dengan koma untuk memudahkan pencarian</p>
+            </div>
+
+            <!-- SEO Fields -->
+            <div class="bg-gray-50 rounded-lg p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">SEO Settings</h3>
+                
+                <div class="mb-4">
+                    <label for="slug" class="block text-sm font-medium text-gray-700 mb-2">
+                        Custom Slug (URL)
+                    </label>
+                    <input 
+                        type="text" 
+                        id="slug" 
+                        name="slug" 
+                        value="{{ old('slug') }}"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('slug') border-red-500 @enderror"
+                        placeholder="Akan otomatis dibuat dari judul jika kosong"
+                    >
+                    @error('slug')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                    <p class="mt-1 text-sm text-gray-500">URL artikel: {{ url('/articles/') }}/<span id="slug-preview">slug-akan-muncul-di-sini</span></p>
+                </div>
+
+                <div class="mb-4">
+                    <label for="meta_description" class="block text-sm font-medium text-gray-700 mb-2">
+                        Meta Description
+                    </label>
+                    <textarea 
+                        id="meta_description" 
+                        name="meta_description" 
+                        rows="3" 
+                        maxlength="500"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('meta_description') border-red-500 @enderror"
+                        placeholder="Deskripsi singkat untuk SEO (maksimal 500 karakter)"
+                    >{{ old('meta_description') }}</textarea>
+                    <p class="mt-1 text-sm text-gray-500"><span id="meta-desc-count">0</span>/500 karakter</p>
+                    @error('meta_description')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label for="meta_keywords" class="block text-sm font-medium text-gray-700 mb-2">
+                        Meta Keywords
+                    </label>
+                    <input 
+                        type="text" 
+                        id="meta_keywords" 
+                        name="meta_keywords" 
+                        value="{{ old('meta_keywords') }}"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('meta_keywords') border-red-500 @enderror"
+                        placeholder="Kata kunci dipisahkan koma, contoh: berita, pesisir barat, lampung"
+                    >
+                    @error('meta_keywords')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                    <p class="mt-1 text-sm text-gray-500">Pisahkan dengan koma untuk optimasi SEO</p>
+                </div>
+            </div>
+
+            <!-- Scheduled Publish -->
+            <div class="mb-6">
+                <label for="scheduled_at" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-clock mr-1"></i>
+                    Jadwalkan Publikasi (Opsional)
+                </label>
+                <input 
+                    type="datetime-local" 
+                    id="scheduled_at" 
+                    name="scheduled_at" 
+                    value="{{ old('scheduled_at') }}"
+                    min="{{ now()->format('Y-m-d\TH:i') }}"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('scheduled_at') border-red-500 @enderror"
+                >
+                @error('scheduled_at')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+                <p class="mt-1 text-sm text-gray-500">Artikel akan otomatis dipublikasikan pada waktu yang ditentukan</p>
             </div>
 
             @if(!auth()->user()->isVerified())
@@ -146,11 +236,16 @@
             @endif
 
             <div class="flex justify-between items-center">
-                <div>
+                <div class="flex items-center space-x-4">
                     <label class="flex items-center">
                         <input type="checkbox" name="save_as_draft" value="1" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                         <span class="ml-2 text-sm text-gray-700">Simpan sebagai draft</span>
                     </label>
+                    <button type="button" onclick="previewArticle()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors text-sm">
+                        <i class="fas fa-eye mr-1"></i>
+                        Preview
+                    </button>
+                    <span id="auto-save-status" class="text-xs text-gray-500"></span>
                 </div>
                 <div class="flex space-x-4">
                     <a href="{{ route('penulis.dashboard') }}" class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors">
@@ -165,54 +260,221 @@
     </form>
 </div>
 
-@push('scripts')
-<!-- Quill.js CDN -->
+@push('styles')
+<!-- Quill.js CSS -->
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<style>
+    #editor-container {
+        min-height: 400px;
+        background: white;
+    }
+    #editor-container .ql-editor {
+        min-height: 350px;
+        font-size: 16px;
+        line-height: 1.6;
+    }
+    #editor-container .ql-toolbar {
+        border-top: 1px solid #ccc;
+        border-left: 1px solid #ccc;
+        border-right: 1px solid #ccc;
+        border-bottom: none;
+        border-radius: 4px 4px 0 0;
+    }
+    #editor-container .ql-container {
+        border-bottom: 1px solid #ccc;
+        border-left: 1px solid #ccc;
+        border-right: 1px solid #ccc;
+        border-top: none;
+        border-radius: 0 0 4px 4px;
+    }
+</style>
+@endpush
+
+@push('scripts')
+<!-- Quill.js JS -->
 <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 
 <script>
-// Initialize Quill editor
-const quill = new Quill('#content', {
-    theme: 'snow',
-    modules: {
-        toolbar: [
-            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-            ['bold', 'italic', 'underline', 'strike'],
-            [{ 'color': [] }, { 'background': [] }],
-            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-            [{ 'indent': '-1'}, { 'indent': '+1' }],
-            [{ 'align': [] }],
-            ['link', 'image', 'video'],
-            ['blockquote', 'code-block'],
-            ['clean']
-        ]
-    },
-    placeholder: 'Tulis isi artikel di sini...'
+let quill;
+let autoSaveInterval;
+let lastSaveTime = null;
+
+// Wait for DOM and Quill to be ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if editor container exists
+    const editorContainer = document.getElementById('editor-container');
+    if (!editorContainer) {
+        console.error('Editor container not found!');
+        return;
+    }
+
+    // Initialize Quill on the container div
+    try {
+        quill = new Quill('#editor-container', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'color': [] }, { 'background': [] }],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    [{ 'indent': '-1'}, { 'indent': '+1' }],
+                    [{ 'align': [] }],
+                    ['link', 'image', 'video'],
+                    ['blockquote', 'code-block'],
+                    ['clean']
+                ]
+            },
+            placeholder: 'Tulis isi artikel di sini...'
+        });
+
+        // Set initial content if exists
+        @if(old('content'))
+            const oldContent = {!! json_encode(old('content')) !!};
+            if (oldContent) {
+                quill.root.innerHTML = oldContent;
+                document.getElementById('content_html').value = oldContent;
+                document.getElementById('content').value = oldContent;
+            }
+        @endif
+
+        // Update hidden inputs when Quill content changes
+        quill.on('text-change', function() {
+            const htmlContent = quill.root.innerHTML;
+            document.getElementById('content_html').value = htmlContent;
+            document.getElementById('content').value = htmlContent;
+            triggerAutoSave();
+        });
+    } catch (error) {
+        console.error('Error initializing Quill:', error);
+    }
+
+    // Auto-save every 30 seconds
+    autoSaveInterval = setInterval(autoSaveDraft, 30000);
+
+    // Slug auto-generate from title
+    const titleInput = document.getElementById('title');
+    const slugInput = document.getElementById('slug');
+    const slugPreview = document.getElementById('slug-preview');
+    
+    titleInput.addEventListener('input', function() {
+        if (!slugInput.value || slugInput.dataset.autoGenerated === 'true') {
+            const slug = this.value.toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/(^-|-$)/g, '');
+            slugInput.value = slug;
+            slugInput.dataset.autoGenerated = 'true';
+            slugPreview.textContent = slug || 'slug-akan-muncul-di-sini';
+        }
+    });
+
+    slugInput.addEventListener('input', function() {
+        slugInput.dataset.autoGenerated = 'false';
+        slugPreview.textContent = this.value || 'slug-akan-muncul-di-sini';
+    });
+
+    // Meta description counter
+    const metaDescInput = document.getElementById('meta_description');
+    const metaDescCount = document.getElementById('meta-desc-count');
+    if (metaDescInput) {
+        metaDescInput.addEventListener('input', function() {
+            metaDescCount.textContent = this.value.length;
+        });
+    }
 });
 
-// Hide the original textarea
-document.getElementById('content').style.display = 'none';
+// Auto-save function
+function autoSaveDraft() {
+    const form = document.querySelector('form');
+    const formData = new FormData(form);
+    formData.append('_token', '{{ csrf_token() }}');
+    formData.append('save_as_draft', '1');
+    formData.append('content', document.getElementById('content_html').value);
 
-// Create a hidden input to store the HTML content
-const hiddenInput = document.createElement('input');
-hiddenInput.type = 'hidden';
-hiddenInput.name = 'content';
-hiddenInput.id = 'content_html';
-document.querySelector('form').appendChild(hiddenInput);
+    fetch('{{ route("penulis.articles.save-draft-create") }}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            lastSaveTime = new Date();
+            updateAutoSaveStatus('Tersimpan otomatis ' + lastSaveTime.toLocaleTimeString());
+            // Update form action if article_id is returned (for subsequent auto-saves)
+            if (data.article_id) {
+                // Store article_id for future auto-saves
+                window.currentArticleId = data.article_id;
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Auto-save error:', error);
+    });
+}
 
-// Update hidden input when Quill content changes
-quill.on('text-change', function() {
-    document.getElementById('content_html').value = quill.root.innerHTML;
-});
+function triggerAutoSave() {
+    // Reset auto-save timer
+    clearInterval(autoSaveInterval);
+    autoSaveInterval = setInterval(autoSaveDraft, 30000);
+    updateAutoSaveStatus('Menyimpan...');
+}
 
-// Set initial content if editing
-@if(old('content'))
-    quill.root.innerHTML = {!! json_encode(old('content')) !!};
-@endif
+function updateAutoSaveStatus(message) {
+    const statusEl = document.getElementById('auto-save-status');
+    if (statusEl) {
+        statusEl.textContent = message;
+        setTimeout(() => {
+            if (statusEl.textContent === message) {
+                statusEl.textContent = '';
+            }
+        }, 3000);
+    }
+}
+
+// Preview function
+function previewArticle() {
+    const title = document.getElementById('title').value || 'Judul Artikel';
+    const content = quill.root.innerHTML || '<p>Konten artikel...</p>';
+    const category = document.getElementById('category_id').options[document.getElementById('category_id').selectedIndex]?.text || 'Kategori';
+    
+    const previewWindow = window.open('', '_blank', 'width=800,height=600');
+    previewWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Preview: ${title}</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+                h1 { color: #333; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+                .meta { color: #666; font-size: 14px; margin-bottom: 20px; }
+                .content { line-height: 1.6; }
+            </style>
+        </head>
+        <body>
+            <h1>${title}</h1>
+            <div class="meta">Kategori: ${category}</div>
+            <div class="content">${content}</div>
+        </body>
+        </html>
+    `);
+    previewWindow.document.close();
+}
 
 // Ensure Quill content is saved before form submission
-document.querySelector('form').addEventListener('submit', function(e) {
-    document.getElementById('content_html').value = quill.root.innerHTML;
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (quill) {
+                const htmlContent = quill.root.innerHTML;
+                document.getElementById('content_html').value = htmlContent;
+                document.getElementById('content').value = htmlContent;
+            }
+        });
+    }
 });
 </script>
 @endpush

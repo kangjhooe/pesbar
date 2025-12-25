@@ -15,6 +15,8 @@ class Article extends Model
         'title',
         'slug',
         'excerpt',
+        'meta_description',
+        'meta_keywords',
         'content',
         'featured_image',
         'category_id',
@@ -25,6 +27,7 @@ class Article extends Model
         'is_breaking',
         'views',
         'published_at',
+        'scheduled_at',
         'rejection_reason',
     ];
 
@@ -32,6 +35,7 @@ class Article extends Model
         'is_featured' => 'boolean',
         'is_breaking' => 'boolean',
         'published_at' => 'datetime',
+        'scheduled_at' => 'datetime',
     ];
 
     protected static function boot()
@@ -72,7 +76,7 @@ class Article extends Model
 
     public function approvedComments(): HasMany
     {
-        return $this->hasMany(Comment::class)->where('is_approved', true);
+        return $this->hasMany(Comment::class)->where('is_approved', true)->with('user');
     }
 
     public function scopePublished($query)

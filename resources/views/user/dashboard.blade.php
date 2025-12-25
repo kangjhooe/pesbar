@@ -10,17 +10,48 @@
 
     @auth
         @if(auth()->user()->role === 'user')
-            <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-6">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                        <i class="fas fa-info-circle mr-2"></i>
-                        <span>Ingin menjadi penulis? Ajukan permintaan upgrade untuk bisa menulis artikel!</span>
+            @if(auth()->user()->verification_request_status === 'pending')
+                <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="fas fa-clock mr-2"></i>
+                            <div>
+                                <span class="font-semibold">Permintaan upgrade Anda sedang dalam proses review oleh admin.</span>
+                                @if(auth()->user()->verification_requested_at)
+                                    <p class="text-sm mt-1">Dikirim pada: {{ auth()->user()->verification_requested_at->format('d M Y, H:i') }}</p>
+                                @endif
+                            </div>
+                        </div>
                     </div>
-                    <a href="{{ route('user.upgrade-request') }}" class="ml-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium">
-                        Ajukan Upgrade
-                    </a>
                 </div>
-            </div>
+            @elseif(auth()->user()->verification_request_status === 'rejected')
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="fas fa-times-circle mr-2"></i>
+                            <div>
+                                <span class="font-semibold">Permintaan upgrade Anda ditolak.</span>
+                                <p class="text-sm mt-1">Anda dapat mengajukan ulang dengan melengkapi informasi yang lebih lengkap.</p>
+                            </div>
+                        </div>
+                        <a href="{{ route('user.upgrade-request') }}" class="ml-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-medium">
+                            Ajukan Ulang
+                        </a>
+                    </div>
+                </div>
+            @else
+                <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            <span>Ingin menjadi penulis? Ajukan permintaan upgrade untuk bisa menulis artikel!</span>
+                        </div>
+                        <a href="{{ route('user.upgrade-request') }}" class="ml-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium">
+                            Ajukan Upgrade
+                        </a>
+                    </div>
+                </div>
+            @endif
         @endif
     @endauth
 
@@ -130,6 +161,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Komentar</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -172,10 +204,30 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {{ $comment->created_at->format('d-m-Y H:i') }}
                         </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <div class="flex items-center space-x-2">
+                                <button onclick="editComment({{ $comment->id }}, '{{ addslashes($comment->comment) }}')" 
+                                        class="text-blue-600 hover:text-blue-900" 
+                                        title="Edit Komentar">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </button>
+                                <form action="{{ route('user.comments.destroy', $comment) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus komentar ini?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-600 hover:text-red-900" title="Hapus Komentar">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">
                             @if(request()->has('status'))
                                 Tidak ada komentar yang sesuai dengan filter. <a href="{{ route('user.dashboard') }}" class="text-blue-600 hover:text-blue-900">Reset filter</a>
                             @else
@@ -218,5 +270,62 @@
     </div>
     @endif
 </div>
+
+<!-- Edit Comment Modal -->
+<div id="editCommentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Edit Komentar</h3>
+            <form id="editCommentForm" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="mb-4">
+                    <label for="edit_comment_text" class="block text-sm font-medium text-gray-700 mb-2">Komentar</label>
+                    <textarea id="edit_comment_text" 
+                              name="comment" 
+                              rows="4" 
+                              required
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              maxlength="1000"></textarea>
+                    <p class="mt-1 text-xs text-gray-500">Maksimal 1000 karakter</p>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" 
+                            onclick="closeEditModal()" 
+                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
+                        Batal
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function editComment(commentId, commentText) {
+    const modal = document.getElementById('editCommentModal');
+    const form = document.getElementById('editCommentForm');
+    const textarea = document.getElementById('edit_comment_text');
+    
+    form.action = `/user/comments/${commentId}`;
+    textarea.value = commentText;
+    modal.classList.remove('hidden');
+}
+
+function closeEditModal() {
+    document.getElementById('editCommentModal').classList.add('hidden');
+}
+
+// Close modal when clicking outside
+document.getElementById('editCommentModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeEditModal();
+    }
+});
+</script>
 @endsection
 

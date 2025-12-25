@@ -99,7 +99,7 @@
                                 </div>
                                 <div class="ml-4">
                                     <div class="text-sm font-medium text-gray-900">{{ $user->name }}</div>
-                                    <div class="text-sm text-gray-500">@{{ $user->username ?? 'N/A' }}</div>
+                                    <div class="text-sm text-gray-500">@{{ $user->username }}</div>
                                 </div>
                             </div>
                         </td>
@@ -150,7 +150,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex items-center space-x-2">
-                                <a href="{{ route('penulis.public-profile', $user->username ?? $user->id) }}" 
+                                <a href="{{ route('penulis.public-profile', $user->username) }}" 
                                    class="text-blue-600 hover:text-blue-900" title="Lihat Profil">
                                     <i class="fas fa-eye"></i>
                                 </a>

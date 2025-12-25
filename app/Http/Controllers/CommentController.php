@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Comment;
+use App\Helpers\SettingsHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -10,10 +11,14 @@ class CommentController extends Controller
 {
     public function store(Request $request)
     {
+        // Hanya user yang sudah login yang bisa berkomentar
+        if (!auth()->check()) {
+            return redirect()->route('login')
+                ->with('error', 'Anda harus login terlebih dahulu untuk berkomentar.');
+        }
+        
         $validator = Validator::make($request->all(), [
             'article_id' => 'required|exists:articles,id',
-            'name' => 'required|string|max:100',
-            'email' => 'required|email|max:100',
             'comment' => 'required|string|max:1000',
         ]);
 
@@ -25,16 +30,27 @@ class CommentController extends Controller
         }
 
         try {
-            Comment::create([
+            // Cek apakah auto approve diaktifkan
+            $autoApprove = SettingsHelper::autoApproveComments();
+            
+            // User sudah pasti login karena ada middleware auth
+            $user = auth()->user();
+            
+            $comment = Comment::create([
                 'article_id' => $request->article_id,
-                'name' => $request->name,
-                'email' => $request->email,
+                'user_id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
                 'comment' => $request->comment,
-                'is_approved' => false, // Komentar perlu disetujui admin
+                'is_approved' => $autoApprove, // Gunakan setting auto approve
                 'ip_address' => $request->ip(),
             ]);
 
-            return back()->with('success', 'Komentar Anda telah dikirim dan sedang menunggu persetujuan admin.');
+            $message = $autoApprove 
+                ? 'Komentar Anda telah berhasil dikirim dan ditampilkan.'
+                : 'Komentar Anda telah dikirim dan sedang menunggu persetujuan admin.';
+
+            return back()->with('success', $message);
         } catch (\Exception $e) {
             return back()
                 ->withInput()

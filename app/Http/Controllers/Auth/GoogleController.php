@@ -24,14 +24,20 @@ class GoogleController extends Controller
             
             if ($user) {
                 // Update existing user with Google info
+                if (!$user->username) {
+                    $user->username = User::generateUsername($user->name, $user->id);
+                    $user->save();
+                }
                 $user->update([
                     'provider' => 'google',
                     'provider_id' => $googleUser->getId(),
                 ]);
             } else {
                 // Create new user
+                $username = User::generateUsername($googleUser->getName());
                 $user = User::create([
                     'name' => $googleUser->getName(),
+                    'username' => $username,
                     'email' => $googleUser->getEmail(),
                     'provider' => 'google',
                     'provider_id' => $googleUser->getId(),

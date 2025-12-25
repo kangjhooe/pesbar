@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.admin-simple')
 
 @section('title', 'Permintaan Verifikasi Penulis')
 
@@ -110,7 +110,7 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <div class="flex items-center space-x-2">
-                                    <a href="{{ route('penulis.public-profile', $user->username ?? $user->id) }}" 
+                                    <a href="{{ route('penulis.public-profile', $user->username) }}" 
                                        class="text-blue-600 hover:text-blue-900" 
                                        title="Lihat Profil"
                                        target="_blank">

@@ -140,6 +140,28 @@
                     </div>
                 </div>
             </a>
+
+            <!-- Permintaan Verifikasi Card -->
+            <a href="{{ route('admin.verification-requests') }}" class="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-white/20 overflow-hidden block">
+                <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div class="relative p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl shadow-lg">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold text-gray-900">{{ $stats['pending_verification_requests'] }}</div>
+                            <div class="text-xs text-cyan-600 font-medium">Perlu Tinjauan</div>
+                        </div>
+                    </div>
+                    <div class="text-sm font-medium text-gray-600">Permintaan Verifikasi</div>
+                    <div class="mt-2 w-full bg-gray-200 rounded-full h-1.5">
+                        <div class="bg-gradient-to-r from-cyan-500 to-cyan-600 h-1.5 rounded-full" style="width: {{ min(($stats['pending_verification_requests'] / 10) * 100, 100) }}%"></div>
+                    </div>
+                </div>
+            </a>
         </div>
     </div>
 

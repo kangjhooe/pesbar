@@ -1,6 +1,8 @@
-@extends('layouts.admin-simple')
+@extends('layouts.penulis')
 
 @section('title', 'Profil Penulis')
+@section('page-title', 'Profil Penulis')
+@section('page-subtitle', 'Kelola informasi profil Anda')
 
 @section('content')
 <div class="container mx-auto px-4 py-8 max-w-2xl">

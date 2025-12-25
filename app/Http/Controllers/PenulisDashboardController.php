@@ -65,6 +65,7 @@ class PenulisDashboardController extends Controller
         
         // Get popular articles
         $popularArticles = $user->articles()
+            ->with('category')
             ->where('status', 'published')
             ->orderBy('views', 'desc')
             ->limit(5)
@@ -83,31 +84,50 @@ class PenulisDashboardController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'content' => 'required|string',
+            'slug' => 'nullable|string|max:255|unique:articles,slug',
+            'content' => 'nullable|string',
+            'content_html' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'tags' => 'nullable|string',
+            'meta_description' => 'nullable|string|max:500',
+            'meta_keywords' => 'nullable|string|max:255',
             'save_as_draft' => 'nullable|boolean',
+            'scheduled_at' => 'nullable|date|after:now',
         ]);
+
+        // Use content_html if available (from Quill), otherwise use content
+        $content = $request->content_html ?? $request->content;
+        if (empty($content) || $content === '<p><br></p>' || trim(strip_tags($content)) === '') {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['content' => 'Konten artikel wajib diisi.']);
+        }
 
         $user = Auth::user();
         
         // Determine status
         if ($request->has('save_as_draft') && $request->save_as_draft) {
             $status = 'draft';
+        } elseif ($request->scheduled_at) {
+            $status = $user->isVerified() ? 'published' : 'pending_review';
         } else {
             $status = $user->isVerified() ? 'published' : 'pending_review';
         }
 
         $article = $user->articles()->create([
             'title' => $request->title,
-            'content' => $request->content,
+            'slug' => $request->slug ?: \Str::slug($request->title),
+            'content' => $content,
             'category_id' => $request->category_id,
             'status' => $status,
+            'meta_description' => $request->meta_description,
+            'meta_keywords' => $request->meta_keywords,
             'featured_image' => $request->hasFile('featured_image') 
                 ? $request->file('featured_image')->store('articles', 'public') 
                 : null,
-            'published_at' => $status === 'published' ? now() : null,
+            'published_at' => $request->scheduled_at ? null : ($status === 'published' ? now() : null),
+            'scheduled_at' => $request->scheduled_at ? \Carbon\Carbon::parse($request->scheduled_at) : null,
         ]);
 
         // Handle tags
@@ -138,18 +158,33 @@ class PenulisDashboardController extends Controller
         
         $request->validate([
             'title' => 'required|string|max:255',
-            'content' => 'required|string',
+            'slug' => 'nullable|string|max:255|unique:articles,slug,' . $article->id,
+            'content' => 'nullable|string',
+            'content_html' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'tags' => 'nullable|string',
+            'meta_description' => 'nullable|string|max:500',
+            'meta_keywords' => 'nullable|string|max:255',
             'save_as_draft' => 'nullable|boolean',
+            'scheduled_at' => 'nullable|date|after:now',
         ]);
+
+        // Use content_html if available (from Quill), otherwise use content
+        $content = $request->content_html ?? $request->content;
+        if (empty($content) || $content === '<p><br></p>' || trim(strip_tags($content)) === '') {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['content' => 'Konten artikel wajib diisi.']);
+        }
 
         $user = Auth::user();
         
         // Determine status - don't change if already published, unless saving as draft
         if ($request->has('save_as_draft') && $request->save_as_draft) {
             $status = 'draft';
+        } elseif ($request->scheduled_at) {
+            $status = $user->isVerified() ? 'published' : 'pending_review';
         } elseif ($article->status === 'published') {
             // Keep published status if already published
             $status = 'published';
@@ -160,14 +195,20 @@ class PenulisDashboardController extends Controller
 
         $updateData = [
             'title' => $request->title,
-            'content' => $request->content,
+            'slug' => $request->slug ?: \Str::slug($request->title),
+            'content' => $content,
             'category_id' => $request->category_id,
             'status' => $status,
+            'meta_description' => $request->meta_description,
+            'meta_keywords' => $request->meta_keywords,
+            'scheduled_at' => $request->scheduled_at ? \Carbon\Carbon::parse($request->scheduled_at) : null,
         ];
 
         // Set published_at if publishing for the first time
-        if ($status === 'published' && !$article->published_at) {
+        if ($status === 'published' && !$article->published_at && !$request->scheduled_at) {
             $updateData['published_at'] = now();
+        } elseif ($request->scheduled_at) {
+            $updateData['published_at'] = null; // Will be set when scheduled time arrives
         }
 
         $article->update($updateData);
@@ -367,6 +408,9 @@ class PenulisDashboardController extends Controller
             'category_id' => 'nullable|exists:categories,id',
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'tags' => 'nullable|string',
+            'slug' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string|max:500',
+            'meta_keywords' => 'nullable|string|max:255',
         ]);
 
         $user = Auth::user();
@@ -375,11 +419,48 @@ class PenulisDashboardController extends Controller
             $this->authorize('update', $article);
         }
 
+        // Generate unique slug if creating new draft
+        if (!$article) {
+            if ($request->slug) {
+                $baseSlug = \Str::slug($request->slug);
+            } elseif ($request->title) {
+                $baseSlug = \Str::slug($request->title);
+            } else {
+                $baseSlug = 'draft-' . time();
+            }
+            
+            // Ensure slug is unique
+            $uniqueSlug = $baseSlug;
+            $counter = 1;
+            while (\App\Models\Article::where('slug', $uniqueSlug)->exists()) {
+                $uniqueSlug = $baseSlug . '-' . $counter;
+                $counter++;
+            }
+            $slug = $uniqueSlug;
+        } else {
+            // For existing article, validate slug uniqueness if changed
+            if ($request->slug && $request->slug !== $article->slug) {
+                $baseSlug = \Str::slug($request->slug);
+                $uniqueSlug = $baseSlug;
+                $counter = 1;
+                while (\App\Models\Article::where('slug', $uniqueSlug)->where('id', '!=', $article->id)->exists()) {
+                    $uniqueSlug = $baseSlug . '-' . $counter;
+                    $counter++;
+                }
+                $slug = $uniqueSlug;
+            } else {
+                $slug = $article->slug;
+            }
+        }
+
         $data = [
-            'title' => $request->title ?? 'Draft tanpa judul',
-            'content' => $request->content ?? '',
-            'category_id' => $request->category_id,
+            'title' => $request->title ?? ($article ? $article->title : 'Draft tanpa judul'),
+            'content' => $request->content ?? ($article ? $article->content : ''),
+            'category_id' => $request->category_id ?? ($article ? $article->category_id : null),
             'status' => 'draft',
+            'slug' => $slug,
+            'meta_description' => $request->meta_description ?? ($article ? $article->meta_description : null),
+            'meta_keywords' => $request->meta_keywords ?? ($article ? $article->meta_keywords : null),
         ];
 
         if ($request->hasFile('featured_image')) {
@@ -396,15 +477,13 @@ class PenulisDashboardController extends Controller
         }
 
         // Handle tags
-        if ($article->exists) {
+        if ($article->exists && $request->tags) {
             $article->tags()->detach();
-            if ($request->tags) {
-                $tagNames = array_map('trim', explode(',', $request->tags));
-                foreach ($tagNames as $tagName) {
-                    if (!empty($tagName)) {
-                        $tag = \App\Models\Tag::firstOrCreate(['name' => $tagName]);
-                        $article->tags()->attach($tag);
-                    }
+            $tagNames = array_map('trim', explode(',', $request->tags));
+            foreach ($tagNames as $tagName) {
+                if (!empty($tagName)) {
+                    $tag = \App\Models\Tag::firstOrCreate(['name' => $tagName]);
+                    $article->tags()->attach($tag);
                 }
             }
         }
@@ -414,5 +493,38 @@ class PenulisDashboardController extends Controller
             'message' => 'Draft berhasil disimpan!',
             'article_id' => $article->id
         ]);
+    }
+
+    public function duplicate(Article $article)
+    {
+        $this->authorize('view', $article);
+        
+        $newArticle = $article->replicate();
+        $newArticle->title = $article->title . ' (Copy)';
+        $newArticle->slug = \Str::slug($newArticle->title) . '-' . time();
+        $newArticle->status = 'draft';
+        $newArticle->published_at = null;
+        $newArticle->scheduled_at = null;
+        $newArticle->views = 0;
+        $newArticle->save();
+
+        // Copy tags
+        foreach ($article->tags as $tag) {
+            $newArticle->tags()->attach($tag);
+        }
+
+        return redirect()->route('penulis.articles.edit', $newArticle)
+            ->with('success', 'Artikel berhasil diduplikasi!');
+    }
+
+    public function export(Article $article)
+    {
+        $this->authorize('view', $article);
+        
+        $content = view('penulis.articles.export', compact('article'))->render();
+        
+        return response($content)
+            ->header('Content-Type', 'text/html; charset=utf-8')
+            ->header('Content-Disposition', 'attachment; filename="' . \Str::slug($article->title) . '.html"');
     }
 }

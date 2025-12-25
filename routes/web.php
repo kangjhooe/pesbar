@@ -50,9 +50,9 @@ Route::get('/search', [SearchController::class, 'index'])->name('search.index');
 Route::get('/search/suggestions', [SearchController::class, 'suggestions'])->name('search.suggestions');
 Route::get('/search/popular', [SearchController::class, 'popular'])->name('search.popular');
 
-// Comment routes
+// Comment routes (only for authenticated users)
 Route::post('/comments', [CommentController::class, 'store'])
-    ->middleware('rate.limit.comments')
+    ->middleware(['auth', 'rate.limit.comments'])
     ->name('comments.store');
 
 // Widget API routes
@@ -92,6 +92,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/user/dashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
     Route::get('/upgrade-request', [UserProfileController::class, 'upgradeRequest'])->name('user.upgrade-request');
     Route::post('/upgrade-request', [UserProfileController::class, 'submitUpgradeRequest'])->name('user.submit-upgrade-request');
+    
+    // User comment management
+    Route::put('/user/comments/{comment}', [UserDashboardController::class, 'updateComment'])->name('user.comments.update');
+    Route::delete('/user/comments/{comment}', [UserDashboardController::class, 'destroyComment'])->name('user.comments.destroy');
 });
 
 // Penulis routes
@@ -105,6 +109,7 @@ Route::middleware(['auth', 'role:penulis'])->prefix('penulis')->name('penulis.')
     // Article management
     Route::get('/articles/create', [PenulisDashboardController::class, 'create'])->name('articles.create');
     Route::post('/articles', [PenulisDashboardController::class, 'store'])->name('articles.store');
+    Route::post('/articles/save-draft', [PenulisDashboardController::class, 'saveDraft'])->name('articles.save-draft-create');
     Route::get('/articles/{article}', [PenulisDashboardController::class, 'show'])->name('articles.show');
     Route::get('/articles/{article}/edit', [PenulisDashboardController::class, 'edit'])->name('articles.edit');
     Route::put('/articles/{article}', [PenulisDashboardController::class, 'update'])->name('articles.update');
@@ -115,6 +120,10 @@ Route::middleware(['auth', 'role:penulis'])->prefix('penulis')->name('penulis.')
     Route::get('/articles/{article}/comments', [PenulisDashboardController::class, 'comments'])->name('articles.comments');
     Route::post('/articles/{article}/comments/{comment}/status', [PenulisDashboardController::class, 'updateCommentStatus'])->name('articles.comments.status');
     Route::delete('/articles/{article}/comments/{comment}', [PenulisDashboardController::class, 'deleteComment'])->name('articles.comments.delete');
+    
+    // Additional features
+    Route::post('/articles/{article}/duplicate', [PenulisDashboardController::class, 'duplicate'])->name('articles.duplicate');
+    Route::get('/articles/{article}/export', [PenulisDashboardController::class, 'export'])->name('articles.export');
 });
 
 // Public penulis profile route (must be after penulis group to avoid conflicts)

@@ -169,7 +169,13 @@
                                             <div class="flex items-center space-x-4">
                                                 <span class="flex items-center space-x-1">
                                                     <i class="fas fa-user text-blue-600"></i>
-                                                    <span>{{ $featured->author->name ?? 'Admin' }}</span>
+                                                    @if($featured->author && $featured->author->isPenulis() && $featured->author->username)
+                                                        <a href="{{ route('penulis.public-profile', $featured->author->username) }}" class="hover:text-blue-700 font-medium">
+                                                            {{ $featured->author->name ?? 'Admin' }}
+                                                        </a>
+                                                    @else
+                                                        <span>{{ $featured->author->name ?? 'Admin' }}</span>
+                                                    @endif
                                                 </span>
                                                 <span class="flex items-center space-x-1">
                                                     <i class="fas fa-calendar text-blue-600"></i>

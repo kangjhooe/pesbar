@@ -21,6 +21,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'username',
         'email',
         'password',
         'role',
@@ -107,11 +108,44 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the user's username (slugified name).
+     * Get the route key for the model.
      */
-    public function getUsernameAttribute(): string
+    public function getRouteKeyName(): string
     {
-        return \Str::slug($this->name);
+        return 'username';
+    }
+
+    /**
+     * Generate a unique username from name.
+     */
+    public static function generateUsername(string $name, ?int $excludeUserId = null): string
+    {
+        $baseUsername = \Str::slug($name);
+        
+        // If slug is empty, use a default
+        if (empty($baseUsername)) {
+            $baseUsername = 'user';
+        }
+        
+        $username = $baseUsername;
+        $counter = 1;
+        
+        // Ensure username is unique
+        $query = static::where('username', $username);
+        if ($excludeUserId) {
+            $query->where('id', '!=', $excludeUserId);
+        }
+        
+        while ($query->exists()) {
+            $username = $baseUsername . '-' . $counter;
+            $query = static::where('username', $username);
+            if ($excludeUserId) {
+                $query->where('id', '!=', $excludeUserId);
+            }
+            $counter++;
+        }
+        
+        return $username;
     }
 
     /**
