@@ -19,7 +19,7 @@ class SearchController extends Controller
 
     public function index(Request $request)
     {
-        $query = $request->get('q');
+        $query = $request->get('q', '');
         
         // If no query, show search page with filters
         if (empty($query) && !$request->hasAny(['category', 'author', 'date_from', 'date_to', 'type'])) {
@@ -38,6 +38,7 @@ class SearchController extends Controller
 
         return view('search.index', array_merge($results, [
             'categories' => Category::where('is_active', true)->orderBy('name')->get(),
+            'query' => $query, // Ensure query is always passed to the view
             'filters' => $filters,
         ]));
     }
