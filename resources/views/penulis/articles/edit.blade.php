@@ -40,24 +40,64 @@
                 @enderror
             </div>
 
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label for="category_id" class="block text-sm font-medium text-gray-700 mb-2">
+                        Kategori <span class="text-red-500">*</span>
+                    </label>
+                    <select 
+                        id="category_id" 
+                        name="category_id" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('category_id') border-red-500 @enderror"
+                        required
+                    >
+                        <option value="">Pilih Kategori</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}" {{ old('category_id', $article->category_id) == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('category_id')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label for="type" class="block text-sm font-medium text-gray-700 mb-2">
+                        Tipe <span class="text-red-500">*</span>
+                    </label>
+                    <select 
+                        id="type" 
+                        name="type" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('type') border-red-500 @enderror"
+                        required
+                    >
+                        <option value="">Pilih Tipe</option>
+                        <option value="berita" {{ old('type', $article->type) == 'berita' ? 'selected' : '' }}>Berita</option>
+                        <option value="artikel" {{ old('type', $article->type) == 'artikel' ? 'selected' : '' }}>Artikel</option>
+                    </select>
+                    @error('type')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+
             <div class="mb-6">
-                <label for="category_id" class="block text-sm font-medium text-gray-700 mb-2">
-                    Kategori <span class="text-red-500">*</span>
+                <label for="excerpt" class="block text-sm font-medium text-gray-700 mb-2">
+                    Ringkasan <span class="text-red-500">*</span>
                 </label>
-                <select 
-                    id="category_id" 
-                    name="category_id" 
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('category_id') border-red-500 @enderror"
+                <textarea 
+                    id="excerpt" 
+                    name="excerpt" 
+                    rows="3" 
+                    maxlength="500"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('excerpt') border-red-500 @enderror"
+                    placeholder="Ringkasan singkat artikel (maksimal 500 karakter)"
                     required
-                >
-                    <option value="">Pilih Kategori</option>
-                    @foreach($categories as $category)
-                        <option value="{{ $category->id }}" {{ old('category_id', $article->category_id) == $category->id ? 'selected' : '' }}>
-                            {{ $category->name }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('category_id')
+                >{{ old('excerpt', $article->excerpt) }}</textarea>
+                <p class="mt-1 text-sm text-gray-500"><span id="excerpt-count">{{ strlen($article->excerpt ?? '') }}</span>/500 karakter</p>
+                @error('excerpt')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
@@ -102,22 +142,32 @@
                 @enderror
             </div>
 
+            <!-- Tags -->
             <div class="mb-6">
-                <label for="tags" class="block text-sm font-medium text-gray-700 mb-2">
-                    Tag
+                <label class="block text-sm font-medium text-gray-700 mb-4">
+                    Tags
                 </label>
-                <input 
-                    type="text" 
-                    id="tags" 
-                    name="tags" 
-                    value="{{ old('tags', $article->tags->pluck('name')->join(', ')) }}"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('tags') border-red-500 @enderror"
-                    placeholder="Pisahkan tag dengan koma, contoh: teknologi, laravel, php"
-                >
+                
+                @if($tags->count() > 0)
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                        @foreach($tags as $tag)
+                        <label class="flex items-center">
+                            <input type="checkbox" name="tags[]" value="{{ $tag->id }}" 
+                                   class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                   {{ in_array($tag->id, old('tags', $article->tags->pluck('id')->toArray())) ? 'checked' : '' }}>
+                            <span class="ml-2 text-sm text-gray-700">{{ $tag->name }}</span>
+                        </label>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-center py-4 text-gray-500">
+                        <i class="fas fa-tags text-2xl mb-2"></i>
+                        <p class="text-sm">Belum ada tags tersedia</p>
+                    </div>
+                @endif
                 @error('tags')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
-                <p class="mt-1 text-sm text-gray-500">Pisahkan tag dengan koma untuk memudahkan pencarian</p>
             </div>
 
             <!-- SEO Fields -->
@@ -315,6 +365,15 @@ document.addEventListener('DOMContentLoaded', function() {
     if (metaDescInput) {
         metaDescInput.addEventListener('input', function() {
             metaDescCount.textContent = this.value.length;
+        });
+    }
+
+    // Excerpt counter
+    const excerptInput = document.getElementById('excerpt');
+    const excerptCount = document.getElementById('excerpt-count');
+    if (excerptInput) {
+        excerptInput.addEventListener('input', function() {
+            excerptCount.textContent = this.value.length;
         });
     }
 });

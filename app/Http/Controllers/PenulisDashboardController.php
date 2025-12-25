@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Article;
 use App\Models\Comment;
+use App\Models\User;
 use App\Models\UserProfile;
 use App\Helpers\ActivityLogHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class PenulisDashboardController extends Controller
 {
@@ -77,7 +79,8 @@ class PenulisDashboardController extends Controller
     public function create()
     {
         $categories = \App\Models\Category::all();
-        return view('penulis.articles.create', compact('categories'));
+        $tags = \App\Models\Tag::all();
+        return view('penulis.articles.create', compact('categories', 'tags'));
     }
 
     public function store(Request $request)
@@ -85,11 +88,14 @@ class PenulisDashboardController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:articles,slug',
+            'excerpt' => 'required|string|max:500',
             'content' => 'nullable|string',
             'content_html' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
+            'type' => 'required|in:berita,artikel',
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'tags' => 'nullable|string',
+            'tags' => 'array',
+            'tags.*' => 'exists:tags,id',
             'meta_description' => 'nullable|string|max:500',
             'meta_keywords' => 'nullable|string|max:255',
             'save_as_draft' => 'nullable|boolean',
@@ -118,8 +124,10 @@ class PenulisDashboardController extends Controller
         $article = $user->articles()->create([
             'title' => $request->title,
             'slug' => $request->slug ?: \Str::slug($request->title),
+            'excerpt' => $request->excerpt,
             'content' => $content,
             'category_id' => $request->category_id,
+            'type' => $request->type,
             'status' => $status,
             'meta_description' => $request->meta_description,
             'meta_keywords' => $request->meta_keywords,
@@ -131,14 +139,10 @@ class PenulisDashboardController extends Controller
         ]);
 
         // Handle tags
-        if ($request->tags) {
-            $tagNames = array_map('trim', explode(',', $request->tags));
-            foreach ($tagNames as $tagName) {
-                if (!empty($tagName)) {
-                    $tag = \App\Models\Tag::firstOrCreate(['name' => $tagName]);
-                    $article->tags()->attach($tag);
-                }
-            }
+        if ($request->has('tags')) {
+            $article->tags()->sync($request->tags);
+        } else {
+            $article->tags()->detach();
         }
 
         $message = $status === 'draft' ? 'Draft artikel berhasil disimpan!' : 'Artikel berhasil dibuat!';
@@ -149,7 +153,8 @@ class PenulisDashboardController extends Controller
     {
         $this->authorize('update', $article);
         $categories = \App\Models\Category::all();
-        return view('penulis.articles.edit', compact('article', 'categories'));
+        $tags = \App\Models\Tag::all();
+        return view('penulis.articles.edit', compact('article', 'categories', 'tags'));
     }
 
     public function update(Request $request, Article $article)
@@ -159,11 +164,14 @@ class PenulisDashboardController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:articles,slug,' . $article->id,
+            'excerpt' => 'required|string|max:500',
             'content' => 'nullable|string',
             'content_html' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
+            'type' => 'required|in:berita,artikel',
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'tags' => 'nullable|string',
+            'tags' => 'array',
+            'tags.*' => 'exists:tags,id',
             'meta_description' => 'nullable|string|max:500',
             'meta_keywords' => 'nullable|string|max:255',
             'save_as_draft' => 'nullable|boolean',
@@ -196,8 +204,10 @@ class PenulisDashboardController extends Controller
         $updateData = [
             'title' => $request->title,
             'slug' => $request->slug ?: \Str::slug($request->title),
+            'excerpt' => $request->excerpt,
             'content' => $content,
             'category_id' => $request->category_id,
+            'type' => $request->type,
             'status' => $status,
             'meta_description' => $request->meta_description,
             'meta_keywords' => $request->meta_keywords,
@@ -224,15 +234,10 @@ class PenulisDashboardController extends Controller
         }
 
         // Handle tags
-        $article->tags()->detach();
-        if ($request->tags) {
-            $tagNames = array_map('trim', explode(',', $request->tags));
-            foreach ($tagNames as $tagName) {
-                if (!empty($tagName)) {
-                    $tag = \App\Models\Tag::firstOrCreate(['name' => $tagName]);
-                    $article->tags()->attach($tag);
-                }
-            }
+        if ($request->has('tags')) {
+            $article->tags()->sync($request->tags);
+        } else {
+            $article->tags()->detach();
         }
 
         $message = $status === 'draft' ? 'Draft artikel berhasil diperbarui!' : 'Artikel berhasil diperbarui!';
@@ -254,13 +259,31 @@ class PenulisDashboardController extends Controller
     public function profile()
     {
         $user = Auth::user();
-        $profile = $user->profile;
-        return view('penulis.profile', compact('profile'));
+        $user->load('profile');
+        return view('penulis.profile', compact('user'));
     }
 
     public function updateProfile(Request $request)
     {
+        $user = Auth::user();
+        
         $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'username' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^[a-z0-9_-]+$/',
+                Rule::unique(User::class)->ignore($user->id),
+            ],
+            'email' => [
+                'required',
+                'string',
+                'lowercase',
+                'email',
+                'max:255',
+                Rule::unique(User::class)->ignore($user->id),
+            ],
             'bio' => 'nullable|string|max:1000',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'website' => 'nullable|url',
@@ -268,27 +291,38 @@ class PenulisDashboardController extends Controller
             'social_links' => 'nullable|array',
         ]);
 
-        $user = Auth::user();
-        $profile = $user->profile;
+        // Update basic user info
+        $userData = $request->only(['name', 'email']);
+        $userData['username'] = strtolower($request->username); // Ensure username is lowercase
+        
+        $user->fill($userData);
 
-        $data = [
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
+
+        // Update or create profile
+        $profile = $user->profile;
+        $profileData = [
             'bio' => $request->bio,
             'website' => $request->website,
             'location' => $request->location,
-            'social_links' => $request->social_links,
+            'social_links' => $request->social_links ?? [],
         ];
 
         if ($request->hasFile('avatar')) {
             if ($profile && $profile->avatar) {
                 Storage::disk('public')->delete($profile->avatar);
             }
-            $data['avatar'] = $request->file('avatar')->store('avatars', 'public');
+            $profileData['avatar'] = $request->file('avatar')->store('avatars', 'public');
         }
 
         if ($profile) {
-            $profile->update($data);
+            $profile->update($profileData);
         } else {
-            $user->profile()->create($data);
+            $user->profile()->create($profileData);
         }
 
         return redirect()->route('penulis.profile')->with('success', 'Profil berhasil diperbarui!');
@@ -404,10 +438,13 @@ class PenulisDashboardController extends Controller
     {
         $request->validate([
             'title' => 'nullable|string|max:255',
+            'excerpt' => 'nullable|string|max:500',
             'content' => 'nullable|string',
             'category_id' => 'nullable|exists:categories,id',
+            'type' => 'nullable|in:berita,artikel',
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'tags' => 'nullable|string',
+            'tags' => 'array',
+            'tags.*' => 'exists:tags,id',
             'slug' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
             'meta_keywords' => 'nullable|string|max:255',
@@ -455,8 +492,10 @@ class PenulisDashboardController extends Controller
 
         $data = [
             'title' => $request->title ?? ($article ? $article->title : 'Draft tanpa judul'),
+            'excerpt' => $request->excerpt ?? ($article ? $article->excerpt : null),
             'content' => $request->content ?? ($article ? $article->content : ''),
             'category_id' => $request->category_id ?? ($article ? $article->category_id : null),
+            'type' => $request->type ?? ($article ? $article->type : 'berita'),
             'status' => 'draft',
             'slug' => $slug,
             'meta_description' => $request->meta_description ?? ($article ? $article->meta_description : null),
@@ -477,15 +516,8 @@ class PenulisDashboardController extends Controller
         }
 
         // Handle tags
-        if ($article->exists && $request->tags) {
-            $article->tags()->detach();
-            $tagNames = array_map('trim', explode(',', $request->tags));
-            foreach ($tagNames as $tagName) {
-                if (!empty($tagName)) {
-                    $tag = \App\Models\Tag::firstOrCreate(['name' => $tagName]);
-                    $article->tags()->attach($tag);
-                }
-            }
+        if ($article->exists && $request->has('tags')) {
+            $article->tags()->sync($request->tags);
         }
 
         return response()->json([
