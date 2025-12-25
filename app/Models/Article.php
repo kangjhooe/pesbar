@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use App\Helpers\CacheHelper;
+use Illuminate\Support\Facades\Cache;
 
 class Article extends Model
 {
@@ -133,6 +135,16 @@ class Article extends Model
     public function incrementViewCount()
     {
         $this->increment('views');
+        
+        // Clear cache for popular articles since views affect the ordering
+        // Clear all popular_articles cache keys (different limits)
+        Cache::forget('popular_articles_5');
+        Cache::forget('popular_articles_10');
+        Cache::forget('popular_articles_15');
+        Cache::forget('popular_articles_20');
+        
+        // Also clear dashboard stats cache since it includes total views
+        CacheHelper::clearDashboardCache();
     }
 
     public function getRouteKeyName()

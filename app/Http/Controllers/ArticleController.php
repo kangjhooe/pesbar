@@ -32,7 +32,16 @@ class ArticleController extends Controller
     public function show(Article $article)
     {
         // Load relationships to avoid N+1 queries
-        $article->load(['author', 'category', 'tags', 'approvedComments.user']);
+        $article->load([
+            'author', 
+            'category', 
+            'tags', 
+            'approvedComments' => function($query) {
+                $query->topLevel()
+                    ->with(['user', 'replies.user'])
+                    ->orderBy('created_at', 'desc');
+            }
+        ]);
         
         // Increment view count
         $article->incrementViewCount();

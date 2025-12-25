@@ -31,8 +31,11 @@ Route::get('/sitemap-news.xml', [\App\Http\Controllers\SitemapController::class,
 // Robots.txt (dynamic)
 Route::get('/robots.txt', [\App\Http\Controllers\RobotsController::class, 'index'])->name('robots');
 
-// Article routes
-Route::get('/berita', [ArticleController::class, 'index'])->name('articles.index');
+// Article routes (disembunyikan dari public)
+// Route /berita disembunyikan - redirect ke home, tapi route name tetap ada untuk link internal
+Route::get('/berita', function() {
+    return redirect()->route('home');
+})->name('articles.index');
 Route::get('/artikel', [ArticleController::class, 'artikel'])->name('articles.artikel');
 Route::get('/articles/{article}', [ArticleController::class, 'show'])->name('articles.show');
 
@@ -54,6 +57,15 @@ Route::get('/search/popular', [SearchController::class, 'popular'])->name('searc
 Route::post('/comments', [CommentController::class, 'store'])
     ->middleware(['auth', 'rate.limit.comments'])
     ->name('comments.store');
+Route::post('/comments/{comment}/like', [CommentController::class, 'like'])
+    ->middleware(['auth'])
+    ->name('comments.like');
+Route::put('/comments/{comment}', [CommentController::class, 'update'])
+    ->middleware(['auth'])
+    ->name('comments.update');
+Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])
+    ->middleware(['auth'])
+    ->name('comments.destroy');
 
 // Widget API routes
 Route::prefix('api/widgets')->middleware('rate.limit.api:60,60')->group(function () {
@@ -81,9 +93,9 @@ Route::get('/dashboard', function () {
     } elseif ($user->isEditor()) {
         return redirect()->route('admin.dashboard');
     } elseif ($user->isPenulis()) {
-        return redirect()->route('penulis.dashboard');
+        return redirect()->route('home');
     } else {
-        return redirect()->route('user.dashboard');
+        return redirect()->route('home');
     }
 })->middleware(['auth'])->name('dashboard');
 

@@ -21,7 +21,13 @@ class ProfileController extends Controller
         $user = $request->user();
         $user->load('profile');
         
-        return view('profile.edit', [
+        // Determine which view to use based on user role
+        $view = 'profile.edit';
+        if ($user->isAdmin() || $user->isEditor() || $user->isPenulis()) {
+            $view = 'profile.edit-admin';
+        }
+        
+        return view($view, [
             'user' => $user,
         ]);
     }

@@ -1,6 +1,8 @@
-@extends('layouts.user')
+@extends('layouts.admin-simple')
 
 @section('title', 'Edit Profil')
+@section('page-title', 'Edit Profil')
+@section('page-subtitle', 'Kelola informasi profil Anda')
 
 @section('content')
 <div class="max-w-4xl mx-auto">
@@ -30,4 +32,3 @@
     </div>
 </div>
 @endsection
-

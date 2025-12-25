@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -35,9 +36,14 @@ return new class extends Migration
         }
         
         // Now make username required
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('username')->nullable(false)->unique()->change();
-        });
+        // Use raw SQL to avoid duplicate index error
+        DB::statement('ALTER TABLE `users` MODIFY COLUMN `username` VARCHAR(255) NOT NULL');
+        
+        // Ensure unique index exists (only if it doesn't exist)
+        $indexExists = DB::select("SHOW INDEX FROM `users` WHERE Key_name = 'users_username_unique'");
+        if (empty($indexExists)) {
+            DB::statement('ALTER TABLE `users` ADD UNIQUE KEY `users_username_unique` (`username`)');
+        }
     }
 
     /**

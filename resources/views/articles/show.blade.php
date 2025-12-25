@@ -241,87 +241,105 @@
             </article>
 
             <!-- Comments Section -->
-            <div class="bg-white rounded-lg shadow-lg p-6 mt-8">
-                <h3 class="text-2xl font-bold text-gray-900 mb-6">Komentar ({{ $article->approvedComments()->count() }})</h3>
+            <div class="bg-white rounded-lg shadow-lg p-6 mt-8" id="comments-section">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-bold text-gray-900">
+                        <i class="fas fa-comments mr-2 text-primary-600"></i>
+                        Komentar (<span id="comments-count">{{ $article->approvedComments->where('parent_id', null)->count() }}</span>)
+                    </h3>
+                </div>
                 
                 <!-- Comment Form -->
-                <div class="mb-8">
-                    <h4 class="text-lg font-semibold text-gray-800 mb-4">Tulis Komentar</h4>
+                <div class="mb-8 border-b border-gray-200 pb-6">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-edit mr-2 text-primary-600"></i>Tulis Komentar
+                    </h4>
                     
                     @auth
-                        <form action="{{ route('comments.store') }}" method="POST" class="space-y-4">
+                        <form id="comment-form" action="{{ route('comments.store') }}" method="POST" class="space-y-4">
                             @csrf
                             <input type="hidden" name="article_id" value="{{ $article->id }}">
+                            <input type="hidden" name="parent_id" id="reply-to-id" value="">
                             
-                            <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                                <p class="text-sm text-blue-800">
-                                    <i class="fas fa-info-circle mr-2"></i>
+                            <div class="mb-4 p-3 bg-gradient-to-r from-blue-50 to-primary-50 border border-blue-200 rounded-lg">
+                                <p class="text-sm text-blue-800 flex items-center">
+                                    <i class="fas fa-user-circle mr-2"></i>
                                     Anda berkomentar sebagai <strong>{{ auth()->user()->name }}</strong>
                                 </p>
                             </div>
                             
-                            <div>
-                                <label for="comment" class="block text-sm font-medium text-gray-700 mb-2">Komentar *</label>
-                                <textarea name="comment" 
-                                          id="comment" 
-                                          rows="4" 
-                                          required
-                                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                                          placeholder="Tulis komentar Anda di sini..."></textarea>
+                            <div id="reply-indicator" class="hidden mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-yellow-800">
+                                        <i class="fas fa-reply mr-2"></i>
+                                        Membalas komentar dari <strong id="reply-to-name"></strong>
+                                    </span>
+                                    <button type="button" onclick="cancelReply()" class="text-yellow-600 hover:text-yellow-800">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
                             </div>
                             
-                            <button type="submit" 
-                                    class="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium">
-                                Kirim Komentar
-                            </button>
+                            <div>
+                                <label for="comment" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Komentar <span class="text-red-500">*</span>
+                                </label>
+                                <textarea name="comment" 
+                                          id="comment" 
+                                          rows="5" 
+                                          required
+                                          maxlength="1000"
+                                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                                          placeholder="Tulis komentar Anda di sini... (Maksimal 1000 karakter)"></textarea>
+                                <div class="flex justify-end items-center mt-1">
+                                    <span class="text-xs text-gray-500">
+                                        <span id="char-count">0</span>/1000 karakter
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center gap-3">
+                                <button type="submit" 
+                                        id="submit-comment-btn"
+                                        class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-all font-medium shadow-md hover:shadow-lg transform hover:scale-105 flex items-center gap-2">
+                                    <i class="fas fa-paper-plane"></i>
+                                    <span>Kirim Komentar</span>
+                                </button>
+                                <button type="button" 
+                                        id="cancel-reply-btn"
+                                        onclick="cancelReply()"
+                                        class="hidden px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+                                    Batal
+                                </button>
+                            </div>
                         </form>
                     @else
-                        <div class="p-6 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
-                            <i class="fas fa-lock text-yellow-600 text-3xl mb-3"></i>
-                            <p class="text-gray-700 mb-4">
+                        <div class="p-6 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg text-center">
+                            <i class="fas fa-lock text-yellow-600 text-4xl mb-3"></i>
+                            <p class="text-gray-700 mb-4 font-medium">
                                 Anda harus <strong>login</strong> terlebih dahulu untuk berkomentar.
                             </p>
                             <a href="{{ route('login') }}" 
-                               class="inline-block bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium">
+                               class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all font-medium shadow-md hover:shadow-lg transform hover:scale-105">
                                 <i class="fas fa-sign-in-alt mr-2"></i>Login Sekarang
                             </a>
                             <p class="text-sm text-gray-600 mt-3">
-                                Belum punya akun? <a href="{{ route('register') }}" class="text-primary-600 hover:text-primary-800 font-medium">Daftar di sini</a>
+                                Belum punya akun? <a href="{{ route('register') }}" class="text-primary-600 hover:text-primary-800 font-medium underline">Daftar di sini</a>
                             </p>
                         </div>
                     @endauth
                 </div>
 
                 <!-- Comments List -->
-                <div class="space-y-6">
-                    @if($article->approvedComments()->count() > 0)
-                        @foreach($article->approvedComments()->latest()->get() as $comment)
-                        <div class="border-l-4 border-primary-500 pl-4 py-2">
-                            <div class="flex items-center space-x-2 mb-2">
-                                <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-user text-primary-600 text-sm"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <h5 class="font-semibold text-gray-900">{{ $comment->name }}</h5>
-                                        @if($comment->user_id && $comment->user && $comment->user->username)
-                                            <a href="{{ route('penulis.public-profile', $comment->user->username) }}" 
-                                               class="text-xs text-primary-600 hover:text-primary-800 flex items-center gap-1">
-                                                <i class="fas fa-check-circle text-green-500" title="User Terverifikasi"></i>
-                                                <span>@{{ $comment->user->username }}</span>
-                                            </a>
-                                        @endif
-                                    </div>
-                                    <p class="text-xs text-gray-500">{{ $comment->created_at->format('d-m-Y H:i') }}</p>
-                                </div>
-                            </div>
-                            <p class="text-gray-700 leading-relaxed">{{ $comment->comment }}</p>
-                        </div>
+                <div id="comments-list" class="space-y-6">
+                    @if($article->approvedComments->where('parent_id', null)->count() > 0)
+                        @foreach($article->approvedComments->where('parent_id', null) as $comment)
+                            @include('comments.comment-item', ['comment' => $comment, 'level' => 0])
                         @endforeach
                     @else
-                        <div class="text-center py-8">
-                            <i class="fas fa-comments text-gray-300 text-4xl mb-4"></i>
-                            <p class="text-gray-500">Belum ada komentar. Jadilah yang pertama berkomentar!</p>
+                        <div class="text-center py-12">
+                            <i class="fas fa-comments text-gray-300 text-6xl mb-4"></i>
+                            <p class="text-gray-500 text-lg">Belum ada komentar. Jadilah yang pertama berkomentar!</p>
                         </div>
                     @endif
                 </div>
@@ -565,7 +583,432 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // ========== COMMENT SYSTEM FUNCTIONALITY ==========
+    
+    // Character counter
+    const commentTextarea = document.getElementById('comment');
+    const charCount = document.getElementById('char-count');
+    
+    if (commentTextarea && charCount) {
+        commentTextarea.addEventListener('input', function() {
+            charCount.textContent = this.value.length;
+            if (this.value.length > 900) {
+                charCount.classList.add('text-red-500', 'font-semibold');
+            } else {
+                charCount.classList.remove('text-red-500', 'font-semibold');
+            }
+        });
+    }
+
+    // AJAX Comment Submission
+    const commentForm = document.getElementById('comment-form');
+    if (commentForm) {
+        commentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submit-comment-btn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Mengirim...';
+            
+            const formData = new FormData(this);
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Add comment to list immediately (semua komentar langsung disetujui)
+                    addCommentToDOM(data.comment);
+                    showNotification('Komentar berhasil dikirim!', 'success');
+                    commentForm.reset();
+                    document.getElementById('char-count').textContent = '0';
+                    cancelReply();
+                } else {
+                    showNotification(data.error || 'Terjadi kesalahan saat mengirim komentar.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Terjadi kesalahan saat mengirim komentar. Silakan coba lagi.', 'error');
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            });
+        });
+    }
+
+    // Reply to comment
+    window.replyToComment = function(commentId, commenterName) {
+        if (!commentId) {
+            console.error('Comment ID is required');
+            return;
+        }
+        
+        const replyToId = document.getElementById('reply-to-id');
+        const replyToName = document.getElementById('reply-to-name');
+        const replyIndicator = document.getElementById('reply-indicator');
+        const cancelBtn = document.getElementById('cancel-reply-btn');
+        const commentForm = document.getElementById('comment-form');
+        const commentTextarea = document.getElementById('comment');
+        
+        if (!replyToId || !replyToName || !replyIndicator || !cancelBtn || !commentForm) {
+            console.error('Required elements not found');
+            return;
+        }
+        
+        replyToId.value = commentId;
+        replyToName.textContent = commenterName || 'User';
+        replyIndicator.classList.remove('hidden');
+        cancelBtn.classList.remove('hidden');
+        
+        // Scroll to comment form
+        commentForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (commentTextarea) {
+            setTimeout(() => commentTextarea.focus(), 300);
+        }
+    };
+
+    // Cancel reply
+    window.cancelReply = function() {
+        document.getElementById('reply-to-id').value = '';
+        document.getElementById('reply-indicator').classList.add('hidden');
+        document.getElementById('cancel-reply-btn').classList.add('hidden');
+    };
+
+    // Toggle like/dislike
+    window.toggleLike = function(commentId, isLike) {
+        if (!commentId) {
+            console.error('Comment ID is required');
+            return;
+        }
+        
+        @guest
+        window.location.href = '{{ route("login") }}';
+        return;
+        @endguest
+
+        // Disable button during request
+        const likeBtn = document.getElementById(`like-btn-${commentId}`);
+        const dislikeBtn = document.getElementById(`dislike-btn-${commentId}`);
+        if (likeBtn) likeBtn.disabled = true;
+        if (dislikeBtn) dislikeBtn.disabled = true;
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
+        
+        fetch(`/comments/${commentId}/like`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ is_like: isLike })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => Promise.reject(err));
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                const likesCountEl = document.getElementById(`likes-count-${commentId}`);
+                const dislikesCountEl = document.getElementById(`dislikes-count-${commentId}`);
+                
+                if (likesCountEl) likesCountEl.textContent = data.likes_count || 0;
+                if (dislikesCountEl) dislikesCountEl.textContent = data.dislikes_count || 0;
+                
+                // Update like button style
+                if (likeBtn) {
+                    if (data.is_liked) {
+                        likeBtn.classList.add('bg-green-100', 'text-green-700');
+                        likeBtn.classList.remove('bg-gray-100', 'text-gray-600', 'hover:bg-green-50');
+                    } else {
+                        likeBtn.classList.remove('bg-green-100', 'text-green-700');
+                        likeBtn.classList.add('bg-gray-100', 'text-gray-600', 'hover:bg-green-50');
+                    }
+                }
+                
+                // Update dislike button style
+                if (dislikeBtn) {
+                    if (data.is_disliked) {
+                        dislikeBtn.classList.add('bg-red-100', 'text-red-700');
+                        dislikeBtn.classList.remove('bg-gray-100', 'text-gray-600', 'hover:bg-red-50');
+                    } else {
+                        dislikeBtn.classList.remove('bg-red-100', 'text-red-700');
+                        dislikeBtn.classList.add('bg-gray-100', 'text-gray-600', 'hover:bg-red-50');
+                    }
+                }
+            } else {
+                showNotification(data.error || 'Terjadi kesalahan saat memproses like/dislike.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            const errorMsg = error.error || error.message || 'Terjadi kesalahan saat memproses like/dislike.';
+            showNotification(errorMsg, 'error');
+        })
+        .finally(() => {
+            if (likeBtn) likeBtn.disabled = false;
+            if (dislikeBtn) dislikeBtn.disabled = false;
+        });
+    };
+
+    // Edit comment
+    window.editComment = function(commentId, commentText) {
+        const modal = document.getElementById(`edit-comment-modal-${commentId}`);
+        const textarea = document.getElementById(`edit-comment-text-${commentId}`);
+        const charCount = document.getElementById(`edit-char-count-${commentId}`);
+        
+        if (modal && textarea) {
+            textarea.value = commentText;
+            charCount.textContent = commentText.length;
+            modal.classList.remove('hidden');
+            
+            // Character counter for edit
+            textarea.addEventListener('input', function() {
+                charCount.textContent = this.value.length;
+            });
+            
+            // Handle form submission
+            const form = document.getElementById(`edit-comment-form-${commentId}`);
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...';
+                    
+                    fetch(form.action, {
+                        method: 'PUT',
+                        body: new FormData(form),
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const commentTextEl = document.querySelector(`#comment-${commentId} .comment-text p`);
+                            if (commentTextEl) {
+                                commentTextEl.textContent = data.comment.comment;
+                            }
+                            closeEditModal(commentId);
+                            showNotification('Komentar berhasil diperbarui.', 'success');
+                        } else {
+                            showNotification(data.error || 'Terjadi kesalahan saat memperbarui komentar.', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showNotification('Terjadi kesalahan saat memperbarui komentar.', 'error');
+                    })
+                    .finally(() => {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    });
+                });
+            }
+        }
+    };
+
+    // Close edit modal
+    window.closeEditModal = function(commentId) {
+        const modal = document.getElementById(`edit-comment-modal-${commentId}`);
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    };
+
+    // Add comment to DOM
+    function addCommentToDOM(commentData) {
+        const commentsList = document.getElementById('comments-list');
+        const commentsCount = document.getElementById('comments-count');
+        
+        if (!commentsList) return;
+        
+        // Escape HTML untuk keamanan
+        const escapeHtml = (text) => {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        };
+        
+        const commentName = escapeHtml(commentData.name || 'User');
+        const commentText = escapeHtml(commentData.comment || '');
+        const parentId = commentData.parent_id || null;
+        
+        // Create comment HTML
+        const commentHTML = `
+            <div class="comment-item border-l-4 ${parentId ? 'border-gray-300 ml-6' : 'border-primary-500'} pl-4 py-3 bg-gray-50 rounded-r-lg hover:bg-gray-100 transition-colors" 
+                 data-comment-id="${commentData.id}" 
+                 id="comment-${commentData.id}">
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold shadow-md">
+                            ${(commentName.charAt(0) || 'U').toUpperCase()}
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-2 flex-wrap">
+                            <h5 class="font-semibold text-gray-900">${commentName}</h5>
+                            <span class="text-xs text-gray-500">
+                                <i class="far fa-clock mr-1"></i>Baru saja
+                            </span>
+                        </div>
+                        <div class="comment-text mb-3">
+                            <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">${commentText}</p>
+                        </div>
+                        <div class="flex items-center gap-4 text-sm">
+                            <div class="flex items-center gap-2">
+                                <button onclick="toggleLike(${commentData.id}, true)" 
+                                        class="flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 text-gray-600 hover:bg-green-50 transition-all"
+                                        id="like-btn-${commentData.id}">
+                                    <i class="fas fa-thumbs-up"></i>
+                                    <span id="likes-count-${commentData.id}">${commentData.likes_count || 0}</span>
+                                </button>
+                                <button onclick="toggleLike(${commentData.id}, false)" 
+                                        class="flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 text-gray-600 hover:bg-red-50 transition-all"
+                                        id="dislike-btn-${commentData.id}">
+                                    <i class="fas fa-thumbs-down"></i>
+                                    <span id="dislikes-count-${commentData.id}">${commentData.dislikes_count || 0}</span>
+                                </button>
+                            </div>
+                            <button onclick="replyToComment(${commentData.id}, '${commentName.replace(/'/g, "\\'")}')" 
+                                    class="text-primary-600 hover:text-primary-800 font-medium flex items-center gap-1 transition-colors">
+                                <i class="fas fa-reply"></i>
+                                <span>Balas</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Jika ini adalah reply, tambahkan ke parent comment
+        if (parentId) {
+            const parentComment = document.getElementById(`comment-${parentId}`);
+            if (parentComment) {
+                // Cari atau buat container untuk replies
+                let repliesContainer = parentComment.querySelector('.replies-container');
+                if (!repliesContainer) {
+                    repliesContainer = document.createElement('div');
+                    repliesContainer.className = 'mt-4 space-y-3 replies-container';
+                    const parentContent = parentComment.querySelector('.flex-1');
+                    if (parentContent) {
+                        parentContent.appendChild(repliesContainer);
+                    }
+                }
+                repliesContainer.insertAdjacentHTML('beforeend', commentHTML);
+            } else {
+                // Jika parent tidak ditemukan, tambahkan ke list utama
+                commentsList.insertAdjacentHTML('afterbegin', commentHTML);
+            }
+        } else {
+            // Remove "no comments" message if exists
+            const noCommentsMsg = commentsList.querySelector('.text-center');
+            if (noCommentsMsg) {
+                noCommentsMsg.remove();
+            }
+            
+            // Add new comment at the top
+            commentsList.insertAdjacentHTML('afterbegin', commentHTML);
+            
+            // Update count hanya untuk top-level comments
+            if (commentsCount) {
+                const currentCount = parseInt(commentsCount.textContent) || 0;
+                commentsCount.textContent = currentCount + 1;
+            }
+        }
+        
+        // Scroll to new comment
+        const newComment = document.getElementById(`comment-${commentData.id}`);
+        if (newComment) {
+            newComment.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
+    // Show notification
+    function showNotification(message, type = 'success') {
+        const colors = {
+            success: 'bg-green-100 border-green-400 text-green-700',
+            error: 'bg-red-100 border-red-400 text-red-700',
+            info: 'bg-blue-100 border-blue-400 text-blue-700'
+        };
+        
+        const icons = {
+            success: 'fa-check-circle',
+            error: 'fa-exclamation-circle',
+            info: 'fa-info-circle'
+        };
+        
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 ${colors[type]} px-6 py-4 rounded-lg shadow-lg z-50 flex items-center gap-3 max-w-md animate-slide-in`;
+        notification.innerHTML = `
+            <i class="fas ${icons[type]} text-xl"></i>
+            <span>${message}</span>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.classList.add('animate-slide-out');
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+
+    // Close modals on outside click
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('bg-black')) {
+            e.target.classList.add('hidden');
+        }
+    });
 });
 </script>
+
+<style>
+@keyframes slide-in {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slide-out {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+.animate-slide-in {
+    animation: slide-in 0.3s ease-out;
+}
+
+.animate-slide-out {
+    animation: slide-out 0.3s ease-out;
+}
+</style>
 @endsection
 @endsection

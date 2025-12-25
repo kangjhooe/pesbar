@@ -49,7 +49,12 @@ class GoogleController extends Controller
             
             Auth::login($user);
             
-            return redirect()->intended('/dashboard');
+            // Redirect user dan penulis ke home, admin dan editor ke dashboard
+            if ($user->isAdmin() || $user->isEditor()) {
+                return redirect()->intended('/dashboard');
+            } else {
+                return redirect()->intended('/');
+            }
             
         } catch (\Exception $e) {
             return redirect()->route('login')->with('error', 'Terjadi kesalahan saat login dengan Google.');
