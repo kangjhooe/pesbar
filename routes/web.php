@@ -178,6 +178,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/articles/bulk', [AdminArticleController::class, 'bulkAction'])->name('articles.bulk');
     Route::post('/articles/{article}/toggle-featured', [AdminArticleController::class, 'toggleFeatured'])->name('articles.toggle-featured');
     Route::post('/articles/{article}/toggle-breaking', [AdminArticleController::class, 'toggleBreaking'])->name('articles.toggle-breaking');
+    Route::post('/articles/{article}/archive', [AdminArticleController::class, 'archive'])->name('articles.archive');
     
     // Categories Management
     Route::get('/categories', [AdminDashboardController::class, 'categories'])->name('categories.index');

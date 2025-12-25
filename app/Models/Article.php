@@ -92,6 +92,11 @@ class Article extends Model
         return $query->where('status', 'rejected');
     }
 
+    public function scopeArchived($query)
+    {
+        return $query->where('status', 'archived');
+    }
+
     public function getIsPublishedAttribute()
     {
         return $this->status === 'published';
@@ -100,6 +105,11 @@ class Article extends Model
     public function getIsRejectedAttribute()
     {
         return $this->status === 'rejected';
+    }
+
+    public function getIsArchivedAttribute()
+    {
+        return $this->status === 'archived';
     }
 
     public function scopeFeatured($query)

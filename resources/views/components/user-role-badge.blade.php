@@ -28,11 +28,11 @@
     $config = null;
     
     if ($user->role === 'admin') {
-        // Admin: icon istimewa (star/crown)
+        // Admin: icon istimewa (crown)
         $config = [
             'label' => 'Admin',
-            'class' => 'bg-gradient-to-br from-red-600 to-rose-700 text-white',
-            'icon' => 'fas fa-star',
+            'class' => 'bg-gradient-to-br from-blue-600 to-blue-700 text-white',
+            'icon' => 'fas fa-crown',
         ];
     } elseif ($user->role === 'penulis' && $user->isVerified()) {
         // Penulis terverifikasi: centang berdasarkan tipe

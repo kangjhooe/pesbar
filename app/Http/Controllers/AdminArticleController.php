@@ -126,6 +126,12 @@ class AdminArticleController extends Controller
      */
     public function edit(Article $article)
     {
+        // Check if admin is trying to edit another user's article
+        if (Auth::user()->isAdmin() && Auth::id() !== $article->author_id) {
+            return redirect()->route('admin.articles.index')
+                ->with('error', 'Admin tidak dapat mengedit artikel yang diterbitkan oleh user lain. Anda dapat menghapus atau mengarsipkan artikel jika melanggar kode etik jurnalistik.');
+        }
+
         $this->authorize('update', $article);
         
         $categories = Category::where('is_active', true)->get();
@@ -140,6 +146,12 @@ class AdminArticleController extends Controller
      */
     public function update(Request $request, Article $article)
     {
+        // Check if admin is trying to edit another user's article
+        if (Auth::user()->isAdmin() && Auth::id() !== $article->author_id) {
+            return redirect()->route('admin.articles.index')
+                ->with('error', 'Admin tidak dapat mengedit artikel yang diterbitkan oleh user lain. Anda dapat menghapus atau mengarsipkan artikel jika melanggar kode etik jurnalistik.');
+        }
+
         $this->authorize('update', $article);
         
         $request->validate([
@@ -208,6 +220,28 @@ class AdminArticleController extends Controller
 
         return redirect()->back()
             ->with('success', 'Artikel berhasil dihapus!');
+    }
+
+    /**
+     * Archive the specified article (give writer opportunity to review)
+     */
+    public function archive(Article $article)
+    {
+        $article->update(['status' => 'archived']);
+
+        // Clear article cache to reflect changes immediately
+        CacheHelper::clearArticleCache();
+
+        // Return JSON response for AJAX requests
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Artikel berhasil diarsipkan. Penulis dapat mereview kembali tulisannya.',
+                'status' => 'archived'
+            ]);
+        }
+
+        return back()->with('success', 'Artikel berhasil diarsipkan. Penulis dapat mereview kembali tulisannya.');
     }
 
     /**

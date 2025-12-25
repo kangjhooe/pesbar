@@ -36,6 +36,7 @@
                     <option value="published" {{ request('status') === 'published' ? 'selected' : '' }}>Dipublikasi</option>
                     <option value="pending_review" {{ request('status') === 'pending_review' ? 'selected' : '' }}>Menunggu Review</option>
                     <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Ditolak</option>
+                    <option value="archived" {{ request('status') === 'archived' ? 'selected' : '' }}>Diarsipkan</option>
                     <option value="draft" {{ request('status') === 'draft' ? 'selected' : '' }}>Draft</option>
                 </select>
             </div>
@@ -188,6 +189,11 @@
                                     <i class="fas fa-times-circle mr-1"></i>
                                     Ditolak
                                 </span>
+                            @elseif($article->status === 'archived')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                    <i class="fas fa-archive mr-1"></i>
+                                    Diarsipkan
+                                </span>
                             @else
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                                     <i class="fas fa-edit mr-1"></i>
@@ -251,12 +257,23 @@
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 @endcan
+                                @if($article->status !== 'archived')
+                                <form action="{{ route('admin.articles.archive', $article) }}" 
+                                      method="POST" class="inline archive-form" 
+                                      data-article-id="{{ $article->id }}"
+                                      onsubmit="return confirm('Apakah Anda yakin ingin mengarsipkan artikel ini? Penulis akan diberi kesempatan untuk mereview kembali tulisannya.')">
+                                    @csrf
+                                    <button type="submit" class="text-purple-600 hover:text-purple-900 p-2 rounded-md transition-colors" title="Arsipkan (beri kesempatan penulis untuk review)">
+                                        <i class="fas fa-archive"></i>
+                                    </button>
+                                </form>
+                                @endif
                                 <form action="{{ route('admin.articles.destroy', $article) }}" 
                                       method="POST" class="inline" 
-                                      onsubmit="return confirm('Apakah Anda yakin ingin menghapus artikel ini?')">
+                                      onsubmit="return confirm('Apakah Anda yakin ingin menghapus artikel ini? Tindakan ini tidak dapat dibatalkan.')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-900 p-2 rounded-md transition-colors" title="Hapus">
+                                    <button type="submit" class="text-red-600 hover:text-red-900 p-2 rounded-md transition-colors" title="Hapus (jika melanggar kode etik jurnalistik)">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
@@ -429,6 +446,48 @@ document.addEventListener('DOMContentLoaded', function() {
                 button.disabled = false;
                 button.innerHTML = originalHTML;
                 alert('Terjadi kesalahan saat memperbarui status breaking');
+            });
+        });
+    });
+
+    // Archive form with AJAX for better UX
+    document.querySelectorAll('.archive-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const form = this;
+            const button = form.querySelector('button');
+            const articleId = form.dataset.articleId;
+            const originalHTML = button.innerHTML;
+            
+            // Show loading state
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            
+            const formData = new FormData(form);
+            
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json().catch(() => ({ success: true }));
+                }
+                throw new Error('Network response was not ok');
+            })
+            .then(data => {
+                // Reload page to show updated state
+                location.reload();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                button.disabled = false;
+                button.innerHTML = originalHTML;
+                alert('Terjadi kesalahan saat mengarsipkan artikel');
             });
         });
     });

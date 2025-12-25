@@ -127,33 +127,36 @@
                 <div class="relative">
                     <!-- Slider Container -->
                     <div class="slider-container relative overflow-hidden rounded-lg shadow-lg">
-                        <div class="slider-wrapper flex transition-transform duration-500 ease-in-out" id="featuredSlider">
+                        <div class="slider-wrapper flex transition-transform duration-500 ease-in-out" id="featuredSlider" style="display: flex;">
                             @foreach($featuredArticles as $index => $featured)
-                            <div class="slider-slide w-full flex-shrink-0">
+                            <div class="slider-slide w-full flex-shrink-0" style="min-width: 100%;">
                                 <article class="card group">
-                                    <div class="relative h-80 overflow-hidden">
+                                    <div class="relative h-80 overflow-hidden" style="position: relative;">
                                         <img src="{{ $featured->featured_image ? asset('storage/' . $featured->featured_image) : asset('images/default-news.jpg') }}" 
                                              alt="{{ $featured->title }}" 
-                                             class="w-full h-full object-cover image-hover">
-                                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                                        <div class="absolute top-4 left-4">
+                                             class="w-full h-full object-cover image-hover"
+                                             style="position: relative; z-index: 0; display: block; width: 100%; height: 100%;"
+                                             onerror="this.onerror=null; this.src='{{ asset('images/default-news.jpg') }}';"
+                                             loading="eager">
+                                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
+                                        <div class="absolute top-4 left-4 z-20">
                                             <span class="category-badge {{ $featured->type === 'berita' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
                                                 {{ $featured->category->name }}
                                             </span>
                                         </div>
-                                        <div class="absolute top-4 right-4">
+                                        <div class="absolute top-4 right-4 z-20">
                                             <span class="text-xs font-semibold px-2 py-1 rounded-full {{ $featured->type === 'berita' ? 'bg-blue-600 text-white' : 'bg-green-600 text-white' }}">
                                                 {{ ucfirst($featured->type) }}
                                             </span>
                                         </div>
                                         @if($featured->is_breaking)
-                                        <div class="absolute bottom-4 left-4">
+                                        <div class="absolute bottom-4 left-4 z-20">
                                             <span class="breaking-badge">
                                                 <i class="fas fa-bolt mr-1"></i>BREAKING
                                             </span>
                                         </div>
                                         @endif
-                                        <div class="absolute bottom-4 left-4 right-4">
+                                        <div class="absolute bottom-4 left-4 right-4 z-20">
                                             <h2 class="text-white text-xl font-bold mb-2 line-clamp-2">
                                                 <a href="{{ route('articles.show', $featured) }}" class="hover:text-yellow-300 transition-colors">
                                                     {{ $featured->title }}
@@ -557,6 +560,17 @@ function initializeSlider() {
     const slider = document.getElementById('featuredSlider');
     if (slider) {
         slider.style.transform = 'translateX(0)';
+        // Ensure images are loaded
+        const images = slider.querySelectorAll('img');
+        images.forEach(img => {
+            if (img.complete) {
+                img.style.display = 'block';
+            } else {
+                img.onload = function() {
+                    this.style.display = 'block';
+                };
+            }
+        });
     }
     updateDots();
 }
@@ -787,6 +801,31 @@ document.addEventListener('DOMContentLoaded', function() {
     font-weight: bold;
     font-size: 12px;
     flex-shrink: 0;
+}
+
+/* Slider Image Fix */
+.slider-container {
+    position: relative;
+}
+
+.slider-wrapper {
+    display: flex !important;
+    width: 100%;
+}
+
+.slider-slide {
+    min-width: 100% !important;
+    flex-shrink: 0 !important;
+    display: block !important;
+}
+
+.slider-slide img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    position: relative !important;
+    z-index: 0 !important;
 }
 </style>
 @endsection
