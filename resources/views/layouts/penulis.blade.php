@@ -131,12 +131,18 @@
             <!-- User Info -->
             <div class="p-4 border-t border-gray-200 flex-shrink-0">
                 <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                        {{ substr(Auth::user()->name, 0, 1) }}
-                    </div>
+                    @if(Auth::user()->profile && Auth::user()->profile->avatar)
+                        <img src="{{ asset('storage/' . Auth::user()->profile->avatar) }}" alt="{{ Auth::user()->name }}" class="w-8 h-8 rounded-full object-cover border-2 border-primary-200">
+                    @else
+                        <div class="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                            {{ substr(Auth::user()->name, 0, 1) }}
+                        </div>
+                    @endif
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-gray-800 truncate">{{ Auth::user()->name }}</p>
-                        <p class="text-xs text-gray-500">Penulis</p>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <p class="text-sm font-medium text-gray-800 truncate">{{ Auth::user()->name }}</p>
+                            <x-user-role-badge :user="Auth::user()" size="xs" />
+                        </div>
                     </div>
 
                 </div>

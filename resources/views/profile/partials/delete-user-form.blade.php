@@ -7,9 +7,9 @@
     enteredText: ''
 }">
     <div class="border border-gray-200 rounded-lg bg-gray-50">
-        <button 
+                        <button 
             @click="showWarning = !showWarning" 
-            class="w-full px-4 py-3 text-left flex items-center justify-between text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors rounded-lg"
+            class="w-full px-4 py-3 text-left flex items-center justify-between text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors rounded-lg touch-target min-h-[44px]"
         >
             <div class="flex items-center">
                 <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -118,7 +118,7 @@
                         <button
                             type="button"
                             @click="$dispatch('open-modal', 'confirm-user-deletion')"
-                            class="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                            class="w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed touch-target min-h-[44px]"
                             :disabled="!confirmPassword || confirmPassword.length < 1"
                         >
                             <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -179,14 +179,14 @@
                 <x-input-error :messages="$errors->userDeletion->get('password')" class="mt-2" />
             </div>
 
-            <div class="flex justify-end space-x-3">
-                <x-secondary-button type="button" x-on:click="$dispatch('close')">
+            <div class="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
+                <x-secondary-button type="button" x-on:click="$dispatch('close')" class="w-full sm:w-auto touch-target min-h-[44px]">
                     {{ __('Batal') }}
                 </x-secondary-button>
 
                 <button
                     type="submit"
-                    class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="w-full sm:w-auto px-4 py-3 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed touch-target min-h-[44px]"
                     :disabled="!finalPassword"
                 >
                     {{ __('Ya, Hapus Akun Saya') }}

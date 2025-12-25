@@ -52,24 +52,29 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <!-- Logo and Site Name -->
-                <a href="{{ route('home') }}" class="flex items-center space-x-3 hover:opacity-80 transition-opacity">
-                    <img src="{{ \App\Helpers\SettingsHelper::siteLogo() }}" alt="{{ \App\Helpers\SettingsHelper::siteName() }}" class="w-8 h-8 object-contain">
+                <a href="{{ route('home') }}" class="flex items-center space-x-2 sm:space-x-3 hover:opacity-80 transition-opacity">
+                    <img src="{{ \App\Helpers\SettingsHelper::siteLogo() }}" alt="{{ \App\Helpers\SettingsHelper::siteName() }}" class="w-7 h-7 sm:w-8 sm:h-8 object-contain">
                     <div>
-                        <h1 class="text-lg font-bold text-gray-800">Dashboard User</h1>
-                        <p class="text-xs text-gray-600">{{ \App\Helpers\SettingsHelper::siteName() }}</p>
+                        <h1 class="text-base sm:text-lg font-bold text-gray-800">Dashboard User</h1>
+                        <p class="text-xs text-gray-600 hidden sm:block">{{ \App\Helpers\SettingsHelper::siteName() }}</p>
                     </div>
                 </a>
                 
                 <!-- User Menu -->
-                <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2 sm:space-x-4">
                     <!-- User Dropdown -->
                     <div class="relative" x-data="{ open: false }">
-                        <button @click="open = !open" class="flex items-center space-x-2 text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-                            <div class="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                                {{ substr(Auth::user()->name, 0, 1) }}
-                            </div>
-                            <span>{{ Auth::user()->name }}</span>
-                            <i class="fas fa-chevron-down text-xs"></i>
+                        <button @click="open = !open" class="flex items-center space-x-2 text-gray-700 hover:text-gray-900 px-2 sm:px-3 py-2 rounded-md text-sm font-medium touch-target">
+                            @if(Auth::user()->profile && Auth::user()->profile->avatar)
+                                <img src="{{ asset('storage/' . Auth::user()->profile->avatar) }}" alt="{{ Auth::user()->name }}" class="w-8 h-8 rounded-full object-cover border-2 border-primary-200">
+                            @else
+                                <div class="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                    {{ substr(Auth::user()->name, 0, 1) }}
+                                </div>
+                            @endif
+                            <span class="hidden sm:inline">{{ Auth::user()->name }}</span>
+                            <x-user-role-badge :user="Auth::user()" size="xs" />
+                            <i class="fas fa-chevron-down text-xs hidden sm:inline"></i>
                         </button>
                         
                         <div x-show="open" 

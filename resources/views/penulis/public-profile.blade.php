@@ -11,7 +11,7 @@
             <div class="flex flex-col md:flex-row items-start md:items-end -mt-16">
                 <div class="flex-shrink-0">
                     @if($user->profile && $user->profile->avatar)
-                        <img src="{{ Storage::url($user->profile->avatar) }}" alt="{{ $user->name }}" class="w-32 h-32 rounded-full border-4 border-white shadow-lg">
+                        <img src="{{ asset('storage/' . $user->profile->avatar) }}" alt="{{ $user->name }}" class="w-32 h-32 rounded-full border-4 border-white shadow-lg">
                     @else
                         <div class="w-32 h-32 rounded-full border-4 border-white shadow-lg bg-gray-300 flex items-center justify-center">
                             <svg class="w-16 h-16 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
@@ -23,19 +23,9 @@
                 <div class="ml-0 md:ml-6 mt-4 md:mt-0 flex-1">
                     <div class="flex flex-col md:flex-row md:items-center md:justify-between">
                         <div>
-                            <h1 class="text-3xl font-bold text-gray-900">{{ $user->name }}</h1>
-                            <div class="flex items-center mt-2">
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                                    Penulis
-                                </span>
-                                @if($user->isVerified())
-                                    <span class="ml-2 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                        </svg>
-                                        Terverifikasi
-                                    </span>
-                                @endif
+                            <div class="flex items-center gap-3 flex-wrap">
+                                <h1 class="text-3xl font-bold text-gray-900">{{ $user->name }}</h1>
+                                <x-user-role-badge :user="$user" size="md" />
                             </div>
                         </div>
                         <div class="mt-4 md:mt-0">

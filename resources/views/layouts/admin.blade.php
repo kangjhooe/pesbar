@@ -117,10 +117,15 @@
                         <!-- User Menu -->
                         <div class="relative">
                             <button class="flex items-center space-x-2 lg:space-x-3 text-gray-700 hover:text-primary-600 transition-colors" onclick="toggleUserMenu()">
-                                <div class="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                                    {{ substr(Auth::user()->name, 0, 1) }}
-                                </div>
+                                @if(Auth::user()->profile && Auth::user()->profile->avatar)
+                                    <img src="{{ asset('storage/' . Auth::user()->profile->avatar) }}" alt="{{ Auth::user()->name }}" class="w-8 h-8 rounded-full object-cover border-2 border-primary-200">
+                                @else
+                                    <div class="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                        {{ substr(Auth::user()->name, 0, 1) }}
+                                    </div>
+                                @endif
                                 <span class="hidden md:block">{{ Auth::user()->name }}</span>
+                                <x-user-role-badge :user="Auth::user()" size="xs" />
                                 <i class="fas fa-chevron-down text-xs"></i>
                             </button>
                             

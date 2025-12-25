@@ -232,13 +232,18 @@
                                     @endif
                                 </div>
                                 <div class="ml-3">
-                                    <div class="text-sm font-medium text-gray-900">
-                                        @if($article->author && $article->author->isPenulis() && $article->author->username)
-                                            <a href="{{ route('penulis.public-profile', $article->author->username) }}" class="text-blue-600 hover:text-blue-800 font-medium" target="_blank">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <div class="text-sm font-medium text-gray-900">
+                                            @if($article->author && $article->author->isPenulis() && $article->author->username)
+                                                <a href="{{ route('penulis.public-profile', $article->author->username) }}" class="text-blue-600 hover:text-blue-800 font-medium" target="_blank">
+                                                    {{ $article->author->name }}
+                                                </a>
+                                            @else
                                                 {{ $article->author->name }}
-                                            </a>
-                                        @else
-                                            {{ $article->author->name }}
+                                            @endif
+                                        </div>
+                                        @if($article->author)
+                                            <x-user-role-badge :user="$article->author" size="xs" />
                                         @endif
                                     </div>
                                     <div class="text-sm text-gray-500">{{ $article->author->email }}</div>

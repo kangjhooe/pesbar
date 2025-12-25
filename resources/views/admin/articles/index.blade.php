@@ -195,8 +195,13 @@
                                 </span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ $article->user->name ?? 'Sistem' }}
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm text-gray-900">{{ $article->user->name ?? 'Sistem' }}</span>
+                                @if($article->user)
+                                    <x-user-role-badge :user="$article->user" size="xs" />
+                                @endif
+                            </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {{ $article->created_at->format('d-m-Y H:i') }}

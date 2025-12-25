@@ -176,6 +176,9 @@
                                                     @else
                                                         <span>{{ $featured->author->name ?? 'Admin' }}</span>
                                                     @endif
+                                                    @if($featured->author)
+                                                        <x-user-role-badge :user="$featured->author" size="xs" />
+                                                    @endif
                                                 </span>
                                                 <span class="flex items-center space-x-1">
                                                     <i class="fas fa-calendar text-blue-600"></i>

@@ -27,7 +27,7 @@
                 </label>
                 @if($profile && $profile->avatar)
                     <div class="mb-3">
-                        <img src="{{ Storage::url($profile->avatar) }}" alt="Current avatar" class="w-24 h-24 rounded-full object-cover">
+                        <img src="{{ asset('storage/' . $profile->avatar) }}" alt="Current avatar" class="w-24 h-24 rounded-full object-cover">
                         <p class="text-sm text-gray-600 mt-1">Foto saat ini</p>
                     </div>
                 @endif

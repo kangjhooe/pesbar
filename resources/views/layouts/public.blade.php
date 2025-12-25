@@ -374,10 +374,15 @@
                         <!-- User Menu -->
                         <div class="relative" x-data="{ open: false }">
                             <button @click="open = !open" class="flex items-center space-x-2 text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">
-                                <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-user text-white text-sm"></i>
-                                </div>
+                                @if(Auth::user()->profile && Auth::user()->profile->avatar)
+                                    <img src="{{ asset('storage/' . Auth::user()->profile->avatar) }}" alt="{{ Auth::user()->name }}" class="w-8 h-8 rounded-full object-cover border-2 border-blue-200">
+                                @else
+                                    <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-user text-white text-sm"></i>
+                                    </div>
+                                @endif
                                 <span class="hidden sm:block">{{ Auth::user()->name }}</span>
+                                <x-user-role-badge :user="Auth::user()" size="xs" />
                                 <i class="fas fa-chevron-down text-xs"></i>
                             </button>
                             

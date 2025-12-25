@@ -159,6 +159,9 @@
                             @else
                                 <span>{{ $article->author->name ?? 'Admin' }}</span>
                             @endif
+                            @if($article->author)
+                                <x-user-role-badge :user="$article->author" size="xs" />
+                            @endif
                         </div>
                         <div class="flex items-center space-x-2">
                             <i class="fas fa-calendar text-primary-600"></i>
@@ -514,6 +517,262 @@
 
 @section('scripts')
 <script>
+// CRITICAL: Define toggleLike FIRST before anything else to ensure it's always available
+window.toggleLike = window.toggleLike || function(commentId, isLike) {
+        if (!commentId) {
+            console.error('Comment ID is required');
+            return;
+        }
+        
+        @guest
+        window.location.href = '{{ route("login") }}';
+        return;
+        @endguest
+
+        // Get buttons
+        const likeBtn = document.getElementById(`like-btn-${commentId}`);
+        const dislikeBtn = document.getElementById(`dislike-btn-${commentId}`);
+        
+        // Check if buttons exist
+        if (!likeBtn || !dislikeBtn) {
+            console.error('Like/Dislike buttons not found for comment:', commentId);
+            return;
+        }
+        
+        // Disable button during request
+        likeBtn.disabled = true;
+        dislikeBtn.disabled = true;
+        likeBtn.style.pointerEvents = 'none';
+        dislikeBtn.style.pointerEvents = 'none';
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
+        
+        fetch(`/comments/${commentId}/like`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ is_like: isLike })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => Promise.reject(err));
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                const likesCountEl = document.getElementById(`likes-count-${commentId}`);
+                const dislikesCountEl = document.getElementById(`dislikes-count-${commentId}`);
+                
+                if (likesCountEl) likesCountEl.textContent = data.likes_count || 0;
+                if (dislikesCountEl) dislikesCountEl.textContent = data.dislikes_count || 0;
+                
+                // Update like button style
+                if (likeBtn) {
+                    if (data.is_liked) {
+                        likeBtn.classList.remove('bg-gray-50', 'text-gray-600', 'border-gray-200', 'hover:bg-green-50', 'hover:text-green-700', 'hover:border-green-200');
+                        likeBtn.classList.add('bg-green-50', 'text-green-700', 'border-green-200');
+                    } else {
+                        likeBtn.classList.remove('bg-green-50', 'text-green-700', 'border-green-200');
+                        likeBtn.classList.add('bg-gray-50', 'text-gray-600', 'border-gray-200', 'hover:bg-green-50', 'hover:text-green-700', 'hover:border-green-200');
+                    }
+                }
+                
+                // Update dislike button style
+                if (dislikeBtn) {
+                    if (data.is_disliked) {
+                        dislikeBtn.classList.remove('bg-gray-50', 'text-gray-600', 'border-gray-200', 'hover:bg-red-50', 'hover:text-red-700', 'hover:border-red-200');
+                        dislikeBtn.classList.add('bg-red-50', 'text-red-700', 'border-red-200');
+                    } else {
+                        dislikeBtn.classList.remove('bg-red-50', 'text-red-700', 'border-red-200');
+                        dislikeBtn.classList.add('bg-gray-50', 'text-gray-600', 'border-gray-200', 'hover:bg-red-50', 'hover:text-red-700', 'hover:border-red-200');
+                    }
+                }
+            } else {
+                if (typeof showNotification === 'function') {
+                    showNotification(data.error || 'Terjadi kesalahan saat memproses like/dislike.', 'error');
+                } else {
+                    alert(data.error || 'Terjadi kesalahan saat memproses like/dislike.');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            const errorMsg = error.error || error.message || 'Terjadi kesalahan saat memproses like/dislike.';
+            if (typeof showNotification === 'function') {
+                showNotification(errorMsg, 'error');
+            } else {
+                alert(errorMsg);
+            }
+        })
+        .finally(() => {
+            if (likeBtn) {
+                likeBtn.disabled = false;
+                likeBtn.style.pointerEvents = 'auto';
+            }
+            if (dislikeBtn) {
+                dislikeBtn.disabled = false;
+                dislikeBtn.style.pointerEvents = 'auto';
+            }
+        });
+};
+
+// Event delegation as fallback for dynamically created buttons (only if onclick fails)
+// This will only trigger if the onclick handler didn't work
+setTimeout(function() {
+    document.addEventListener('click', function(e) {
+        const button = e.target.closest('[id^="like-btn-"]') || e.target.closest('[id^="dislike-btn-"]');
+        if (button && button.hasAttribute('onclick')) {
+            // If button has onclick attribute, skip delegation (onclick should handle it)
+            return;
+        }
+        
+        if (button) {
+            // Extract comment ID and action from button ID
+            const buttonId = button.id;
+            const match = buttonId.match(/(like|dislike)-btn-(\d+)/);
+            if (match && typeof window.toggleLike === 'function') {
+                const isLike = match[1] === 'like';
+                const commentId = parseInt(match[2]);
+                e.preventDefault();
+                e.stopPropagation();
+                window.toggleLike(commentId, isLike);
+            }
+        }
+    }, 100); // Small delay to ensure onclick handlers are attached first
+}, 0);
+
+// Reply to comment
+window.replyToComment = function(commentId, commenterName) {
+    if (!commentId) {
+        console.error('Comment ID is required');
+        return;
+    }
+    
+    const replyToId = document.getElementById('reply-to-id');
+    const replyToName = document.getElementById('reply-to-name');
+    const replyIndicator = document.getElementById('reply-indicator');
+    const cancelBtn = document.getElementById('cancel-reply-btn');
+    const commentForm = document.getElementById('comment-form');
+    const commentTextarea = document.getElementById('comment');
+    
+    if (!replyToId || !replyToName || !replyIndicator || !cancelBtn || !commentForm) {
+        console.error('Required elements not found');
+        return;
+    }
+    
+    replyToId.value = commentId;
+    replyToName.textContent = commenterName || 'User';
+    replyIndicator.classList.remove('hidden');
+    cancelBtn.classList.remove('hidden');
+    
+    // Scroll to comment form
+    commentForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (commentTextarea) {
+        setTimeout(() => commentTextarea.focus(), 300);
+    }
+};
+
+// Cancel reply
+window.cancelReply = function() {
+    const replyToId = document.getElementById('reply-to-id');
+    const replyIndicator = document.getElementById('reply-indicator');
+    const cancelBtn = document.getElementById('cancel-reply-btn');
+    
+    if (replyToId) replyToId.value = '';
+    if (replyIndicator) replyIndicator.classList.add('hidden');
+    if (cancelBtn) cancelBtn.classList.add('hidden');
+};
+
+// Edit comment
+window.editComment = function(commentId, commentText) {
+    const modal = document.getElementById(`edit-comment-modal-${commentId}`);
+    const textarea = document.getElementById(`edit-comment-text-${commentId}`);
+    const charCount = document.getElementById(`edit-char-count-${commentId}`);
+    
+    if (modal && textarea) {
+        textarea.value = commentText;
+        if (charCount) charCount.textContent = commentText.length;
+        modal.classList.remove('hidden');
+        
+        // Character counter for edit
+        textarea.addEventListener('input', function() {
+            if (charCount) charCount.textContent = this.value.length;
+        });
+        
+        // Handle form submission
+        const form = document.getElementById(`edit-comment-form-${commentId}`);
+        if (form) {
+            // Remove existing listener to prevent duplicates
+            const newForm = form.cloneNode(true);
+            form.parentNode.replaceChild(newForm, form);
+            
+            newForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const submitBtn = newForm.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...';
+                
+                fetch(newForm.action, {
+                    method: 'PUT',
+                    body: new FormData(newForm),
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const commentTextEl = document.querySelector(`#comment-${commentId} .comment-text p`);
+                        if (commentTextEl) {
+                            commentTextEl.textContent = data.comment.comment;
+                        }
+                        window.closeEditModal(commentId);
+                        if (typeof showNotification === 'function') {
+                            showNotification('Komentar berhasil diperbarui.', 'success');
+                        } else {
+                            alert('Komentar berhasil diperbarui.');
+                        }
+                    } else {
+                        if (typeof showNotification === 'function') {
+                            showNotification(data.error || 'Terjadi kesalahan saat memperbarui komentar.', 'error');
+                        } else {
+                            alert(data.error || 'Terjadi kesalahan saat memperbarui komentar.');
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    if (typeof showNotification === 'function') {
+                        showNotification('Terjadi kesalahan saat memperbarui komentar.', 'error');
+                    } else {
+                        alert('Terjadi kesalahan saat memperbarui komentar.');
+                    }
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                });
+            });
+        }
+    }
+};
+
+// Close edit modal
+window.closeEditModal = function(commentId) {
+    const modal = document.getElementById(`edit-comment-modal-${commentId}`);
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+};
+
 document.addEventListener('DOMContentLoaded', function() {
     // Auto-refresh widget data every 30 minutes
     setInterval(function() {
@@ -646,192 +905,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Reply to comment
-    window.replyToComment = function(commentId, commenterName) {
-        if (!commentId) {
-            console.error('Comment ID is required');
-            return;
-        }
-        
-        const replyToId = document.getElementById('reply-to-id');
-        const replyToName = document.getElementById('reply-to-name');
-        const replyIndicator = document.getElementById('reply-indicator');
-        const cancelBtn = document.getElementById('cancel-reply-btn');
-        const commentForm = document.getElementById('comment-form');
-        const commentTextarea = document.getElementById('comment');
-        
-        if (!replyToId || !replyToName || !replyIndicator || !cancelBtn || !commentForm) {
-            console.error('Required elements not found');
-            return;
-        }
-        
-        replyToId.value = commentId;
-        replyToName.textContent = commenterName || 'User';
-        replyIndicator.classList.remove('hidden');
-        cancelBtn.classList.remove('hidden');
-        
-        // Scroll to comment form
-        commentForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        if (commentTextarea) {
-            setTimeout(() => commentTextarea.focus(), 300);
-        }
-    };
 
-    // Cancel reply
-    window.cancelReply = function() {
-        document.getElementById('reply-to-id').value = '';
-        document.getElementById('reply-indicator').classList.add('hidden');
-        document.getElementById('cancel-reply-btn').classList.add('hidden');
-    };
-
-    // Toggle like/dislike
-    window.toggleLike = function(commentId, isLike) {
-        if (!commentId) {
-            console.error('Comment ID is required');
-            return;
-        }
-        
-        @guest
-        window.location.href = '{{ route("login") }}';
-        return;
-        @endguest
-
-        // Disable button during request
-        const likeBtn = document.getElementById(`like-btn-${commentId}`);
-        const dislikeBtn = document.getElementById(`dislike-btn-${commentId}`);
-        if (likeBtn) likeBtn.disabled = true;
-        if (dislikeBtn) dislikeBtn.disabled = true;
-
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
-        
-        fetch(`/comments/${commentId}/like`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({ is_like: isLike })
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(err => Promise.reject(err));
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                const likesCountEl = document.getElementById(`likes-count-${commentId}`);
-                const dislikesCountEl = document.getElementById(`dislikes-count-${commentId}`);
-                
-                if (likesCountEl) likesCountEl.textContent = data.likes_count || 0;
-                if (dislikesCountEl) dislikesCountEl.textContent = data.dislikes_count || 0;
-                
-                // Update like button style
-                if (likeBtn) {
-                    if (data.is_liked) {
-                        likeBtn.classList.add('bg-green-100', 'text-green-700');
-                        likeBtn.classList.remove('bg-gray-100', 'text-gray-600', 'hover:bg-green-50');
-                    } else {
-                        likeBtn.classList.remove('bg-green-100', 'text-green-700');
-                        likeBtn.classList.add('bg-gray-100', 'text-gray-600', 'hover:bg-green-50');
-                    }
-                }
-                
-                // Update dislike button style
-                if (dislikeBtn) {
-                    if (data.is_disliked) {
-                        dislikeBtn.classList.add('bg-red-100', 'text-red-700');
-                        dislikeBtn.classList.remove('bg-gray-100', 'text-gray-600', 'hover:bg-red-50');
-                    } else {
-                        dislikeBtn.classList.remove('bg-red-100', 'text-red-700');
-                        dislikeBtn.classList.add('bg-gray-100', 'text-gray-600', 'hover:bg-red-50');
-                    }
-                }
-            } else {
-                showNotification(data.error || 'Terjadi kesalahan saat memproses like/dislike.', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            const errorMsg = error.error || error.message || 'Terjadi kesalahan saat memproses like/dislike.';
-            showNotification(errorMsg, 'error');
-        })
-        .finally(() => {
-            if (likeBtn) likeBtn.disabled = false;
-            if (dislikeBtn) dislikeBtn.disabled = false;
-        });
-    };
-
-    // Edit comment
-    window.editComment = function(commentId, commentText) {
-        const modal = document.getElementById(`edit-comment-modal-${commentId}`);
-        const textarea = document.getElementById(`edit-comment-text-${commentId}`);
-        const charCount = document.getElementById(`edit-char-count-${commentId}`);
-        
-        if (modal && textarea) {
-            textarea.value = commentText;
-            charCount.textContent = commentText.length;
-            modal.classList.remove('hidden');
-            
-            // Character counter for edit
-            textarea.addEventListener('input', function() {
-                charCount.textContent = this.value.length;
-            });
-            
-            // Handle form submission
-            const form = document.getElementById(`edit-comment-form-${commentId}`);
-            if (form) {
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    const submitBtn = form.querySelector('button[type="submit"]');
-                    const originalText = submitBtn.innerHTML;
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...';
-                    
-                    fetch(form.action, {
-                        method: 'PUT',
-                        body: new FormData(form),
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'application/json'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            const commentTextEl = document.querySelector(`#comment-${commentId} .comment-text p`);
-                            if (commentTextEl) {
-                                commentTextEl.textContent = data.comment.comment;
-                            }
-                            closeEditModal(commentId);
-                            showNotification('Komentar berhasil diperbarui.', 'success');
-                        } else {
-                            showNotification(data.error || 'Terjadi kesalahan saat memperbarui komentar.', 'error');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        showNotification('Terjadi kesalahan saat memperbarui komentar.', 'error');
-                    })
-                    .finally(() => {
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = originalText;
-                    });
-                });
-            }
-        }
-    };
-
-    // Close edit modal
-    window.closeEditModal = function(commentId) {
-        const modal = document.getElementById(`edit-comment-modal-${commentId}`);
-        if (modal) {
-            modal.classList.add('hidden');
-        }
-    };
 
     // Add comment to DOM
     function addCommentToDOM(commentData) {
@@ -853,45 +927,54 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Create comment HTML
         const commentHTML = `
-            <div class="comment-item border-l-4 ${parentId ? 'border-gray-300 ml-6' : 'border-primary-500'} pl-4 py-3 bg-gray-50 rounded-r-lg hover:bg-gray-100 transition-colors" 
+            <div class="comment-item ${parentId ? 'ml-8 mt-4' : ''} mb-4 bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 overflow-hidden" 
                  data-comment-id="${commentData.id}" 
                  id="comment-${commentData.id}">
-                <div class="flex items-start space-x-3">
-                    <div class="flex-shrink-0">
-                        <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold shadow-md">
-                            ${(commentName.charAt(0) || 'U').toUpperCase()}
+                <div class="p-4 md:p-5">
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md hover:shadow-lg transition-shadow">
+                                ${(commentName.charAt(0) || 'U').toUpperCase()}
+                            </div>
                         </div>
-                    </div>
-                    <div class="flex-1">
-                        <div class="flex items-center gap-2 mb-2 flex-wrap">
-                            <h5 class="font-semibold text-gray-900">${commentName}</h5>
-                            <span class="text-xs text-gray-500">
-                                <i class="far fa-clock mr-1"></i>Baru saja
-                            </span>
-                        </div>
-                        <div class="comment-text mb-3">
-                            <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">${commentText}</p>
-                        </div>
-                        <div class="flex items-center gap-4 text-sm">
-                            <div class="flex items-center gap-2">
-                                <button onclick="toggleLike(${commentData.id}, true)" 
-                                        class="flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 text-gray-600 hover:bg-green-50 transition-all"
-                                        id="like-btn-${commentData.id}">
-                                    <i class="fas fa-thumbs-up"></i>
-                                    <span id="likes-count-${commentData.id}">${commentData.likes_count || 0}</span>
-                                </button>
-                                <button onclick="toggleLike(${commentData.id}, false)" 
-                                        class="flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 text-gray-600 hover:bg-red-50 transition-all"
-                                        id="dislike-btn-${commentData.id}">
-                                    <i class="fas fa-thumbs-down"></i>
-                                    <span id="dislikes-count-${commentData.id}">${commentData.dislikes_count || 0}</span>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-start justify-between mb-3 gap-3">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 flex-wrap mb-1">
+                                        <h5 class="font-bold text-gray-900 text-base">${commentName}</h5>
+                                    </div>
+                                    <div class="flex items-center gap-3 flex-wrap text-xs text-gray-500">
+                                        <span class="flex items-center gap-1">
+                                            <i class="far fa-clock"></i>
+                                            <span>Baru saja</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="comment-text mb-4">
+                                <p class="text-gray-800 leading-relaxed whitespace-pre-wrap text-[15px]">${commentText}</p>
+                            </div>
+                            <div class="flex items-center gap-3 pt-3 border-t border-gray-100">
+                                <div class="flex items-center gap-2">
+                                    <button onclick="toggleLike(${commentData.id}, true)" 
+                                            class="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200 bg-gray-50 text-gray-600 hover:bg-green-50 hover:text-green-700 border border-gray-200 hover:border-green-200"
+                                            id="like-btn-${commentData.id}">
+                                        <i class="fas fa-thumbs-up text-sm"></i>
+                                        <span class="text-sm font-medium" id="likes-count-${commentData.id}">${commentData.likes_count || 0}</span>
+                                    </button>
+                                    <button onclick="toggleLike(${commentData.id}, false)" 
+                                            class="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200 bg-gray-50 text-gray-600 hover:bg-red-50 hover:text-red-700 border border-gray-200 hover:border-red-200"
+                                            id="dislike-btn-${commentData.id}">
+                                        <i class="fas fa-thumbs-down text-sm"></i>
+                                        <span class="text-sm font-medium" id="dislikes-count-${commentData.id}">${commentData.dislikes_count || 0}</span>
+                                    </button>
+                                </div>
+                                <button onclick="replyToComment(${commentData.id}, '${commentName.replace(/'/g, "\\'")}')" 
+                                        class="flex items-center gap-2 px-3 py-1.5 text-primary-600 hover:text-primary-800 hover:bg-primary-50 font-medium rounded-lg transition-all duration-200 border border-transparent hover:border-primary-200">
+                                    <i class="fas fa-reply text-sm"></i>
+                                    <span class="text-sm">Balas</span>
                                 </button>
                             </div>
-                            <button onclick="replyToComment(${commentData.id}, '${commentName.replace(/'/g, "\\'")}')" 
-                                    class="text-primary-600 hover:text-primary-800 font-medium flex items-center gap-1 transition-colors">
-                                <i class="fas fa-reply"></i>
-                                <span>Balas</span>
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -906,13 +989,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 let repliesContainer = parentComment.querySelector('.replies-container');
                 if (!repliesContainer) {
                     repliesContainer = document.createElement('div');
-                    repliesContainer.className = 'mt-4 space-y-3 replies-container';
-                    const parentContent = parentComment.querySelector('.flex-1');
+                    repliesContainer.className = 'mt-5 pt-4 border-t border-gray-100 replies-container';
+                    const repliesWrapper = document.createElement('div');
+                    repliesWrapper.className = 'space-y-3';
+                    repliesContainer.appendChild(repliesWrapper);
+                    const parentContent = parentComment.querySelector('.flex-1.min-w-0');
                     if (parentContent) {
                         parentContent.appendChild(repliesContainer);
                     }
                 }
-                repliesContainer.insertAdjacentHTML('beforeend', commentHTML);
+                const repliesWrapper = repliesContainer.querySelector('.space-y-3') || repliesContainer;
+                repliesWrapper.insertAdjacentHTML('beforeend', commentHTML);
             } else {
                 // Jika parent tidak ditemukan, tambahkan ke list utama
                 commentsList.insertAdjacentHTML('afterbegin', commentHTML);

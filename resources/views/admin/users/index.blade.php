@@ -98,7 +98,10 @@
                                     @endif
                                 </div>
                                 <div class="ml-4">
-                                    <div class="text-sm font-medium text-gray-900">{{ $user->name }}</div>
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <div class="text-sm font-medium text-gray-900">{{ $user->name }}</div>
+                                        <x-user-role-badge :user="$user" size="xs" />
+                                    </div>
                                     <div class="text-sm text-gray-500">{{ $user->email }}</div>
                                 </div>
                             </div>
