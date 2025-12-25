@@ -328,7 +328,7 @@
                 <div class="flex items-center flex-shrink-0">
                     <a href="{{ route('home') }}" class="flex items-center space-x-3 group">
                         <div class="relative">
-                            <img src="{{ \App\Helpers\SettingsHelper::siteLogo() }}" alt="{{ \App\Helpers\SettingsHelper::siteName() }}" class="h-10 w-auto">
+                            <img src="{{ \App\Helpers\SettingsHelper::siteLogo() }}" alt="{{ \App\Helpers\SettingsHelper::siteName() }}" class="h-10 w-auto object-contain">
                         </div>
                         <div>
                             <h1 class="text-lg font-bold text-gray-800">{{ \App\Helpers\SettingsHelper::siteName() }}</h1>
@@ -496,7 +496,7 @@
             <div class="text-center">
                 <!-- Logo & Site Name -->
                 <div class="flex justify-center items-center space-x-3 mb-4">
-                    <img src="{{ \App\Helpers\SettingsHelper::siteLogo() }}" alt="{{ \App\Helpers\SettingsHelper::siteName() }}" class="h-10 w-auto">
+                    <img src="{{ \App\Helpers\SettingsHelper::siteLogo() }}" alt="{{ \App\Helpers\SettingsHelper::siteName() }}" class="h-10 w-auto object-contain">
                     <h3 class="text-lg font-bold">{{ \App\Helpers\SettingsHelper::siteName() }}</h3>
                 </div>
                 
