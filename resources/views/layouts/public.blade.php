@@ -405,13 +405,24 @@
                             </div>
                         </div>
                     @else
-                        <!-- Guest Links -->
-                        <a href="{{ route('login') }}" class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">
-                            Login
-                        </a>
-                        <a href="{{ route('register') }}" class="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium transition-colors">
-                            Daftar
-                        </a>
+                        <!-- Guest Links - Desktop -->
+                        <div class="hidden md:flex items-center space-x-3">
+                            <a href="{{ route('login') }}" class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">
+                                Login
+                            </a>
+                            <a href="{{ route('register') }}" class="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                                Daftar
+                            </a>
+                        </div>
+                        <!-- Guest Links - Mobile (Icon only) -->
+                        <div class="md:hidden flex items-center space-x-2">
+                            <a href="{{ route('login') }}" class="text-gray-700 hover:text-blue-600 p-2 rounded-md hover:bg-gray-100 transition-colors" title="Login">
+                                <i class="fas fa-sign-in-alt text-lg"></i>
+                            </a>
+                            <a href="{{ route('register') }}" class="bg-blue-600 text-white hover:bg-blue-700 p-2 rounded-md transition-colors" title="Daftar">
+                                <i class="fas fa-user-plus text-lg"></i>
+                            </a>
+                        </div>
                     @endauth
 
                     <!-- Mobile menu button -->
