@@ -382,9 +382,11 @@
                             </button>
                             
                             <div x-show="open" @click.away="open = false" x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border">
-                                <a href="{{ route('dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    Dashboard
-                                </a>
+                                @if(auth()->user()->role !== 'user')
+                                    <a href="{{ route('dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        Dashboard
+                                    </a>
+                                @endif
                                 <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                     Profil
                                 </a>
@@ -451,9 +453,11 @@
                 
                 @auth
                     <hr class="my-2">
-                    <a href="{{ route('dashboard') }}" @click="mobileMenuOpen = false" class="block px-3 py-2 text-gray-700 hover:text-blue-600 rounded-md text-base font-medium">
-                        Dashboard
-                    </a>
+                    @if(auth()->user()->role !== 'user')
+                        <a href="{{ route('dashboard') }}" @click="mobileMenuOpen = false" class="block px-3 py-2 text-gray-700 hover:text-blue-600 rounded-md text-base font-medium">
+                            Dashboard
+                        </a>
+                    @endif
                     <a href="{{ route('profile.edit') }}" @click="mobileMenuOpen = false" class="block px-3 py-2 text-gray-700 hover:text-blue-600 rounded-md text-base font-medium">
                         Profil
                     </a>

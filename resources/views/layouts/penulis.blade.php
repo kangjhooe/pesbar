@@ -59,13 +59,13 @@
             <!-- Logo -->
             <div class="p-4 lg:p-6 border-b border-gray-200 flex-shrink-0">
                 <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
+                    <a href="{{ route('home') }}" class="flex items-center space-x-3 hover:opacity-80 transition-opacity">
                         <img src="{{ \App\Helpers\SettingsHelper::siteLogo() }}" alt="{{ \App\Helpers\SettingsHelper::siteName() }}" class="w-8 h-8 lg:w-10 lg:h-10 object-contain">
                         <div>
                             <h1 class="text-base lg:text-lg font-bold text-gray-800">Dashboard Penulis</h1>
                             <p class="text-xs text-gray-600">{{ \App\Helpers\SettingsHelper::siteName() }}</p>
                         </div>
-                    </div>
+                    </a>
                     <!-- Mobile close button -->
                     <button class="lg:hidden p-2 rounded-lg hover:bg-gray-100 touch-target" onclick="toggleSidebar()" aria-label="Close sidebar">
                         <i class="fas fa-times text-gray-600"></i>

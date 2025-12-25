@@ -52,25 +52,16 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <!-- Logo and Site Name -->
-                <div class="flex items-center space-x-3">
+                <a href="{{ route('home') }}" class="flex items-center space-x-3 hover:opacity-80 transition-opacity">
                     <img src="{{ \App\Helpers\SettingsHelper::siteLogo() }}" alt="{{ \App\Helpers\SettingsHelper::siteName() }}" class="w-8 h-8 object-contain">
                     <div>
                         <h1 class="text-lg font-bold text-gray-800">Dashboard User</h1>
                         <p class="text-xs text-gray-600">{{ \App\Helpers\SettingsHelper::siteName() }}</p>
                     </div>
-                </div>
+                </a>
                 
                 <!-- User Menu -->
                 <div class="flex items-center space-x-4">
-                    <a href="{{ route('home') }}" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-                        <i class="fas fa-home mr-2"></i>
-                        Beranda
-                    </a>
-                    <a href="{{ route('articles.index') }}" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-                        <i class="fas fa-newspaper mr-2"></i>
-                        Artikel
-                    </a>
-                    
                     <!-- User Dropdown -->
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open" class="flex items-center space-x-2 text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
@@ -91,10 +82,12 @@
                              x-transition:leave-end="transform opacity-0 scale-95"
                              class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50"
                              style="display: none;">
-                            <a href="{{ route('user.dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                <i class="fas fa-tachometer-alt mr-2"></i>
-                                Dashboard
-                            </a>
+                            @if(auth()->user()->role !== 'user')
+                                <a href="{{ route('user.dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-tachometer-alt mr-2"></i>
+                                    Dashboard
+                                </a>
+                            @endif
                             <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                 <i class="fas fa-user mr-2"></i>
                                 Profil Saya

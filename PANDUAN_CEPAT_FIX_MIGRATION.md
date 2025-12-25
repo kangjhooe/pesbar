@@ -79,3 +79,4 @@ php artisan migrate:status
 
 **Migration sudah diperbaiki dan siap digunakan!** 🚀
 
+

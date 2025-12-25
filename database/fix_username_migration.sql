@@ -86,3 +86,4 @@ SELECT * FROM migrations
 WHERE migration = '2025_12_25_082043_make_username_required_in_users_table';
 -- Harus ada 1 row
 
+

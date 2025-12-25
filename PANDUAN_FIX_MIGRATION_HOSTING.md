@@ -254,3 +254,4 @@ php artisan migrate:status
 
 **Dibuat untuk mengatasi error migration di hosting** 🚀
 
+

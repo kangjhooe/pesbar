@@ -40,7 +40,10 @@ class ProfileController extends Controller
         $user = $request->user();
         
         // Update basic user info
-        $user->fill($request->only(['name', 'email']));
+        $userData = $request->only(['name', 'email']);
+        $userData['username'] = strtolower($request->username); // Ensure username is lowercase
+        
+        $user->fill($userData);
 
         if ($user->isDirty('email')) {
             $user->email_verified_at = null;
