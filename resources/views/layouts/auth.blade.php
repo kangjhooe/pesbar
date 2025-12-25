@@ -47,7 +47,7 @@
             <!-- Header -->
             <div class="text-center">
                 <div class="flex justify-center mb-6">
-                    <img src="{{ \App\Helpers\SettingsHelper::siteLogo() }}" alt="{{ \App\Helpers\SettingsHelper::siteName() }}" class="w-16 h-16 object-contain">
+                    <img src="{{ \App\Helpers\SettingsHelper::siteLogo() }}" alt="{{ \App\Helpers\SettingsHelper::siteName() }}" class="w-16 h-16 max-w-full object-contain">
                 </div>
                 <h2 class="text-3xl font-bold text-gray-900 mb-2">
                     @yield('page-title', \App\Helpers\SettingsHelper::siteName())

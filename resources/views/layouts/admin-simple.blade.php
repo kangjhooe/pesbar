@@ -96,7 +96,7 @@
             <div class="p-4 lg:p-6 border-b border-gray-200 flex-shrink-0">
                 <div class="flex items-center justify-between">
                     <a href="{{ route('home') }}" class="flex items-center space-x-3 hover:opacity-80 transition-opacity">
-                        <img src="{{ \App\Helpers\SettingsHelper::siteLogo() }}" alt="{{ \App\Helpers\SettingsHelper::siteName() }}" class="w-8 h-8 lg:w-10 lg:h-10 object-contain">
+                        <img src="{{ \App\Helpers\SettingsHelper::siteLogo() }}" alt="{{ \App\Helpers\SettingsHelper::siteName() }}" class="w-8 h-8 lg:w-10 lg:h-10 max-w-full object-contain">
                         <div>
                             <h1 class="text-base lg:text-lg font-bold text-gray-800">Admin Panel</h1>
                             <p class="text-xs text-gray-600">{{ \App\Helpers\SettingsHelper::siteName() }}</p>

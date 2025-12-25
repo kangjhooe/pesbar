@@ -328,7 +328,7 @@
                 <div class="flex items-center flex-shrink-0">
                     <a href="{{ route('home') }}" class="flex items-center space-x-3 group">
                         <div class="relative">
-                            <img src="{{ \App\Helpers\SettingsHelper::siteLogo() }}" alt="{{ \App\Helpers\SettingsHelper::siteName() }}" class="h-10 w-auto object-contain">
+                            <img src="{{ \App\Helpers\SettingsHelper::siteLogo() }}" alt="{{ \App\Helpers\SettingsHelper::siteName() }}" class="h-10 w-auto max-w-full object-contain">
                         </div>
                         <div>
                             <h1 class="text-lg font-bold text-gray-800">{{ \App\Helpers\SettingsHelper::siteName() }}</h1>

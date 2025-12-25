@@ -53,7 +53,7 @@
             <div class="flex justify-between items-center h-16">
                 <!-- Logo and Site Name -->
                 <a href="{{ route('home') }}" class="flex items-center space-x-2 sm:space-x-3 hover:opacity-80 transition-opacity">
-                    <img src="{{ \App\Helpers\SettingsHelper::siteLogo() }}" alt="{{ \App\Helpers\SettingsHelper::siteName() }}" class="w-7 h-7 sm:w-8 sm:h-8 object-contain">
+                    <img src="{{ \App\Helpers\SettingsHelper::siteLogo() }}" alt="{{ \App\Helpers\SettingsHelper::siteName() }}" class="w-7 h-7 sm:w-8 sm:h-8 max-w-full object-contain">
                     <div>
                         <h1 class="text-base sm:text-lg font-bold text-gray-800">Dashboard User</h1>
                         <p class="text-xs text-gray-600 hidden sm:block">{{ \App\Helpers\SettingsHelper::siteName() }}</p>

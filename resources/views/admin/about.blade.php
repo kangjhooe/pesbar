@@ -11,7 +11,7 @@
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 lg:p-8 mb-6">
             <div class="flex flex-col lg:flex-row items-center lg:items-start space-y-4 lg:space-y-0 lg:space-x-6">
                 <div class="flex-shrink-0">
-                    <img src="{{ \App\Helpers\SettingsHelper::siteLogo() }}" alt="{{ \App\Helpers\SettingsHelper::siteName() }}" class="w-20 h-20 lg:w-24 lg:h-24 object-contain">
+                    <img src="{{ \App\Helpers\SettingsHelper::siteLogo() }}" alt="{{ \App\Helpers\SettingsHelper::siteName() }}" class="w-20 h-20 lg:w-24 lg:h-24 max-w-full object-contain">
                 </div>
                 <div class="flex-1 text-center lg:text-left">
                     <h1 class="text-2xl lg:text-3xl font-bold text-gray-800 mb-2">{{ \App\Helpers\SettingsHelper::siteName() }}</h1>
