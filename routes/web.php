@@ -93,7 +93,7 @@ Route::get('/dashboard', function () {
     } elseif ($user->isEditor()) {
         return redirect()->route('admin.dashboard');
     } elseif ($user->isPenulis()) {
-        return redirect()->route('home');
+        return redirect()->route('penulis.dashboard');
     } else {
         return redirect()->route('home');
     }

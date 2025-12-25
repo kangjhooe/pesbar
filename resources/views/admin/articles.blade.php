@@ -86,7 +86,6 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             <div class="flex items-center gap-2">
-                                <span class="text-gray-600">Penulis:</span>
                                 <span class="font-medium">{{ $article->author->name ?? 'Sistem' }}</span>
                                 @if($article->author)
                                     <x-user-role-badge :user="$article->author" size="xs" />

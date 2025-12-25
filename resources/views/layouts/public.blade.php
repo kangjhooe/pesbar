@@ -416,11 +416,11 @@
                         </div>
                         <!-- Guest Links - Mobile (Icon only) -->
                         <div class="md:hidden flex items-center space-x-2">
-                            <a href="{{ route('login') }}" class="text-gray-700 hover:text-blue-600 p-2 rounded-md hover:bg-gray-100 transition-colors" title="Login">
-                                <i class="fas fa-sign-in-alt text-lg"></i>
+                            <a href="{{ route('login') }}" class="text-gray-700 hover:text-blue-600 p-2.5 rounded-md hover:bg-gray-100 transition-all duration-200 hover:scale-110" title="Login">
+                                <i class="fas fa-arrow-right-to-bracket text-lg"></i>
                             </a>
-                            <a href="{{ route('register') }}" class="bg-blue-600 text-white hover:bg-blue-700 p-2 rounded-md transition-colors" title="Daftar">
-                                <i class="fas fa-user-plus text-lg"></i>
+                            <a href="{{ route('register') }}" class="bg-blue-600 text-white hover:bg-blue-700 p-2.5 rounded-md transition-all duration-200 hover:scale-110 shadow-md hover:shadow-lg" title="Daftar">
+                                <i class="fas fa-user-circle-plus text-lg"></i>
                             </a>
                         </div>
                     @endauth

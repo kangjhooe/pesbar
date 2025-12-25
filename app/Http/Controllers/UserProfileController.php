@@ -35,7 +35,10 @@ class UserProfileController extends Controller
             'total_comments' => $user->articles()->where('status', 'published')->withCount('comments')->get()->sum('comments_count'),
         ];
 
-        return view('penulis.public-profile', compact('user', 'articles', 'stats'));
+        // Check if current user is admin
+        $isAdmin = Auth::check() && Auth::user()->isAdmin();
+
+        return view('penulis.public-profile', compact('user', 'articles', 'stats', 'isAdmin'));
     }
 
     public function upgradeRequest()

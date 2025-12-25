@@ -232,7 +232,6 @@
                                     @endif
                                 </div>
                                 <div class="ml-3">
-                                    <div class="text-xs text-gray-500 mb-1">Penulis</div>
                                     <div class="flex items-center gap-2 flex-wrap">
                                         <div class="text-sm font-medium text-gray-900">
                                             @if($article->author && $article->author->isPenulis() && $article->author->username)

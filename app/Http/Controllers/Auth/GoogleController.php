@@ -49,9 +49,11 @@ class GoogleController extends Controller
             
             Auth::login($user);
             
-            // Redirect user dan penulis ke home, admin dan editor ke dashboard
+            // Redirect berdasarkan role
             if ($user->isAdmin() || $user->isEditor()) {
                 return redirect()->intended('/dashboard');
+            } elseif ($user->isPenulis()) {
+                return redirect()->intended(route('penulis.dashboard'));
             } else {
                 return redirect()->intended('/');
             }

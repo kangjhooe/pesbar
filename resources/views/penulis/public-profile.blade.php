@@ -4,6 +4,170 @@
 
 @section('content')
 <div class="container mx-auto px-4 py-8">
+    <!-- Admin Verification Panel -->
+    @if(isset($isAdmin) && $isAdmin)
+    <div class="bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-500 rounded-lg shadow-md mb-6 p-6">
+        <div class="flex items-start justify-between">
+            <div class="flex-1">
+                <div class="flex items-center mb-3">
+                    <svg class="w-6 h-6 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
+                    <h2 class="text-xl font-bold text-gray-900">Panel Verifikasi Admin</h2>
+                </div>
+                <p class="text-gray-700 mb-4">Anda sedang melihat profil penulis dalam mode admin. Gunakan tombol di bawah untuk memverifikasi atau menolak permintaan verifikasi.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                        <div class="text-sm text-gray-600 mb-1">Status Verifikasi</div>
+                        @if($user->isVerified())
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                </svg>
+                                Terverifikasi
+                            </span>
+                        @elseif($user->verification_request_status === 'pending')
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+                                </svg>
+                                Menunggu Verifikasi
+                            </span>
+                        @elseif($user->verification_request_status === 'rejected')
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                                </svg>
+                                Ditolak
+                            </span>
+                        @else
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                                Belum Mengajukan
+                            </span>
+                        @endif
+                    </div>
+                    
+                    @if($user->verification_type)
+                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                        <div class="text-sm text-gray-600 mb-1">Tipe Verifikasi</div>
+                        <div class="text-lg font-semibold text-gray-900 capitalize">{{ $user->verification_type === 'perorangan' ? 'Perorangan' : 'Lembaga' }}</div>
+                    </div>
+                    @endif
+                    
+                    @if($user->verification_requested_at)
+                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                        <div class="text-sm text-gray-600 mb-1">Tanggal Request</div>
+                        <div class="text-lg font-semibold text-gray-900">{{ $user->verification_requested_at->format('d M Y, H:i') }}</div>
+                    </div>
+                    @endif
+                </div>
+
+                @if($user->verification_request_status === 'pending')
+                <div class="flex flex-wrap gap-3">
+                    <form method="POST" action="{{ route('admin.verification-requests.approve', $user) }}" class="inline">
+                        @csrf
+                        <button type="submit" 
+                                class="inline-flex items-center px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors shadow-md hover:shadow-lg"
+                                onclick="return confirm('Setujui verifikasi untuk {{ $user->name }}? Artikel pending akan otomatis dipublish.')">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                            Setujui Verifikasi
+                        </button>
+                    </form>
+                    
+                    <button type="button" 
+                            onclick="showRejectModal()"
+                            class="inline-flex items-center px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors shadow-md hover:shadow-lg">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                        </svg>
+                        Tolak Verifikasi
+                    </button>
+                    
+                    <a href="{{ route('admin.verification-requests') }}" 
+                       class="inline-flex items-center px-6 py-3 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors shadow-md hover:shadow-lg">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        Kembali ke Daftar
+                    </a>
+                </div>
+                @elseif($user->isVerified())
+                <div class="flex flex-wrap gap-3">
+                    <form method="POST" action="{{ route('admin.users.toggle-verified', $user) }}" class="inline">
+                        @csrf
+                        <button type="submit" 
+                                class="inline-flex items-center px-6 py-3 bg-yellow-600 text-white font-semibold rounded-lg hover:bg-yellow-700 transition-colors shadow-md hover:shadow-lg"
+                                onclick="return confirm('Cabut verifikasi untuk {{ $user->name }}?')">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                            </svg>
+                            Cabut Verifikasi
+                        </button>
+                    </form>
+                    
+                    <a href="{{ route('admin.verification-requests') }}" 
+                       class="inline-flex items-center px-6 py-3 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors shadow-md hover:shadow-lg">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        Kembali ke Daftar
+                    </a>
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Modal -->
+    @if($user->verification_request_status === 'pending')
+    <div id="rejectModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Tolak Verifikasi</h3>
+                <form method="POST" action="{{ route('admin.verification-requests.reject', $user) }}" id="rejectForm">
+                    @csrf
+                    <div class="mb-4">
+                        <label for="reason" class="block text-sm font-medium text-gray-700 mb-2">Alasan Penolakan (Opsional)</label>
+                        <textarea id="reason" name="reason" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Masukkan alasan penolakan..."></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" 
+                                onclick="hideRejectModal()"
+                                class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">
+                            Batal
+                        </button>
+                        <button type="submit" 
+                                class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
+                            Tolak Verifikasi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showRejectModal() {
+            document.getElementById('rejectModal').classList.remove('hidden');
+        }
+        
+        function hideRejectModal() {
+            document.getElementById('rejectModal').classList.add('hidden');
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('rejectModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideRejectModal();
+            }
+        });
+    </script>
+    @endif
+    @endif
+
     <!-- Profile Header -->
     <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
         <div class="bg-gradient-to-r from-blue-600 to-purple-600 h-32"></div>
@@ -156,12 +320,15 @@
     <!-- Verification Info & Identity Card Section -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <!-- Verification Info -->
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="bg-white rounded-lg shadow p-6 {{ isset($isAdmin) && $isAdmin ? 'border-2 border-blue-300' : '' }}">
             <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
                 </svg>
                 Informasi Verifikasi
+                @if(isset($isAdmin) && $isAdmin)
+                    <span class="ml-2 px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded">Admin View</span>
+                @endif
             </h3>
             <div class="space-y-3">
                 <div class="flex items-center justify-between py-2 border-b border-gray-200">
@@ -173,8 +340,22 @@
                             </svg>
                             Terverifikasi
                         </span>
-                    @else
+                    @elseif($user->verification_request_status === 'pending')
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+                            </svg>
+                            Menunggu Verifikasi
+                        </span>
+                    @elseif($user->verification_request_status === 'rejected')
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                            </svg>
+                            Ditolak
+                        </span>
+                    @else
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                             Belum Terverifikasi
                         </span>
                     @endif
@@ -186,24 +367,48 @@
                 </div>
                 @endif
                 @if($user->verification_requested_at)
-                <div class="flex items-center justify-between py-2">
+                <div class="flex items-center justify-between py-2 {{ isset($isAdmin) && $isAdmin ? 'border-b border-gray-200' : '' }}">
                     <span class="text-sm text-gray-600">Tanggal Request</span>
                     <span class="text-sm font-medium text-gray-900">{{ $user->verification_requested_at->format('d M Y') }}</span>
                 </div>
+                @endif
+                @if(isset($isAdmin) && $isAdmin)
+                    @if($user->verification_request_status)
+                    <div class="flex items-center justify-between py-2 border-b border-gray-200">
+                        <span class="text-sm text-gray-600">Status Request</span>
+                        <span class="text-sm font-medium text-gray-900 capitalize">{{ $user->verification_request_status }}</span>
+                    </div>
+                    @endif
+                    <div class="flex items-center justify-between py-2">
+                        <span class="text-sm text-gray-600">User ID</span>
+                        <span class="text-sm font-medium text-gray-900">#{{ $user->id }}</span>
+                    </div>
                 @endif
             </div>
         </div>
 
         <!-- Identity Card -->
-        <div class="bg-white rounded-lg shadow p-6">
-        @if($user->verification_document)
+        <div class="bg-white rounded-lg shadow p-6 {{ isset($isAdmin) && $isAdmin ? 'border-2 border-blue-300' : '' }}">
+            @if(isset($isAdmin) && $isAdmin)
+            <div class="mb-4 flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2m-1-4h-1m-1 4h-1"></path>
+                    </svg>
+                    Dokumen Verifikasi
+                </h3>
+                <span class="px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded">Admin View</span>
+            </div>
+            @else
             <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2m-1-4h-1m-1 4h-1"></path>
                 </svg>
                 Kartu Identitas
             </h3>
-            <div class="mt-4">
+            @endif
+        @if($user->verification_document)
+            <div class="{{ !isset($isAdmin) || !$isAdmin ? 'mt-4' : '' }}">
                 @php
                     $documentPath = Storage::url($user->verification_document);
                     $documentExtension = strtolower(pathinfo($user->verification_document, PATHINFO_EXTENSION));
@@ -228,12 +433,14 @@
                 @endif
             </div>
         @else
+            @if(!isset($isAdmin) || !$isAdmin)
             <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2m-1-4h-1m-1 4h-1"></path>
                 </svg>
                 Kartu Identitas
             </h3>
+            @endif
             <div class="text-center py-8">
                 <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>

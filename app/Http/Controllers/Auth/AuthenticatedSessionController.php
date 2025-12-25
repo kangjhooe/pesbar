@@ -30,9 +30,11 @@ class AuthenticatedSessionController extends Controller
 
         $user = auth()->user();
         
-        // Redirect user dan penulis ke home, admin dan editor ke dashboard
+        // Redirect berdasarkan role
         if ($user->isAdmin() || $user->isEditor()) {
             return redirect()->intended(route('dashboard', absolute: false));
+        } elseif ($user->isPenulis()) {
+            return redirect()->intended(route('penulis.dashboard', absolute: false));
         } else {
             return redirect()->intended(route('home', absolute: false));
         }
