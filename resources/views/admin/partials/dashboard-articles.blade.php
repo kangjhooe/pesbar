@@ -116,7 +116,11 @@
                                 </p>
                                 <p class="text-sm text-gray-600">
                                     <i class="fas fa-user text-gray-400 mr-1"></i>
-                                    {{ $article->user->name ?? 'Sistem' }}
+                                    <span class="text-gray-500">Penulis:</span>
+                                    <span class="font-medium">{{ $article->author->name ?? 'Sistem' }}</span>
+                                    @if($article->author)
+                                        <x-user-role-badge :user="$article->author" size="xs" class="ml-1" />
+                                    @endif
                                 </p>
                                 <p class="text-sm text-gray-600">
                                     <i class="fas fa-eye text-gray-400 mr-1"></i>

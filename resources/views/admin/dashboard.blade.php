@@ -377,7 +377,13 @@
                                         <div class="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center mr-3">
                                             <span class="text-xs font-semibold text-white">{{ substr($article->author->name ?? 'A', 0, 1) }}</span>
                                         </div>
-                                        <div class="text-sm text-gray-900">{{ $article->author->name ?? 'Unknown' }}</div>
+                                        <div>
+                                            <div class="text-xs text-gray-500">Penulis</div>
+                                            <div class="text-sm font-medium text-gray-900">{{ $article->author->name ?? 'Unknown' }}</div>
+                                        </div>
+                                        @if($article->author)
+                                            <x-user-role-badge :user="$article->author" size="xs" class="ml-2" />
+                                        @endif
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">

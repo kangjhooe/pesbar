@@ -15,7 +15,11 @@
                     <div class="mt-2 flex items-center space-x-4 text-sm text-gray-600">
                         <span class="flex items-center">
                             <i class="fas fa-user mr-1"></i>
-                            {{ $article->user->name ?? 'Sistem' }}
+                            <span class="text-gray-500 mr-1">Penulis:</span>
+                            <span class="font-medium text-gray-900">{{ $article->author->name ?? 'Sistem' }}</span>
+                            @if($article->author)
+                                <x-user-role-badge :user="$article->author" size="xs" class="ml-2" />
+                            @endif
                         </span>
                         <span class="flex items-center">
                             <i class="fas fa-calendar mr-1"></i>

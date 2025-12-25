@@ -35,7 +35,11 @@
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                 </svg>
-                                {{ $article->author->name ?? 'Unknown' }}
+                                <span class="text-gray-500 mr-1">Penulis:</span>
+                                <span class="font-medium text-gray-900">{{ $article->author->name ?? 'Unknown' }}</span>
+                                @if($article->author)
+                                    <x-user-role-badge :user="$article->author" size="xs" class="ml-2" />
+                                @endif
                             </span>
                             <span class="flex items-center">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

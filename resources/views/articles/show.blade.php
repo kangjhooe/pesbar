@@ -152,12 +152,13 @@
                     <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                         <div class="flex items-center space-x-2">
                             <i class="fas fa-user text-primary-600"></i>
+                            <span class="text-gray-500">Penulis:</span>
                             @if($article->author && $article->author->isPenulis() && $article->author->username)
-                                <a href="{{ route('penulis.public-profile', $article->author->username) }}" class="hover:text-primary-700 font-medium">
+                                <a href="{{ route('penulis.public-profile', $article->author->username) }}" class="hover:text-primary-700 font-medium text-gray-900">
                                     {{ $article->author->name ?? 'Admin' }}
                                 </a>
                             @else
-                                <span>{{ $article->author->name ?? 'Admin' }}</span>
+                                <span class="font-medium text-gray-900">{{ $article->author->name ?? 'Admin' }}</span>
                             @endif
                             @if($article->author)
                                 <x-user-role-badge :user="$article->author" size="xs" />

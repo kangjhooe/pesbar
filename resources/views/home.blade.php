@@ -7,18 +7,36 @@
 <div class="container-responsive py-8">
     @if($breakingNews)
     <!-- Breaking News -->
-    <div class="bg-gradient-to-r from-red-600 to-red-700 text-white p-4 rounded-lg mb-8">
-        <div class="flex items-center space-x-4">
-            <div class="bg-red-500 px-4 py-2 rounded-full text-sm font-semibold flex items-center space-x-2">
-                <i class="fas fa-bolt"></i>
-                <span>BERITA TERKINI</span>
-            </div>
-            <div class="flex-1">
-                <p class="text-sm font-medium">
-                    <a href="{{ route('articles.show', $breakingNews) }}" class="hover:underline">
-                        {{ $breakingNews->title }}
-                    </a>
-                </p>
+    <div class="breaking-news-container bg-gradient-to-r from-red-600 via-red-650 to-red-700 text-white rounded-lg mb-6 md:mb-8 overflow-hidden shadow-lg border-2 border-red-500">
+        <div class="relative">
+            <!-- Animated background effect -->
+            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer"></div>
+            
+            <!-- Content -->
+            <div class="relative z-10 p-3 md:p-4">
+                <div class="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+                    <!-- Badge -->
+                    <div class="flex-shrink-0 flex items-center justify-center md:justify-start">
+                        <div class="breaking-badge bg-red-500 px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-bold flex items-center space-x-2 animate-pulse">
+                            <i class="fas fa-bolt text-yellow-300"></i>
+                            <span>BERITA TERKINI</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Title with marquee effect for long text -->
+                    <div class="flex-1 min-w-0">
+                        <div class="breaking-news-title-wrapper overflow-hidden">
+                            <p class="text-sm md:text-base font-semibold md:font-medium leading-tight">
+                                <a href="{{ route('articles.show', $breakingNews) }}" 
+                                   class="breaking-news-link hover:text-yellow-200 transition-colors duration-300 block">
+                                    <span class="breaking-news-text inline-block whitespace-nowrap">
+                                        {{ $breakingNews->title }}
+                                    </span>
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -138,7 +156,7 @@
                                              style="position: relative; z-index: 0; display: block; width: 100%; height: 100%;"
                                              onerror="this.onerror=null; this.src='{{ asset('images/default-news.jpg') }}';"
                                              loading="eager">
-                                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
+                                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20 z-10"></div>
                                         <div class="absolute top-4 left-4 z-20">
                                             <span class="category-badge {{ $featured->type === 'berita' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
                                                 {{ $featured->category->name }}
@@ -150,18 +168,20 @@
                                             </span>
                                         </div>
                                         @if($featured->is_breaking)
-                                        <div class="absolute bottom-4 left-4 z-20">
+                                        <div class="absolute bottom-20 left-4 z-20">
                                             <span class="breaking-badge">
                                                 <i class="fas fa-bolt mr-1"></i>BREAKING
                                             </span>
                                         </div>
                                         @endif
-                                        <div class="absolute bottom-4 left-4 right-4 z-20">
-                                            <h2 class="text-white text-xl font-bold mb-2 line-clamp-2">
-                                                <a href="{{ route('articles.show', $featured) }}" class="hover:text-yellow-300 transition-colors">
-                                                    {{ $featured->title }}
-                                                </a>
-                                            </h2>
+                                        <div class="absolute bottom-0 left-0 right-0 z-20">
+                                            <div class="slider-title-container px-4 md:px-6 pb-4 md:pb-6 pt-8">
+                                                <h2 class="text-white text-base md:text-xl lg:text-2xl font-bold leading-tight slider-title">
+                                                    <a href="{{ route('articles.show', $featured) }}" class="hover:text-yellow-300 transition-colors block">
+                                                        {{ $featured->title }}
+                                                    </a>
+                                                </h2>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="p-6">
@@ -172,12 +192,13 @@
                                             <div class="flex items-center space-x-4">
                                                 <span class="flex items-center space-x-1">
                                                     <i class="fas fa-user text-blue-600"></i>
+                                                    <span class="text-gray-500">Penulis:</span>
                                                     @if($featured->author && $featured->author->isPenulis() && $featured->author->username)
-                                                        <a href="{{ route('penulis.public-profile', $featured->author->username) }}" class="hover:text-blue-700 font-medium">
+                                                        <a href="{{ route('penulis.public-profile', $featured->author->username) }}" class="hover:text-blue-700 font-medium text-gray-900">
                                                             {{ $featured->author->name ?? 'Admin' }}
                                                         </a>
                                                     @else
-                                                        <span>{{ $featured->author->name ?? 'Admin' }}</span>
+                                                        <span class="font-medium text-gray-900">{{ $featured->author->name ?? 'Admin' }}</span>
                                                     @endif
                                                     @if($featured->author)
                                                         <x-user-role-badge :user="$featured->author" size="xs" />
@@ -240,7 +261,7 @@
 
             <!-- News Grid - Below featured article in center column -->
             <div class="mt-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-4">
                     @forelse($latestArticles as $article)
                     <article class="card group">
                         <div class="relative h-32 overflow-hidden">
@@ -553,6 +574,52 @@ document.addEventListener('DOMContentLoaded', function() {
             this.src = '{{ asset("images/default-news.jpg") }}';
         });
     });
+    
+    // Breaking News Marquee Effect - only if text overflows
+    function initBreakingNewsMarquee() {
+        const breakingNewsWrapper = document.querySelector('.breaking-news-title-wrapper');
+        const breakingNewsText = document.querySelector('.breaking-news-text');
+        
+        if (!breakingNewsWrapper || !breakingNewsText) return;
+        
+        // Remove any existing duplicates
+        const existingDuplicates = breakingNewsWrapper.querySelectorAll('.breaking-news-text:not(:first-child)');
+        existingDuplicates.forEach(dup => dup.remove());
+        
+        if (window.innerWidth <= 768) {
+            // Temporarily set to nowrap to measure
+            breakingNewsText.style.whiteSpace = 'nowrap';
+            const wrapperWidth = breakingNewsWrapper.offsetWidth;
+            const textWidth = breakingNewsText.scrollWidth;
+            
+            if (textWidth > wrapperWidth) {
+                // Text overflows, enable marquee
+                breakingNewsWrapper.classList.add('has-overflow');
+                // Duplicate text for seamless loop
+                const duplicateText = breakingNewsText.cloneNode(true);
+                duplicateText.classList.add('breaking-news-text');
+                breakingNewsText.parentElement.appendChild(duplicateText);
+            } else {
+                // Text doesn't overflow, disable marquee
+                breakingNewsWrapper.classList.remove('has-overflow');
+                breakingNewsText.style.whiteSpace = 'normal';
+            }
+        } else {
+            // Desktop - no marquee needed
+            breakingNewsWrapper.classList.remove('has-overflow');
+            breakingNewsText.style.whiteSpace = 'normal';
+        }
+    }
+    
+    // Initialize breaking news marquee after a short delay to ensure layout is ready
+    setTimeout(initBreakingNewsMarquee, 100);
+    
+    // Re-check on window resize
+    let resizeTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(initBreakingNewsMarquee, 250);
+    });
 });
 
 // Slider Functions
@@ -826,6 +893,146 @@ document.addEventListener('DOMContentLoaded', function() {
     object-fit: cover !important;
     position: relative !important;
     z-index: 0 !important;
+}
+
+/* Slider Title Styling for Better Readability */
+.slider-title-container {
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.5) 50%, transparent 100%);
+    position: relative;
+}
+
+.slider-title-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.3), transparent);
+}
+
+.slider-title {
+    text-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.9),
+        0 4px 12px rgba(0, 0, 0, 0.7),
+        0 0 20px rgba(0, 0, 0, 0.5);
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.slider-title a {
+    text-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.95),
+        0 4px 12px rgba(0, 0, 0, 0.8),
+        0 0 25px rgba(0, 0, 0, 0.6);
+    transition: all 0.3s ease;
+}
+
+.slider-title a:hover {
+    text-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.95),
+        0 4px 12px rgba(0, 0, 0, 0.8),
+        0 0 25px rgba(0, 0, 0, 0.6),
+        0 0 30px rgba(255, 235, 59, 0.4);
+    transform: translateY(-1px);
+}
+
+/* Breaking News Styles */
+.breaking-news-container {
+    position: relative;
+    animation: slideDown 0.5s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.animate-shimmer {
+    animation: shimmer 3s infinite;
+}
+
+.breaking-badge {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.breaking-news-link {
+    display: block;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.breaking-news-text {
+    display: inline-block;
+}
+
+/* Marquee effect for long titles on mobile */
+@media (max-width: 768px) {
+    .breaking-news-title-wrapper {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .breaking-news-title-wrapper.has-overflow {
+        white-space: nowrap;
+    }
+    
+    .breaking-news-title-wrapper.has-overflow .breaking-news-text {
+        animation: marquee 8s linear infinite;
+        display: inline-block;
+        padding-right: 30px;
+    }
+    
+    .breaking-news-title-wrapper.has-overflow:hover .breaking-news-text {
+        animation-play-state: paused;
+    }
+    
+    @keyframes marquee {
+        0% {
+            transform: translateX(0);
+        }
+        100% {
+            transform: translateX(-50%);
+        }
+    }
+    
+    /* Only animate if text is long enough to overflow */
+    .breaking-news-title-wrapper:not(.has-overflow) .breaking-news-text {
+        animation: none;
+        white-space: normal;
+    }
+}
+
+/* Desktop hover effects */
+@media (min-width: 768px) {
+    .breaking-news-container:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(220, 38, 38, 0.4);
+        transition: all 0.3s ease;
+    }
+    
+    .breaking-news-link:hover {
+        text-decoration: underline;
+    }
 }
 </style>
 @endsection
