@@ -6,9 +6,14 @@ use Illuminate\Http\Request;
 use App\Models\Article;
 use App\Models\Category;
 use App\Models\Tag;
+use App\Models\Comment;
+use App\Models\CommentLike;
+use App\Models\Bookmark;
+use App\Models\ReadingHistory;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Helpers\CacheHelper;
 use App\Helpers\ActivityLogHelper;
 
@@ -251,18 +256,44 @@ class AdminArticleController extends Controller
      */
     public function destroy(Article $article)
     {
+        DB::beginTransaction();
         try {
             $articleTitle = $article->title;
+            $articleId = $article->id;
+            
+            // Get all comment IDs for this article
+            $commentIds = Comment::where('article_id', $articleId)->pluck('id');
+            
+            // Delete comment likes first (related to comments)
+            if ($commentIds->isNotEmpty()) {
+                CommentLike::whereIn('comment_id', $commentIds)->delete();
+            }
+            
+            // Delete comments (including nested comments via cascade)
+            Comment::where('article_id', $articleId)->delete();
+            
+            // Delete bookmarks
+            Bookmark::where('article_id', $articleId)->delete();
+            
+            // Delete reading history
+            ReadingHistory::where('article_id', $articleId)->delete();
+            
+            // Detach tags
+            $article->tags()->detach();
             
             // Delete featured image
             if ($article->featured_image) {
-                Storage::disk('public')->delete($article->featured_image);
+                try {
+                    Storage::disk('public')->delete($article->featured_image);
+                } catch (\Exception $e) {
+                    \Log::warning('Failed to delete featured image: ' . $e->getMessage());
+                }
             }
-
-            // Detach tags
-            $article->tags()->detach();
-
+            
+            // Delete the article
             $article->delete();
+            
+            DB::commit();
 
             // Clear cache
             CacheHelper::clearArticleCache();
@@ -274,13 +305,15 @@ class AdminArticleController extends Controller
             return redirect()->back()
                 ->with('success', 'Artikel berhasil dihapus!');
         } catch (\Exception $e) {
+            DB::rollBack();
+            
             \Log::error('Article Deletion Error: ' . $e->getMessage(), [
-                'article_id' => $article->id,
+                'article_id' => $article->id ?? null,
                 'trace' => $e->getTraceAsString()
             ]);
             
             return redirect()->back()
-                ->with('error', 'Terjadi kesalahan saat menghapus artikel. Silakan coba lagi.');
+                ->with('error', 'Terjadi kesalahan saat menghapus artikel: ' . $e->getMessage());
         }
     }
 
@@ -370,35 +403,74 @@ class AdminArticleController extends Controller
             $articles = Article::whereIn('id', $articleIds)->get();
 
             if ($articles->isEmpty()) {
-                return back()->with('error', 'Tidak ada artikel yang ditemukan.');
+                $errorMessage = 'Tidak ada artikel yang ditemukan.';
+                
+                // Return JSON for AJAX requests
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $errorMessage
+                    ], 422);
+                }
+                
+                return back()->with('error', $errorMessage);
             }
 
             switch ($request->action) {
                 case 'delete':
-                    $count = $articles->count();
-                    
-                    // Delete featured images and detach tags for each article
-                    $articles->each(function ($article) {
-                        // Delete featured image
-                        if ($article->featured_image) {
-                            Storage::disk('public')->delete($article->featured_image);
+                    DB::beginTransaction();
+                    try {
+                        $count = $articles->count();
+                        
+                        // Get all comment IDs for these articles
+                        $commentIds = Comment::whereIn('article_id', $articleIds)->pluck('id');
+                        
+                        // Delete comment likes first
+                        if ($commentIds->isNotEmpty()) {
+                            CommentLike::whereIn('comment_id', $commentIds)->delete();
                         }
                         
-                        // Detach tags
-                        $article->tags()->detach();
-                    });
-                    
-                    // Delete articles
-                    Article::whereIn('id', $articleIds)->delete();
-                    
-                    // Clear cache
-                    CacheHelper::clearArticleCache();
-                    CacheHelper::clearDashboardCache();
-                    
-                    // Log activity
-                    ActivityLogHelper::log('article', 'bulk_deleted', $count . ' artikel dihapus secara massal');
-                    
-                    $message = $count . ' artikel berhasil dihapus!';
+                        // Delete comments
+                        Comment::whereIn('article_id', $articleIds)->delete();
+                        
+                        // Delete bookmarks
+                        Bookmark::whereIn('article_id', $articleIds)->delete();
+                        
+                        // Delete reading history
+                        ReadingHistory::whereIn('article_id', $articleIds)->delete();
+                        
+                        // Delete featured images and detach tags for each article
+                        $articles->each(function ($article) {
+                            // Delete featured image
+                            if ($article->featured_image) {
+                                try {
+                                    Storage::disk('public')->delete($article->featured_image);
+                                } catch (\Exception $e) {
+                                    \Log::warning('Failed to delete featured image for article ' . $article->id . ': ' . $e->getMessage());
+                                }
+                            }
+                            
+                            // Detach tags
+                            $article->tags()->detach();
+                        });
+                        
+                        // Delete articles
+                        Article::whereIn('id', $articleIds)->delete();
+                        
+                        DB::commit();
+                        
+                        // Clear cache
+                        CacheHelper::clearArticleCache();
+                        CacheHelper::clearDashboardCache();
+                        
+                        // Log activity
+                        ActivityLogHelper::log('article', 'bulk_deleted', $count . ' artikel dihapus secara massal');
+                        
+                        $message = $count . ' artikel berhasil dihapus!';
+                    } catch (\Exception $e) {
+                        DB::rollBack();
+                        throw $e;
+                    }
                     break;
 
                 case 'publish':
@@ -443,6 +515,14 @@ class AdminArticleController extends Controller
                     break;
             }
 
+            // Return JSON for AJAX requests
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message
+                ]);
+            }
+            
             return back()->with('success', $message);
         } catch (\Exception $e) {
             \Log::error('Bulk Action Error: ' . $e->getMessage(), [
@@ -451,7 +531,17 @@ class AdminArticleController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             
-            return back()->with('error', 'Terjadi kesalahan saat memproses aksi bulk. Silakan coba lagi.');
+            $errorMessage = 'Terjadi kesalahan saat memproses aksi bulk: ' . $e->getMessage();
+            
+            // Return JSON for AJAX requests
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage
+                ], 500);
+            }
+            
+            return back()->with('error', $errorMessage);
         }
     }
 }

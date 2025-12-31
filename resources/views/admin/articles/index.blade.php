@@ -434,26 +434,29 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => {
             if (response.ok) {
-                return response.text();
+                return response.json();
             }
-            throw new Error('Network response was not ok');
+            return response.json().then(data => {
+                throw new Error(data.message || 'Network response was not ok');
+            });
         })
-        .then(html => {
-            // Check if response contains success message
-            if (html.includes('success') || html.includes('berhasil')) {
+        .then(data => {
+            if (data.success) {
                 // Clear selection
                 clearSelection();
+                // Show success message
+                alert(data.message || 'Aksi berhasil dilakukan!');
                 // Reload page to show updated state
                 location.reload();
             } else {
-                throw new Error('Terjadi kesalahan saat memproses aksi');
+                throw new Error(data.message || 'Terjadi kesalahan saat memproses aksi');
             }
         })
         .catch(error => {
             console.error('Error:', error);
             submitButton.disabled = false;
             submitButton.innerHTML = originalText;
-            alert('Terjadi kesalahan saat memproses aksi bulk. Silakan coba lagi.');
+            alert(error.message || 'Terjadi kesalahan saat memproses aksi bulk. Silakan coba lagi.');
         });
     });
 
