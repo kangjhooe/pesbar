@@ -1,8 +1,8 @@
 @extends('layouts.admin-simple')
 
-@section('title', 'Tentang Kami - Portal Berita Kabupaten Pesisir Barat')
+@section('title', 'Tentang Kami - Pesisir Barat Hub')
 @section('page-title', 'Tentang Kami')
-@section('page-subtitle', 'Informasi tentang Portal Berita Kabupaten Pesisir Barat')
+@section('page-subtitle', 'Informasi tentang Pesisir Barat Hub')
 
 @section('content')
 <div class="p-4 lg:p-6">
@@ -15,7 +15,7 @@
                 </div>
                 <div class="flex-1 text-center lg:text-left">
                     <h1 class="text-2xl lg:text-3xl font-bold text-gray-800 mb-2">{{ \App\Helpers\SettingsHelper::siteName() }}</h1>
-                    <p class="text-gray-600 text-lg">Platform informasi resmi Pemerintah Kabupaten Pesisir Barat</p>
+                    <p class="text-gray-600 text-lg">Platform informasi Kabupaten Pesisir Barat</p>
                 </div>
             </div>
         </div>

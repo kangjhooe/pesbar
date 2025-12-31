@@ -1,7 +1,7 @@
 @extends('layouts.public')
 
 @section('title', 'Kebijakan Privasi - ' . \App\Helpers\SettingsHelper::siteName())
-@section('description', 'Kebijakan Privasi Portal Berita Kabupaten Pesisir Barat')
+@section('description', 'Kebijakan Privasi Pesisir Barat Hub')
 
 @section('content')
 <div class="container-responsive py-8">
@@ -30,7 +30,7 @@
             <section class="mb-8">
                 <h2 class="text-2xl font-bold text-gray-800 mb-4">1. Pendahuluan</h2>
                 <p class="text-gray-700 leading-relaxed mb-4">
-                    Portal Berita Kabupaten Pesisir Barat menghormati privasi Anda dan berkomitmen untuk melindungi informasi pribadi yang Anda berikan kepada kami. Kebijakan Privasi ini menjelaskan bagaimana kami mengumpulkan, menggunakan, mengungkapkan, dan melindungi informasi Anda saat menggunakan layanan kami.
+                    Pesisir Barat Hub menghormati privasi Anda dan berkomitmen untuk melindungi informasi pribadi yang Anda berikan kepada kami. Kebijakan Privasi ini menjelaskan bagaimana kami mengumpulkan, menggunakan, mengungkapkan, dan melindungi informasi Anda saat menggunakan layanan kami.
                 </p>
             </section>
 

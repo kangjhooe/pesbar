@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'Method Tidak Diizinkan - Portal Berita Kabupaten Pesisir Barat')
+@section('title', 'Method Tidak Diizinkan - Pesisir Barat Hub')
 @section('description', 'Method HTTP tidak diizinkan untuk URL ini')
 
 @section('content')

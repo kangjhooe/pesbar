@@ -1,8 +1,8 @@
-# Laporan Penyempurnaan Aplikasi Portal Berita Pesisir Barat
+# Laporan Penyempurnaan Aplikasi Pesisir Barat Hub Pesisir Barat
 
 ## Ringkasan
 
-Aplikasi Portal Berita Kabupaten Pesisir Barat telah disempurnakan dengan berbagai perbaikan dan penambahan fitur untuk meningkatkan performa, keamanan, SEO, dan maintainability.
+Aplikasi Pesisir Barat Hub Kabupaten Pesisir Barat telah disempurnakan dengan berbagai perbaikan dan penambahan fitur untuk meningkatkan performa, keamanan, SEO, dan maintainability.
 
 ## Perbaikan yang Telah Dilakukan
 

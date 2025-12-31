@@ -26,7 +26,7 @@
                     <input type="text" 
                            id="site_name" 
                            name="site_name" 
-                           value="{{ $settings['site_name'] ?? 'Portal Berita Kabupaten Pesisir Barat' }}"
+                           value="{{ $settings['site_name'] ?? 'Pesisir Barat Hub' }}"
                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                 </div>
                 

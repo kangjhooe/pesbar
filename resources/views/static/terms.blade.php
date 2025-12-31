@@ -1,7 +1,7 @@
 @extends('layouts.public')
 
 @section('title', 'Syarat dan Ketentuan - ' . \App\Helpers\SettingsHelper::siteName())
-@section('description', 'Syarat dan Ketentuan penggunaan Portal Berita Kabupaten Pesisir Barat')
+@section('description', 'Syarat dan Ketentuan penggunaan Pesisir Barat Hub')
 
 @section('content')
 <div class="container-responsive py-8">
@@ -14,7 +14,7 @@
                 </div>
                 <div>
                     <h1 class="heading-responsive font-bold">Syarat dan Ketentuan</h1>
-                    <p class="text-primary-100 text-responsive">Ketentuan penggunaan Portal Berita Kabupaten Pesisir Barat</p>
+                    <p class="text-primary-100 text-responsive">Ketentuan penggunaan Pesisir Barat Hub</p>
                 </div>
             </div>
         </div>
@@ -30,7 +30,7 @@
             <section class="mb-8">
                 <h2 class="text-2xl font-bold text-gray-800 mb-4">1. Penerimaan Syarat</h2>
                 <p class="text-gray-700 leading-relaxed mb-4">
-                    Dengan mengakses dan menggunakan Portal Berita Kabupaten Pesisir Barat, Anda menyetujui untuk terikat oleh syarat dan ketentuan ini. Jika Anda tidak setuju dengan bagian mana pun dari syarat ini, maka Anda tidak boleh menggunakan layanan kami.
+                    Dengan mengakses dan menggunakan Pesisir Barat Hub, Anda menyetujui untuk terikat oleh syarat dan ketentuan ini. Jika Anda tidak setuju dengan bagian mana pun dari syarat ini, maka Anda tidak boleh menggunakan layanan kami.
                 </p>
             </section>
 
@@ -79,7 +79,7 @@
             <section class="mb-8">
                 <h2 class="text-2xl font-bold text-gray-800 mb-4">5. Hak Kekayaan Intelektual</h2>
                 <p class="text-gray-700 leading-relaxed mb-4">
-                    Semua konten di Portal Berita Kabupaten Pesisir Barat, termasuk teks, grafik, logo, ikon, gambar, klip audio, unduhan digital, dan kompilasi data, adalah milik kami atau pemberi lisensi kami dan dilindungi oleh undang-undang hak cipta dan kekayaan intelektual lainnya.
+                    Semua konten di Pesisir Barat Hub, termasuk teks, grafik, logo, ikon, gambar, klip audio, unduhan digital, dan kompilasi data, adalah milik kami atau pemberi lisensi kami dan dilindungi oleh undang-undang hak cipta dan kekayaan intelektual lainnya.
                 </p>
             </section>
 

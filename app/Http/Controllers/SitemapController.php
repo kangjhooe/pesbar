@@ -623,7 +623,7 @@ class SitemapController extends Controller
         $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" ' .
                 'xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">' . "\n";
         
-        $publicationName = SettingsHelper::siteName() ?: config('app.name', 'Portal Berita');
+        $publicationName = SettingsHelper::siteName() ?: config('app.name', 'Pesisir Barat Hub');
         $publicationLanguage = 'id'; // Indonesian
         
         // Get recent articles (last 2 days for Google News)

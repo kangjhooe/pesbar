@@ -47,8 +47,8 @@ class HomeController extends Controller
             ->skip(5) // Skip the first 5 articles that are already shown in featured
             ->paginate(10); // Show 10 articles per page
 
-        $siteTitle = Setting::get('site_title', 'Portal Berita Kabupaten Pesisir Barat');
-        $siteDescription = Setting::get('site_description', 'Portal berita resmi Kabupaten Pesisir Barat');
+        $siteTitle = Setting::get('site_title', 'Pesisir Barat Hub');
+        $siteDescription = Setting::get('site_description', 'Platform informasi Kabupaten Pesisir Barat');
 
         // Get widget data
         $weatherData = $this->weatherService->getWeatherData();
@@ -77,8 +77,8 @@ class HomeController extends Controller
 
     public function about()
     {
-        $siteTitle = Setting::get('site_title', 'Portal Berita Kabupaten Pesisir Barat');
-        $siteDescription = Setting::get('site_description', 'Portal berita resmi Kabupaten Pesisir Barat');
+        $siteTitle = Setting::get('site_title', 'Pesisir Barat Hub');
+        $siteDescription = Setting::get('site_description', 'Platform informasi Kabupaten Pesisir Barat');
         
         return view('about', compact('siteTitle', 'siteDescription'));
     }

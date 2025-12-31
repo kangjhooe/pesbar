@@ -539,7 +539,7 @@
                 </div>
                 
                 <p class="text-gray-300 text-sm">
-                    &copy; {{ date('Y') }} Portal Berita Kabupaten Pesisir Barat. Semua hak dilindungi.
+                    &copy; {{ date('Y') }} Pesisir Barat Hub. Semua hak dilindungi.
                 </p>
             </div>
         </div>

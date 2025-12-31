@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', $category->name . ' - Portal Berita Kabupaten Pesisir Barat')
+@section('title', $category->name . ' - Pesisir Barat Hub')
 @section('description', 'Baca berita terkini dari kategori ' . $category->name . '. Informasi terbaru dan terpercaya dari Kabupaten Pesisir Barat.')
 
 @section('content')

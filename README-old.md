@@ -1,4 +1,4 @@
-# Portal Berita Kabupaten Pesisir Barat
+# Pesisir Barat Hub Kabupaten Pesisir Barat
 
 Portal berita resmi Kabupaten Pesisir Barat yang menyajikan informasi terkini, akurat, dan terpercaya untuk masyarakat.
 
@@ -232,7 +232,7 @@ Untuk bantuan dan support:
 
 ## 📄 License
 
-© 2024 Portal Berita Kabupaten Pesisir Barat. All rights reserved.
+© 2024 Pesisir Barat Hub Kabupaten Pesisir Barat. All rights reserved.
 
 ---
 

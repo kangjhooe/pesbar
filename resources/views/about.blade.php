@@ -63,7 +63,7 @@
                             {!! nl2br(e(\App\Helpers\SettingsHelper::aboutContent())) !!}
                         @else
                             <p class="text-gray-700 leading-relaxed mb-4">
-                                Portal Berita Kabupaten Pesisir Barat didirikan sebagai inisiatif 
+                                Pesisir Barat Hub didirikan sebagai inisiatif 
                                 untuk meningkatkan akses informasi publik dan transparansi pemerintahan di Kabupaten Pesisir Barat, Lampung.
                             </p>
                             <p class="text-gray-700 leading-relaxed mb-4">

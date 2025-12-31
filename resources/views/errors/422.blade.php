@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'Data Tidak Valid - Portal Berita Kabupaten Pesisir Barat')
+@section('title', 'Data Tidak Valid - Pesisir Barat Hub')
 @section('description', 'Data yang dimasukkan tidak valid, silakan periksa kembali')
 
 @section('content')

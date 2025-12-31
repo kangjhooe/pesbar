@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'Kesalahan Server - Portal Berita Kabupaten Pesisir Barat')
+@section('title', 'Kesalahan Server - Pesisir Barat Hub')
 @section('description', 'Terjadi kesalahan pada server, silakan coba lagi nanti')
 
 @section('content')

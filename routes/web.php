@@ -94,6 +94,10 @@ Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallb
 Route::get('/dashboard', function () {
     $user = auth()->user();
     
+    // Refresh user dari database untuk memastikan data terbaru (terutama role)
+    // Ini penting ketika role user berubah saat mereka masih login
+    $user->refresh();
+    
     if ($user->isAdmin()) {
         return redirect()->route('admin.dashboard');
     } elseif ($user->isEditor()) {

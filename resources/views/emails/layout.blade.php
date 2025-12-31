@@ -90,7 +90,7 @@
 <body>
     <div class="email-container">
         <div class="email-header">
-            <h1>{{ $siteName ?? config('app.name', 'Portal Berita') }}</h1>
+            <h1>{{ $siteName ?? config('app.name', 'Pesisir Barat Hub') }}</h1>
         </div>
         
         <div class="email-body">
@@ -99,7 +99,7 @@
         
         <div class="email-footer">
             <p>
-                <strong>{{ $siteName ?? config('app.name', 'Portal Berita') }}</strong><br>
+                <strong>{{ $siteName ?? config('app.name', 'Pesisir Barat Hub') }}</strong><br>
                 {{ $siteDescription ?? 'Portal berita resmi Kabupaten Pesisir Barat' }}
             </p>
             <p style="margin-top: 10px;">

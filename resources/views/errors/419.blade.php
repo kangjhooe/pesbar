@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'Token CSRF Tidak Valid - Portal Berita Kabupaten Pesisir Barat')
+@section('title', 'Token CSRF Tidak Valid - Pesisir Barat Hub')
 @section('description', 'Token CSRF tidak valid, silakan refresh halaman dan coba lagi')
 
 @section('content')

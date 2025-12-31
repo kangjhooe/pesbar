@@ -15,12 +15,12 @@ class SettingSeeder extends Seeder
         $settings = [
             [
                 'setting_key' => 'site_title',
-                'setting_value' => 'Portal Berita Kabupaten Pesisir Barat',
+                'setting_value' => 'Pesisir Barat Hub',
                 'description' => 'Judul website',
             ],
             [
                 'setting_key' => 'site_description',
-                'setting_value' => 'Portal berita resmi Kabupaten Pesisir Barat yang menyajikan informasi terkini, akurat, dan terpercaya untuk masyarakat.',
+                'setting_value' => 'Platform informasi Kabupaten Pesisir Barat yang menyajikan berita dan artikel terkini untuk masyarakat.',
                 'description' => 'Deskripsi website',
             ],
             [

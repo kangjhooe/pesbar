@@ -66,7 +66,7 @@ class PenulisUserSeeder extends Seeder
             if (!$user->profile) {
                 UserProfile::create([
                     'user_id' => $user->id,
-                    'bio' => 'Penulis di Portal Berita Pesisir Barat',
+                    'bio' => 'Penulis di Pesisir Barat Hub',
                     'avatar' => null,
                     'website' => null,
                     'location' => 'Kabupaten Pesisir Barat, Lampung',

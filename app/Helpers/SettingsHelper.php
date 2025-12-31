@@ -27,7 +27,7 @@ class SettingsHelper
      */
     public static function siteName()
     {
-        return self::get('site_name', 'Portal Berita');
+        return self::get('site_name', 'Pesisir Barat Hub');
     }
 
     /**
@@ -35,7 +35,7 @@ class SettingsHelper
      */
     public static function siteDescription()
     {
-        return self::get('site_description', 'Portal berita resmi');
+        return self::get('site_description', 'Platform informasi Kabupaten Pesisir Barat');
     }
 
     /**

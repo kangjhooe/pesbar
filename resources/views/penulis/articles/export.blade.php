@@ -75,7 +75,7 @@
     </div>
 
     <div class="footer">
-        <p>Dicetak dari Portal Berita Kabupaten Pesisir Barat</p>
+        <p>Dicetak dari Pesisir Barat Hub</p>
         <p>{{ url('/articles/' . $article->slug) }}</p>
         <p>Dicetak pada: {{ now()->format('d F Y, H:i') }}</p>
     </div>

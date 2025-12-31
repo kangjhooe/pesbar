@@ -74,6 +74,9 @@ class WeatherService
                 $humidity = $this->extractParameterValue($parameter, 'hu', 0); // Kelembaban
                 $weather = $this->extractParameterValue($parameter, 'weather', 0); // Kondisi cuaca
                 
+                // Ambil data prakiraan cuaca untuk 3 hari ke depan
+                $forecast = $this->getWeatherForecast($parameter);
+                
                 return [
                     'temperature' => $temperature ?: 28,
                     'humidity' => $humidity ?: 75,
@@ -81,7 +84,8 @@ class WeatherService
                     'icon' => $this->getWeatherIcon($weather),
                     'location' => 'Pesisir Barat',
                     'source' => 'BMKG',
-                    'updated_at' => now()->format('H:i')
+                    'updated_at' => now()->format('H:i'),
+                    'forecast' => $forecast
                 ];
             }
             
@@ -98,7 +102,14 @@ class WeatherService
      */
     private function extractParameterValue($parameter, $type, $index = 0)
     {
-        $param = $parameter->xpath("//parameter[@id='{$type}']")[0] ?? null;
+        // Cari parameter dengan ID yang sesuai dalam parent parameter
+        $param = null;
+        foreach ($parameter->children() as $child) {
+            if ((string)$child['id'] === $type) {
+                $param = $child;
+                break;
+            }
+        }
         
         if ($param && isset($param->timerange[$index])) {
             $value = $param->timerange[$index]->value;
@@ -106,6 +117,116 @@ class WeatherService
         }
         
         return null;
+    }
+    
+    /**
+     * Get weather forecast for next 3 days
+     */
+    private function getWeatherForecast($parameter)
+    {
+        $forecast = [];
+        $today = now()->startOfDay();
+        
+        // Ambil data untuk 3 hari ke depan
+        for ($day = 1; $day <= 3; $day++) {
+            $targetDate = $today->copy()->addDays($day);
+            
+            // Cari timerange yang sesuai dengan tanggal target (biasanya interval 6 jam)
+            // Ambil data untuk siang hari (index sekitar 2-3 untuk hari berikutnya)
+            $timerangeIndex = ($day * 4) + 2; // Estimasi index untuk siang hari
+            
+            $temp = $this->extractParameterValue($parameter, 't', $timerangeIndex);
+            $weather = $this->extractParameterValue($parameter, 'weather', $timerangeIndex);
+            
+            // Jika tidak ada data, coba ambil dari index sebelumnya atau berikutnya
+            if (!$temp || !$weather) {
+                for ($offset = -2; $offset <= 2; $offset++) {
+                    $testIndex = $timerangeIndex + $offset;
+                    if ($testIndex >= 0) {
+                        $testTemp = $this->extractParameterValue($parameter, 't', $testIndex);
+                        $testWeather = $this->extractParameterValue($parameter, 'weather', $testIndex);
+                        if ($testTemp && $testWeather) {
+                            $temp = $testTemp;
+                            $weather = $testWeather;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // Ambil suhu min dan max untuk hari tersebut
+            $tempMin = $this->getMinTemperatureForDay($parameter, $day);
+            $tempMax = $this->getMaxTemperatureForDay($parameter, $day);
+            
+            $forecast[] = [
+                'day' => $this->getDayName($targetDate),
+                'date' => $targetDate->format('d/m'),
+                'temperature' => $temp ?: ($tempMax ?: 28),
+                'temp_min' => $tempMin ?: ($temp ?: 26),
+                'temp_max' => $tempMax ?: ($temp ?: 30),
+                'condition' => $this->mapWeatherCondition($weather),
+                'icon' => $this->getWeatherIcon($weather)
+            ];
+        }
+        
+        return $forecast;
+    }
+    
+    /**
+     * Get minimum temperature for a specific day
+     */
+    private function getMinTemperatureForDay($parameter, $dayOffset)
+    {
+        $startIndex = $dayOffset * 4;
+        $endIndex = ($dayOffset + 1) * 4;
+        $minTemp = null;
+        
+        for ($i = $startIndex; $i < $endIndex && $i < 20; $i++) {
+            $temp = $this->extractParameterValue($parameter, 't', $i);
+            if ($temp) {
+                $temp = (int) $temp;
+                if ($minTemp === null || $temp < $minTemp) {
+                    $minTemp = $temp;
+                }
+            }
+        }
+        
+        return $minTemp;
+    }
+    
+    /**
+     * Get maximum temperature for a specific day
+     */
+    private function getMaxTemperatureForDay($parameter, $dayOffset)
+    {
+        $startIndex = $dayOffset * 4;
+        $endIndex = ($dayOffset + 1) * 4;
+        $maxTemp = null;
+        
+        for ($i = $startIndex; $i < $endIndex && $i < 20; $i++) {
+            $temp = $this->extractParameterValue($parameter, 't', $i);
+            if ($temp) {
+                $temp = (int) $temp;
+                if ($maxTemp === null || $temp > $maxTemp) {
+                    $maxTemp = $temp;
+                }
+            }
+        }
+        
+        return $maxTemp;
+    }
+    
+    /**
+     * Get day name in Indonesian
+     */
+    private function getDayName($date)
+    {
+        $days = [
+            'Minggu', 'Senin', 'Selasa', 'Rabu', 
+            'Kamis', 'Jumat', 'Sabtu'
+        ];
+        
+        return $days[$date->dayOfWeek] ?? $date->format('l');
     }
     
     /**
@@ -167,6 +288,26 @@ class WeatherService
         $conditions = ['Cerah', 'Berawan', 'Hujan Ringan'];
         $condition = $conditions[array_rand($conditions)];
         
+        // Generate forecast data fallback
+        $forecast = [];
+        $today = now()->startOfDay();
+        $forecastConditions = ['Cerah', 'Berawan', 'Hujan Ringan', 'Cerah Berawan'];
+        
+        for ($day = 1; $day <= 3; $day++) {
+            $targetDate = $today->copy()->addDays($day);
+            $forecastCondition = $forecastConditions[array_rand($forecastConditions)];
+            
+            $forecast[] = [
+                'day' => $this->getDayName($targetDate),
+                'date' => $targetDate->format('d/m'),
+                'temperature' => rand(26, 30),
+                'temp_min' => rand(24, 26),
+                'temp_max' => rand(28, 32),
+                'condition' => $forecastCondition,
+                'icon' => $this->getFallbackIcon($forecastCondition)
+            ];
+        }
+        
         return [
             'temperature' => rand(26, 32),
             'humidity' => rand(70, 85),
@@ -174,7 +315,8 @@ class WeatherService
             'icon' => $this->getFallbackIcon($condition),
             'location' => 'Pesisir Barat',
             'source' => 'Estimasi',
-            'updated_at' => now()->format('H:i')
+            'updated_at' => now()->format('H:i'),
+            'forecast' => $forecast
         ];
     }
     
@@ -185,8 +327,11 @@ class WeatherService
     {
         $icons = [
             'Cerah' => 'fas fa-sun',
+            'Cerah Berawan' => 'fas fa-cloud-sun',
             'Berawan' => 'fas fa-cloud',
-            'Hujan Ringan' => 'fas fa-cloud-rain'
+            'Hujan Ringan' => 'fas fa-cloud-rain',
+            'Hujan Sedang' => 'fas fa-cloud-rain',
+            'Hujan Lebat' => 'fas fa-cloud-showers-heavy'
         ];
         
         return $icons[$condition] ?? 'fas fa-sun';

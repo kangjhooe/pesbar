@@ -1,4 +1,4 @@
--- Database Schema untuk Portal Berita Kabupaten Pesisir Barat
+-- Database Schema untuk Pesisir Barat Hub
 -- Format tanggal: DD-MM-YYYY sesuai preferensi user
 
 CREATE DATABASE IF NOT EXISTS pesisir_barat_news CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -163,7 +163,7 @@ INSERT INTO navigation_menu (title, url, sort_order) VALUES
 
 -- Insert Data Awal Pengaturan
 INSERT INTO settings (setting_key, setting_value, description) VALUES
-('site_title', 'Portal Berita Kabupaten Pesisir Barat', 'Judul website'),
+('site_title', 'Pesisir Barat Hub', 'Judul website'),
 ('site_description', 'Portal berita resmi Kabupaten Pesisir Barat yang menyajikan informasi terkini, akurat, dan terpercaya untuk masyarakat.', 'Deskripsi website'),
 ('site_keywords', 'berita pesisir barat, kabupaten pesisir barat, lampung, berita lokal', 'Keywords SEO'),
 ('contact_email', 'info@pesisirbaratnews.id', 'Email kontak'),

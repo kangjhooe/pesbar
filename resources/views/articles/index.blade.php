@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'Berita Terkini - Portal Berita Kabupaten Pesisir Barat')
+@section('title', 'Berita Terkini - Pesisir Barat Hub')
 @section('description', 'Baca berita terkini dan terpercaya dari Kabupaten Pesisir Barat. Informasi terbaru tentang pemerintahan, pembangunan, dan kehidupan masyarakat.')
 
 @section('content')

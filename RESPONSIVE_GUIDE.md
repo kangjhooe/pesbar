@@ -1,4 +1,4 @@
-# Panduan Responsivitas - Portal Berita Kabupaten Pesisir Barat
+# Panduan Responsivitas - Pesisir Barat Hub Kabupaten Pesisir Barat
 
 ## 📱 **Kompatibilitas Perangkat**
 
@@ -205,4 +205,4 @@ Jika mengalami masalah dengan responsivitas, silakan:
 
 ---
 
-**Dibuat dengan ❤️ untuk Portal Berita Kabupaten Pesisir Barat**
+**Dibuat dengan ❤️ untuk Pesisir Barat Hub Kabupaten Pesisir Barat**

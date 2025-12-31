@@ -417,12 +417,12 @@
             @include('widgets.events')
 
             <!-- Weather Widget -->
-            <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-6 mb-8">
+            <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-6 mb-8 widget" id="weather-widget">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-bold text-gray-800 flex items-center">
-                        <i class="weather-widget {{ $weatherData['icon'] ?? 'fas fa-cloud-sun' }} text-yellow-500 mr-2"></i>Cuaca Hari Ini
+                        <i class="weather-widget {{ $weatherData['icon'] ?? 'fas fa-cloud-sun' }} text-yellow-500 mr-2"></i>Prakiraan Cuaca
                     </h3>
-                    <span class="text-xs text-gray-500 bg-green-100 text-green-600 px-2 py-1 rounded-full font-semibold">Live</span>
+                    <span class="text-xs text-gray-500 bg-green-100 text-green-600 px-2 py-1 rounded-full font-semibold relative">Live</span>
                 </div>
                 <div class="flex items-center space-x-4">
                     <div class="text-4xl text-yellow-500">
@@ -455,6 +455,42 @@
                         </div>
                     </div>
                 </div>
+                
+                @if(isset($weatherData['forecast']) && count($weatherData['forecast']) > 0)
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <div class="text-sm font-semibold text-gray-700 mb-3">Prakiraan 3 Hari</div>
+                    <div class="space-y-2 weather-forecast-container">
+                        @foreach($weatherData['forecast'] as $forecast)
+                        <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition">
+                            <div class="flex items-center space-x-3 flex-1">
+                                <div class="text-yellow-500 text-lg">
+                                    <i class="{{ $forecast['icon'] ?? 'fas fa-sun' }}"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="text-sm font-semibold text-gray-800">{{ $forecast['day'] ?? 'N/A' }}</div>
+                                    <div class="text-xs text-gray-500">{{ $forecast['date'] ?? '' }}</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-bold text-gray-800">
+                                    @if(isset($forecast['temp_min']) && isset($forecast['temp_max']))
+                                        {{ $forecast['temp_min'] }}-{{ $forecast['temp_max'] }}°C
+                                    @else
+                                        {{ $forecast['temperature'] ?? 28 }}°C
+                                    @endif
+                                </div>
+                                <div class="text-xs text-gray-600">{{ $forecast['condition'] ?? 'Cerah' }}</div>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @else
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <div class="text-sm font-semibold text-gray-700 mb-3">Prakiraan 3 Hari</div>
+                    <div class="space-y-2 weather-forecast-container"></div>
+                </div>
+                @endif
             </div>
 
             <!-- Prayer Times Widget -->
@@ -921,6 +957,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function updateWeatherWidget(weatherData) {
+        const widget = document.getElementById('weather-widget');
         const weatherIcon = document.querySelector('.weather-widget');
         const weatherIconLarge = document.querySelector('.weather-widget-large');
         const weatherTemp = document.querySelector('.weather-temp');
@@ -928,12 +965,108 @@ document.addEventListener('DOMContentLoaded', function() {
         const weatherLocation = document.querySelector('.weather-location');
         const weatherUpdate = document.querySelector('.weather-update');
         
-        if (weatherIcon) weatherIcon.className = 'weather-widget ' + weatherData.icon + ' text-yellow-500 mr-2';
-        if (weatherIconLarge) weatherIconLarge.className = 'weather-widget-large ' + weatherData.icon;
-        if (weatherTemp) weatherTemp.textContent = weatherData.temperature + '°C';
-        if (weatherCondition) weatherCondition.textContent = weatherData.condition;
+        // Add updating animation
+        if (widget) {
+            widget.classList.add('updating');
+            setTimeout(() => widget.classList.remove('updating'), 500);
+        }
+        
+        // Animate temperature change
+        if (weatherTemp) {
+            weatherTemp.classList.add('updating');
+            setTimeout(() => {
+                weatherTemp.textContent = weatherData.temperature + '°C';
+                setTimeout(() => weatherTemp.classList.remove('updating'), 500);
+            }, 100);
+        }
+        
+        if (weatherIcon) {
+            weatherIcon.style.opacity = '0';
+            setTimeout(() => {
+                weatherIcon.className = 'weather-widget ' + weatherData.icon + ' text-yellow-500 mr-2';
+                weatherIcon.style.opacity = '1';
+            }, 200);
+        }
+        
+        if (weatherIconLarge) {
+            weatherIconLarge.style.opacity = '0';
+            setTimeout(() => {
+                weatherIconLarge.className = 'weather-widget-large ' + weatherData.icon;
+                weatherIconLarge.style.opacity = '1';
+            }, 200);
+        }
+        
+        if (weatherCondition) {
+            weatherCondition.style.opacity = '0';
+            setTimeout(() => {
+                weatherCondition.textContent = weatherData.condition;
+                weatherCondition.style.opacity = '1';
+            }, 300);
+        }
+        
         if (weatherLocation) weatherLocation.textContent = weatherData.location;
-        if (weatherUpdate) weatherUpdate.textContent = 'Update: ' + weatherData.updated_at;
+        if (weatherUpdate) {
+            weatherUpdate.style.opacity = '0';
+            setTimeout(() => {
+                weatherUpdate.textContent = 'Update: ' + weatherData.updated_at;
+                weatherUpdate.style.opacity = '1';
+            }, 400);
+        }
+        
+        // Update forecast
+        if (weatherData.forecast && weatherData.forecast.length > 0) {
+            updateWeatherForecast(weatherData.forecast);
+        }
+    }
+    
+    function updateWeatherForecast(forecastData) {
+        const forecastContainer = document.querySelector('.weather-forecast-container');
+        if (!forecastContainer) return;
+        
+        // Fade out existing items
+        const existingItems = forecastContainer.querySelectorAll('div');
+        existingItems.forEach((item, index) => {
+            item.style.opacity = '0';
+            item.style.transform = 'translateX(-20px)';
+        });
+        
+        setTimeout(() => {
+            forecastContainer.innerHTML = '';
+            
+            forecastData.forEach((forecast, index) => {
+                const tempDisplay = forecast.temp_min && forecast.temp_max 
+                    ? `${forecast.temp_min}-${forecast.temp_max}°C`
+                    : `${forecast.temperature}°C`;
+                
+                const forecastItem = document.createElement('div');
+                forecastItem.className = 'flex items-center justify-between bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition';
+                forecastItem.style.opacity = '0';
+                forecastItem.style.transform = 'translateY(20px)';
+                forecastItem.innerHTML = `
+                    <div class="flex items-center space-x-3 flex-1">
+                        <div class="text-yellow-500 text-lg">
+                            <i class="${forecast.icon || 'fas fa-sun'}"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="text-sm font-semibold text-gray-800">${forecast.day || 'N/A'}</div>
+                            <div class="text-xs text-gray-500">${forecast.date || ''}</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm font-bold text-gray-800">${tempDisplay}</div>
+                        <div class="text-xs text-gray-600">${forecast.condition || 'Cerah'}</div>
+                    </div>
+                `;
+                forecastContainer.appendChild(forecastItem);
+                
+                // Animate in
+                setTimeout(() => {
+                    forecastItem.style.transition = 'all 0.5s ease';
+                    forecastItem.style.opacity = '1';
+                    forecastItem.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        }, 300);
     }
     
     function updatePrayerTimesWidget(prayerData) {

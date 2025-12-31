@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'Hasil Pencarian' . (!empty($query) ? ': ' . $query : '') . ' - Portal Berita Kabupaten Pesisir Barat')
+@section('title', 'Hasil Pencarian' . (!empty($query) ? ': ' . $query : '') . ' - Pesisir Barat Hub')
 @section('description', 'Hasil pencarian' . (!empty($query) ? ' untuk: ' . $query : '') . '. Temukan berita terkini dan terpercaya dari Kabupaten Pesisir Barat.')
 
 @section('content')

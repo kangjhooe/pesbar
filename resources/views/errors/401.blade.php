@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'Akses Ditolak - Portal Berita Kabupaten Pesisir Barat')
+@section('title', 'Akses Ditolak - Pesisir Barat Hub')
 @section('description', 'Anda harus login terlebih dahulu untuk mengakses halaman ini')
 
 @section('content')

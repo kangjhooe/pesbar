@@ -16,8 +16,8 @@ class EventPopupSeeder extends Seeder
     {
         $eventPopups = [
             [
-                'title' => 'Selamat Datang di Portal Berita Pesisir Barat',
-                'message' => 'Selamat datang di portal berita resmi Kabupaten Pesisir Barat. Dapatkan informasi terkini seputar kabupaten kami, mulai dari berita pemerintahan, pembangunan, hingga kegiatan masyarakat.',
+                'title' => 'Selamat Datang di Pesisir Barat Hub',
+                'message' => 'Selamat datang di Pesisir Barat Hub. Dapatkan informasi terkini seputar kabupaten kami, mulai dari berita, artikel, hingga kegiatan masyarakat.',
                 'start_date' => Carbon::now()->subDays(1),
                 'end_date' => Carbon::now()->addDays(30),
                 'status' => true,

@@ -65,7 +65,7 @@
             <!-- Footer -->
             <div class="text-center">
                 <p class="text-sm text-gray-600">
-                    &copy; {{ date('Y') }} Portal Berita Kabupaten Pesisir Barat
+                    &copy; {{ date('Y') }} Pesisir Barat Hub
                 </p>
             </div>
         </div>

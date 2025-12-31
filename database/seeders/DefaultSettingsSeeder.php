@@ -14,10 +14,10 @@ class DefaultSettingsSeeder extends Seeder
     {
         $settings = [
             // General Settings
-            'site_name' => 'Portal Berita Pesisir Barat',
-            'site_description' => 'Portal berita resmi Kabupaten Pesisir Barat yang menyajikan informasi terkini dan terpercaya',
+            'site_name' => 'Pesisir Barat Hub',
+            'site_description' => 'Platform informasi Kabupaten Pesisir Barat yang menyajikan berita dan artikel terkini',
             'site_keywords' => 'berita, pesisir barat, lampung, informasi, news',
-            'site_author' => 'Portal Berita Pesisir Barat',
+            'site_author' => 'Pesisir Barat Hub',
             'contact_email' => 'info@pesisirbarat.com',
             'contact_phone' => '+62 812-3456-7890',
             'contact_address' => 'Jl. Raya Pesisir Barat, Lampung',
@@ -29,16 +29,16 @@ class DefaultSettingsSeeder extends Seeder
             'youtube_url' => '',
             
             // About Page
-            'about_title' => 'Tentang Portal Berita Pesisir Barat',
-            'about_content' => 'Portal Berita Pesisir Barat adalah media online resmi yang menyajikan informasi terkini, akurat, dan terpercaya tentang berbagai peristiwa dan perkembangan di Kabupaten Pesisir Barat, Lampung. Kami berkomitmen untuk memberikan layanan informasi yang berkualitas kepada masyarakat.',
+            'about_title' => 'Tentang Pesisir Barat Hub',
+            'about_content' => 'Pesisir Barat Hub adalah platform informasi yang menyajikan berita dan artikel terkini tentang berbagai peristiwa dan perkembangan di Kabupaten Pesisir Barat, Lampung. Kami berkomitmen untuk memberikan informasi yang berkualitas kepada masyarakat.',
             'mission_title' => 'Misi Kami',
             'mission_content' => 'Menyediakan informasi yang akurat, cepat, dan terpercaya untuk mendukung transparansi dan partisipasi masyarakat dalam pembangunan daerah.',
             'vision_title' => 'Visi Kami',
             'vision_content' => 'Menjadi media informasi terdepan dan terpercaya di Kabupaten Pesisir Barat yang mendukung terwujudnya masyarakat yang informatif dan partisipatif.',
             
             // SEO Settings
-            'meta_title' => 'Portal Berita Pesisir Barat - Informasi Terkini',
-            'meta_description' => 'Portal berita resmi Kabupaten Pesisir Barat yang menyajikan informasi terkini dan terpercaya tentang berbagai peristiwa dan perkembangan di daerah.',
+            'meta_title' => 'Pesisir Barat Hub - Informasi Terkini',
+            'meta_description' => 'Platform informasi Kabupaten Pesisir Barat yang menyajikan berita dan artikel terkini tentang berbagai peristiwa dan perkembangan di daerah.',
             'meta_keywords' => 'berita pesisir barat, lampung, informasi terkini, news',
             'google_analytics' => '',
             'google_search_console' => '',

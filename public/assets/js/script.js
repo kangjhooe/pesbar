@@ -1,4 +1,4 @@
-// Portal Berita Kabupaten Pesisir Barat - JavaScript
+// Pesisir Barat Hub - JavaScript
 
 document.addEventListener('DOMContentLoaded', function() {
     // Mobile Menu Toggle

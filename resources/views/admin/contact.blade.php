@@ -3,7 +3,7 @@
 @section('title', 'Kontak - Admin Panel')
 
 @section('page-title', 'Kontak')
-@section('page-subtitle', 'Informasi kontak dan alamat Portal Berita Kabupaten Pesisir Barat')
+@section('page-subtitle', 'Informasi kontak dan alamat Pesisir Barat Hub')
 
 @section('content')
 <div class="space-y-6">
@@ -15,11 +15,11 @@
             </div>
             <div>
                 <h2 class="text-xl font-semibold text-gray-800">Informasi Kontak</h2>
-                <p class="text-sm text-gray-600">Portal Berita Kabupaten Pesisir Barat</p>
+                <p class="text-sm text-gray-600">Pesisir Barat Hub</p>
             </div>
         </div>
         <p class="text-gray-700 leading-relaxed">
-            Portal Berita Kabupaten Pesisir Barat menyediakan informasi terkini seputar kegiatan, program, dan perkembangan di Kabupaten Pesisir Barat. 
+            Pesisir Barat Hub menyediakan informasi terkini seputar kegiatan, program, dan perkembangan di Kabupaten Pesisir Barat. 
             Kami berkomitmen untuk memberikan informasi yang akurat, terpercaya, dan bermanfaat bagi masyarakat.
         </p>
     </div>

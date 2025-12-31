@@ -3,7 +3,7 @@
 @section('title', 'RSS Feed - Admin Panel')
 
 @section('page-title', 'RSS Feed')
-@section('page-subtitle', 'Informasi dan pengaturan RSS Feed Portal Berita')
+@section('page-subtitle', 'Informasi dan pengaturan RSS Feed')
 
 @section('content')
 <div class="space-y-6">
@@ -15,11 +15,11 @@
             </div>
             <div>
                 <h2 class="text-xl font-semibold text-gray-800">RSS Feed</h2>
-                <p class="text-sm text-gray-600">Portal Berita Kabupaten Pesisir Barat</p>
+                <p class="text-sm text-gray-600">Pesisir Barat Hub</p>
             </div>
         </div>
         <p class="text-gray-700 leading-relaxed">
-            RSS (Really Simple Syndication) Feed memungkinkan pengguna untuk berlangganan konten terbaru dari Portal Berita Kabupaten Pesisir Barat. 
+            RSS (Really Simple Syndication) Feed memungkinkan pengguna untuk berlangganan konten terbaru dari Pesisir Barat Hub. 
             Dengan RSS Feed, pembaca dapat menerima update otomatis setiap kali ada artikel baru yang diterbitkan.
         </p>
     </div>

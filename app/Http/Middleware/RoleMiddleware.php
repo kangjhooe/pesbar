@@ -29,26 +29,28 @@ class RoleMiddleware
         if (!$user->role || trim($user->role) === '') {
             abort(403, 'Akses ditolak. Anda tidak memiliki izin untuk mengakses halaman ini.');
         }
+
+        // PRIORITAS 1: Cek mantan penulis yang mencoba akses route penulis
+        // Ini harus dicek SEBELUM pengecekan admin/editor untuk mencegah bypass
+        // User biasa (bukan admin, bukan editor, bukan penulis) yang mencoba akses route penulis
+        if ($role === 'penulis' && !$user->isPenulis() && !$user->isAdmin() && !$user->isEditor()) {
+            return redirect()->route('user.dashboard')
+                ->with('error', 'Akses ditolak. Anda tidak lagi memiliki akses sebagai penulis.');
+        }
         
-        // Admin bisa akses semua
+        // PRIORITAS 2: Admin bisa akses semua
         if ($user->isAdmin()) {
             return $next($request);
         }
 
-        // Editor bisa akses editor dan penulis
+        // PRIORITAS 3: Editor bisa akses editor dan penulis
         if ($user->isEditor() && in_array($role, ['editor', 'penulis'])) {
             return $next($request);
         }
 
-        // Penulis hanya bisa akses penulis
+        // PRIORITAS 4: Penulis hanya bisa akses penulis
         if ($user->isPenulis() && $role === 'penulis') {
             return $next($request);
-        }
-
-        // Jika user mencoba akses route penulis tapi bukan penulis lagi (mantan penulis)
-        if ($role === 'penulis' && !$user->isPenulis()) {
-            return redirect()->route('user.dashboard')
-                ->with('error', 'Akses ditolak. Anda tidak lagi memiliki akses sebagai penulis.');
         }
 
         // Jika tidak memenuhi kondisi di atas, tolak akses

@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'Halaman Tidak Ditemukan - Portal Berita Kabupaten Pesisir Barat')
+@section('title', 'Halaman Tidak Ditemukan - Pesisir Barat Hub')
 @section('description', 'Halaman yang Anda cari tidak ditemukan')
 
 @section('content')

@@ -1,10 +1,10 @@
-# Portal Berita Kabupaten Pesisir Barat
+# Pesisir Barat Hub
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo">
 </p>
 
-Portal berita resmi Kabupaten Pesisir Barat yang dibangun dengan Laravel. Aplikasi ini menyajikan informasi terkini, akurat, dan terpercaya untuk masyarakat dengan sistem manajemen konten yang lengkap.
+Platform informasi Kabupaten Pesisir Barat yang dibangun dengan Laravel. Aplikasi ini menyajikan berita dan artikel terkini untuk masyarakat dengan sistem manajemen konten yang lengkap.
 
 ## 📋 Daftar Isi
 
@@ -244,7 +244,7 @@ php artisan view:cache
 
 1. **Buat file `.env`** di root direktori dengan konfigurasi production:
 ```env
-APP_NAME="Portal Berita Pesisir Barat"
+APP_NAME="Pesisir Barat Hub"
 APP_ENV=production
 APP_KEY=base64:your-generated-key
 APP_DEBUG=false

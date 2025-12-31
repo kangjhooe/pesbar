@@ -1,7 +1,7 @@
 # Panduan Sistem Autentikasi dan Role Management
 
 ## Overview
-Sistem autentikasi dan role management telah berhasil ditambahkan ke aplikasi Portal Berita Laravel dengan fitur-fitur lengkap sesuai spesifikasi.
+Sistem autentikasi dan role management telah berhasil ditambahkan ke aplikasi Pesisir Barat Hub Laravel dengan fitur-fitur lengkap sesuai spesifikasi.
 
 ## Fitur yang Telah Diimplementasikan
 

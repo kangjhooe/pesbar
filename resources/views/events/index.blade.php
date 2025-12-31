@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'Agenda Kegiatan - Portal Berita Kabupaten Pesisir Barat')
+@section('title', 'Agenda Kegiatan - Pesisir Barat Hub')
 @section('description', 'Lihat semua agenda dan kegiatan yang akan diselenggarakan di Kabupaten Pesisir Barat')
 
 @section('content')
