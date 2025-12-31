@@ -37,14 +37,9 @@ class ArticlePolicy
      */
     public function update(User $user, Article $article): bool
     {
-        // Editor bisa update semua artikel
-        if ($user->isEditor()) {
+        // Admin dan Editor bisa update semua artikel
+        if ($user->isAdmin() || $user->isEditor()) {
             return true;
-        }
-        
-        // Admin hanya bisa update artikel miliknya sendiri (tidak bisa edit artikel user lain)
-        if ($user->isAdmin()) {
-            return $user->id === $article->author_id;
         }
         
         // Penulis hanya bisa update artikel miliknya
