@@ -26,7 +26,7 @@ class Tag extends Model
 
     public function articles(): BelongsToMany
     {
-        return $this->belongsToMany(Article::class);
+        return $this->belongsToMany(Article::class, 'article_tags');
     }
 
     public function getRouteKeyName()
