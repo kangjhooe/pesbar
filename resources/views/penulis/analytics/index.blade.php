@@ -9,7 +9,7 @@
 @endpush
 
 @section('content')
-<div class="min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+<div class="bg-gray-50 px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
     <!-- Header -->
     <div class="mb-6">
         <div class="flex items-center justify-between flex-wrap gap-4">
@@ -93,131 +93,163 @@
 
     <!-- Charts Row -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <!-- Views Over Time Chart -->
+        <!-- Articles Published Over Time Chart -->
         <div class="bg-white rounded-xl shadow-md p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Views Over Time</h3>
-            <canvas id="viewsChart" height="300"></canvas>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Artikel Diterbitkan & Total Views</h3>
+            <div style="height: 300px; position: relative;">
+                <canvas id="viewsChart"></canvas>
+            </div>
         </div>
 
-        <!-- Category Performance -->
+        <!-- Category Performance Chart -->
         <div class="bg-white rounded-xl shadow-md p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Performance by Category</h3>
-            <canvas id="categoryChart" height="300"></canvas>
+            <div style="height: 300px; position: relative;">
+                <canvas id="categoryChart"></canvas>
+            </div>
         </div>
     </div>
 
-    <!-- Top Performing Articles -->
-    <div class="bg-white rounded-xl shadow-md p-6 mb-8">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Top Performing Articles</h3>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Artikel</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Views</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Komentar</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Engagement</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Views/Hari</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($topArticles as $article)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">{{ Str::limit($article['title'], 50) }}</div>
-                            <div class="text-sm text-gray-500">{{ $article['category'] }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ number_format($article['views']) }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ number_format($article['comments']) }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ number_format($article['engagement_rate'], 2) }}%</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ number_format($article['avg_views_per_day'], 2) }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <a href="{{ route('penulis.articles.show', $article['id']) }}" class="text-blue-600 hover:text-blue-900">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">Tidak ada data</td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+    <!-- Top Performing Articles & Category Performance in Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Top Performing Articles -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Top Performing Articles</h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Artikel</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Views</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Komentar</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @forelse($topArticles as $article)
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3">
+                                <div class="text-sm font-medium text-gray-900">{{ Str::limit($article['title'], 40) }}</div>
+                                <div class="text-xs text-gray-500 mt-1">{{ $article['category'] }}</div>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-900">{{ number_format($article['views']) }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-900">{{ number_format($article['comments']) }}</td>
+                            <td class="px-4 py-3 text-sm font-medium">
+                                <a href="{{ route('penulis.articles.show', $article['id']) }}" class="text-blue-600 hover:text-blue-900" title="Lihat Detail">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="4" class="px-4 py-4 text-center text-gray-500 text-sm">Tidak ada data</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
 
-    <!-- Category Performance Table -->
-    @if(count($categoryPerformance) > 0)
-    <div class="bg-white rounded-xl shadow-md p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Performance by Category</h3>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Artikel</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Views</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Komentar</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Views/Artikel</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Engagement Rate</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach($categoryPerformance as $cat)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $cat['category_name'] }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $cat['total_articles'] }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($cat['total_views']) }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($cat['total_comments']) }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($cat['avg_views_per_article'], 2) }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($cat['engagement_rate'], 2) }}%</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+        <!-- Category Performance Table -->
+        @if(count($categoryPerformance) > 0)
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Performance by Category</h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Artikel</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Views</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Engagement</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach($categoryPerformance as $cat)
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ $cat['category_name'] }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-900">{{ $cat['total_articles'] }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-900">{{ number_format($cat['total_views']) }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-900">{{ number_format($cat['engagement_rate'], 1) }}%</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
+        @endif
     </div>
-    @endif
 </div>
 
 @push('scripts')
 <script>
-    // Views Over Time Chart
+    // Articles Published & Views Over Time Chart
     const viewsCtx = document.getElementById('viewsChart').getContext('2d');
     const viewsChart = new Chart(viewsCtx, {
         type: 'line',
         data: {
             labels: {!! json_encode(array_column($viewsOverTime, 'date_formatted')) !!},
-            datasets: [{
-                label: 'Views',
-                data: {!! json_encode(array_column($viewsOverTime, 'views')) !!},
-                borderColor: 'rgb(59, 130, 246)',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
+            datasets: [
+                {
+                    label: 'Total Views',
+                    data: {!! json_encode(array_column($viewsOverTime, 'views')) !!},
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Artikel Diterbitkan',
+                    data: {!! json_encode(array_column($viewsOverTime, 'articles')) !!},
+                    borderColor: 'rgb(34, 197, 94)',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    tension: 0.4,
+                    fill: false,
+                    yAxisID: 'y1',
+                    type: 'bar'
+                }
+            ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
             plugins: {
                 legend: {
-                    display: true
+                    display: true,
+                    position: 'top'
+                },
+                tooltip: {
+                    enabled: true
                 }
             },
             scales: {
                 y: {
-                    beginAtZero: true
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Total Views'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Jumlah Artikel'
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    },
                 }
             }
         }
@@ -243,7 +275,8 @@
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    display: true
+                    display: true,
+                    position: 'top'
                 }
             },
             scales: {
@@ -254,7 +287,11 @@
         }
     });
     @else
-    categoryCtx.getContext('2d').fillText('Tidak ada data kategori', 10, 50);
+    const ctx = categoryCtx.getContext('2d');
+    ctx.font = '16px Arial';
+    ctx.fillStyle = '#666';
+    ctx.textAlign = 'center';
+    ctx.fillText('Tidak ada data kategori', categoryCtx.width / 2, categoryCtx.height / 2);
     @endif
 </script>
 @endpush

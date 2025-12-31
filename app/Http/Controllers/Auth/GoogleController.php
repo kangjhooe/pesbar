@@ -51,13 +51,17 @@ class GoogleController extends Controller
             
             Auth::login($user);
             
+            // Refresh user dari database untuk memastikan data terbaru (terutama role)
+            $user->refresh();
+            
             // Redirect berdasarkan role
             if ($user->isAdmin() || $user->isEditor()) {
-                return redirect()->intended('/dashboard');
+                return redirect()->intended(route('dashboard', absolute: false));
             } elseif ($user->isPenulis()) {
-                return redirect()->intended(route('penulis.dashboard'));
+                return redirect()->intended(route('penulis.dashboard', absolute: false));
             } else {
-                return redirect()->intended('/');
+                // User biasa (termasuk mantan penulis yang verifikasinya dibatalkan)
+                return redirect()->intended(route('user.dashboard', absolute: false));
             }
             
         } catch (\Exception $e) {

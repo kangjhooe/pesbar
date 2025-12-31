@@ -30,13 +30,18 @@ class AuthenticatedSessionController extends Controller
 
         $user = auth()->user();
         
+        // Refresh user dari database untuk memastikan data terbaru (terutama role)
+        // Ini penting ketika role user berubah saat mereka masih login
+        $user->refresh();
+        
         // Redirect berdasarkan role
         if ($user->isAdmin() || $user->isEditor()) {
             return redirect()->intended(route('dashboard', absolute: false));
         } elseif ($user->isPenulis()) {
             return redirect()->intended(route('penulis.dashboard', absolute: false));
         } else {
-            return redirect()->intended(route('home', absolute: false));
+            // User biasa (termasuk mantan penulis yang verifikasinya dibatalkan)
+            return redirect()->intended(route('user.dashboard', absolute: false));
         }
     }
 

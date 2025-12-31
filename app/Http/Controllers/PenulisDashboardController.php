@@ -618,25 +618,37 @@ class PenulisDashboardController extends Controller
             ),
         ];
         
-        // Views over time
+        // Articles published over time (since we don't track daily views)
         $viewsOverTime = [];
+        $startDate = now()->subDays($days);
+        
+        // Group articles by published date
+        $articlesByDate = $publishedArticles
+            ->filter(function($article) use ($startDate) {
+                return $article->published_at && $article->published_at->gte($startDate);
+            })
+            ->groupBy(function($article) {
+                return $article->published_at->format('Y-m-d');
+            });
+        
+        // Create data points for each day in the range
         for ($i = $days - 1; $i >= 0; $i--) {
             $date = now()->subDays($i);
-            $dayArticles = $publishedArticles->filter(function($article) use ($date) {
-                return $article->published_at && $article->published_at->format('Y-m-d') === $date->format('Y-m-d');
-            });
+            $dateKey = $date->format('Y-m-d');
+            $dayArticles = $articlesByDate->get($dateKey, collect());
+            
             $viewsOverTime[] = [
-                'date' => $date->format('Y-m-d'),
+                'date' => $dateKey,
                 'date_formatted' => $date->format('d/m'),
                 'views' => $dayArticles->sum('views'),
                 'articles' => $dayArticles->count(),
             ];
         }
         
-        // Top performing articles
+        // Top performing articles (limit to 5 for better UI)
         $topArticles = $publishedArticles
             ->sortByDesc('views')
-            ->take(10)
+            ->take(5)
             ->map(function($article) {
                 $commentsCount = $article->comments()->where('is_approved', true)->count();
                 $daysSincePublished = $article->published_at ? now()->diffInDays($article->published_at) : 0;

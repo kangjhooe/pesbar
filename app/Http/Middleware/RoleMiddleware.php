@@ -45,6 +45,12 @@ class RoleMiddleware
             return $next($request);
         }
 
+        // Jika user mencoba akses route penulis tapi bukan penulis lagi (mantan penulis)
+        if ($role === 'penulis' && !$user->isPenulis()) {
+            return redirect()->route('user.dashboard')
+                ->with('error', 'Akses ditolak. Anda tidak lagi memiliki akses sebagai penulis.');
+        }
+
         // Jika tidak memenuhi kondisi di atas, tolak akses
         abort(403, 'Akses ditolak. Anda tidak memiliki izin untuk mengakses halaman ini.');
     }
