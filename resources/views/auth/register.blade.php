@@ -74,9 +74,9 @@
             <div class="ml-3 text-sm">
                 <label for="terms" class="font-medium text-gray-700">
                     Saya menyetujui 
-                    <a href="#" class="text-blue-600 hover:text-blue-500">Syarat dan Ketentuan</a>
+                    <a href="{{ route('terms') }}" target="_blank" class="text-blue-600 hover:text-blue-500 underline">Syarat dan Ketentuan</a>
                     dan 
-                    <a href="#" class="text-blue-600 hover:text-blue-500">Kebijakan Privasi</a>
+                    <a href="{{ route('privacy') }}" target="_blank" class="text-blue-600 hover:text-blue-500 underline">Kebijakan Privasi</a>
                 </label>
             </div>
         </div>

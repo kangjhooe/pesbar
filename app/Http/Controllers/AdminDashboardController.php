@@ -250,8 +250,20 @@ class AdminDashboardController extends Controller
                     'role' => 'user',
                     'verification_request_status' => null, // Reset status verifikasi request
                 ]);
+                
+                // Refresh user model dari database
+                $user->refresh();
+                
                 $status = 'tidak diverifikasi dan role dikembalikan ke user biasa';
                 ActivityLogHelper::logUser('user.verification.toggled', $user, "User {$user->name} {$status}");
+                
+                // Jika user yang sedang login adalah user yang role-nya berubah, redirect ke user dashboard
+                if (Auth::check() && Auth::id() === $user->id) {
+                    // Refresh session untuk memastikan data terbaru
+                    Auth::user()->refresh();
+                    return redirect()->route('user.dashboard')->with('success', "Verifikasi Anda telah dibatalkan. Anda sekarang adalah user biasa.");
+                }
+                
                 return redirect()->back()->with('success', "Verifikasi berhasil dibatalkan dan user dikembalikan menjadi user biasa!");
             } 
             // Jika memberikan verifikasi (dari tidak verified ke verified)
@@ -622,7 +634,17 @@ class AdminDashboardController extends Controller
                 'verification_request_status' => null, // Reset status verifikasi request
             ]);
 
+            // Refresh user model dari database
+            $user->refresh();
+
             ActivityLogHelper::logUser('user.demoted', $user, "Penulis {$user->name} diturunkan menjadi user biasa");
+            
+            // Jika user yang sedang login adalah user yang role-nya berubah, redirect ke user dashboard
+            if (Auth::check() && Auth::id() === $user->id) {
+                // Refresh session untuk memastikan data terbaru
+                Auth::user()->refresh();
+                return redirect()->route('user.dashboard')->with('success', 'Role Anda telah diturunkan menjadi user biasa.');
+            }
             
             return redirect()->back()->with('success', 'Penulis berhasil diturunkan menjadi user!');
         } catch (\Exception $e) {

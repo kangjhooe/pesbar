@@ -7,6 +7,7 @@ use App\Http\Controllers\AdminSettingsController;
 use App\Http\Controllers\PenulisDashboardController;
 use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\UserDashboardController;
+use App\Http\Controllers\UserFeatureController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ArticleController;
@@ -17,10 +18,15 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\WidgetController;
 use App\Http\Controllers\Admin\ContactImportantController;
 use App\Http\Controllers\EventPopupController;
+use App\Http\Controllers\StaticPageController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+// Static pages
+Route::get('/terms', [StaticPageController::class, 'terms'])->name('terms');
+Route::get('/privacy', [StaticPageController::class, 'privacy'])->name('privacy');
 // Route::get('/tentang', [HomeController::class, 'about'])->name('about'); // Disembunyikan dari publik
 
 // Sitemap
@@ -108,6 +114,16 @@ Route::middleware(['auth'])->group(function () {
     // User comment management
     Route::put('/user/comments/{comment}', [UserDashboardController::class, 'updateComment'])->name('user.comments.update');
     Route::delete('/user/comments/{comment}', [UserDashboardController::class, 'destroyComment'])->name('user.comments.destroy');
+    
+    // User features: Bookmarks, Reading History, Follow
+    Route::post('/articles/{article}/bookmark', [UserFeatureController::class, 'toggleBookmark'])->name('articles.bookmark');
+    Route::get('/user/bookmarks', [UserFeatureController::class, 'bookmarks'])->name('user.bookmarks');
+    
+    Route::get('/user/reading-history', [UserFeatureController::class, 'readingHistory'])->name('user.reading-history');
+    
+    Route::post('/users/{user}/follow', [UserFeatureController::class, 'toggleFollow'])->name('users.follow');
+    Route::get('/user/following', [UserFeatureController::class, 'following'])->name('user.following');
+    Route::get('/user/followers', [UserFeatureController::class, 'followers'])->name('user.followers');
 });
 
 // Penulis routes
@@ -136,6 +152,24 @@ Route::middleware(['auth', 'role:penulis'])->prefix('penulis')->name('penulis.')
     // Additional features
     Route::post('/articles/{article}/duplicate', [PenulisDashboardController::class, 'duplicate'])->name('articles.duplicate');
     Route::get('/articles/{article}/export', [PenulisDashboardController::class, 'export'])->name('articles.export');
+    
+    // Analytics Dashboard
+    Route::get('/analytics', [PenulisDashboardController::class, 'analytics'])->name('analytics');
+    
+    // Media Library
+    Route::get('/media', [PenulisDashboardController::class, 'mediaLibrary'])->name('media.index');
+    Route::post('/media/upload', [PenulisDashboardController::class, 'uploadMedia'])->name('media.upload');
+    Route::delete('/media/delete', [PenulisDashboardController::class, 'deleteMedia'])->name('media.delete');
+    
+    // Advanced Comment Management
+    Route::get('/comments', [PenulisDashboardController::class, 'commentsAdvanced'])->name('comments.advanced');
+    Route::post('/comments/bulk-action', [PenulisDashboardController::class, 'bulkCommentAction'])->name('comments.bulk-action');
+    Route::post('/articles/{article}/comments/{comment}/reply', [PenulisDashboardController::class, 'replyComment'])->name('articles.comments.reply');
+    Route::get('/articles/{article}/comments/export', [PenulisDashboardController::class, 'exportComments'])->name('articles.comments.export');
+    
+    // SEO Tools
+    Route::get('/seo', [PenulisDashboardController::class, 'seoTools'])->name('seo.index');
+    Route::get('/seo/analyze/{article}', [PenulisDashboardController::class, 'seoTools'])->name('seo.analyze');
 });
 
 // Public penulis profile route (must be after penulis group to avoid conflicts)

@@ -97,6 +97,31 @@
                         </a>
                     </div>
 
+                    <!-- Analytics & Tools -->
+                    <div class="mt-4">
+                        <h3 class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Analytics & Tools</h3>
+                        
+                        <a href="{{ route('penulis.analytics') }}" class="flex items-center px-3 lg:px-4 py-3 text-gray-700 rounded-lg hover:bg-primary-50 hover:text-primary-600 transition-colors touch-target {{ request()->routeIs('penulis.analytics') ? 'bg-primary-50 text-primary-600' : '' }}">
+                            <i class="fas fa-chart-line mr-3 text-sm lg:text-base"></i>
+                            <span class="text-sm lg:text-base">Analytics</span>
+                        </a>
+                        
+                        <a href="{{ route('penulis.media.index') }}" class="flex items-center px-3 lg:px-4 py-3 text-gray-700 rounded-lg hover:bg-primary-50 hover:text-primary-600 transition-colors touch-target {{ request()->routeIs('penulis.media.*') ? 'bg-primary-50 text-primary-600' : '' }}">
+                            <i class="fas fa-images mr-3 text-sm lg:text-base"></i>
+                            <span class="text-sm lg:text-base">Media Library</span>
+                        </a>
+                        
+                        <a href="{{ route('penulis.comments.advanced') }}" class="flex items-center px-3 lg:px-4 py-3 text-gray-700 rounded-lg hover:bg-primary-50 hover:text-primary-600 transition-colors touch-target {{ request()->routeIs('penulis.comments.*') ? 'bg-primary-50 text-primary-600' : '' }}">
+                            <i class="fas fa-comments mr-3 text-sm lg:text-base"></i>
+                            <span class="text-sm lg:text-base">Komentar</span>
+                        </a>
+                        
+                        <a href="{{ route('penulis.seo.index') }}" class="flex items-center px-3 lg:px-4 py-3 text-gray-700 rounded-lg hover:bg-primary-50 hover:text-primary-600 transition-colors touch-target {{ request()->routeIs('penulis.seo.*') ? 'bg-primary-50 text-primary-600' : '' }}">
+                            <i class="fas fa-search mr-3 text-sm lg:text-base"></i>
+                            <span class="text-sm lg:text-base">SEO Tools</span>
+                        </a>
+                    </div>
+
                     <!-- Profil & Pengaturan -->
                     <div class="mt-4">
                         <h3 class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Profil</h3>

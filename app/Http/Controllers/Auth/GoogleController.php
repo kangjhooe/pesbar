@@ -34,6 +34,8 @@ class GoogleController extends Controller
                 ]);
             } else {
                 // Create new user
+                // Note: Users registering via Google OAuth are considered to have accepted
+                // Terms & Conditions and Privacy Policy by using the service
                 $username = User::generateUsername($googleUser->getName());
                 $user = User::create([
                     'name' => $googleUser->getName(),

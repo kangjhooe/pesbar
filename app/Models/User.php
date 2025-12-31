@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -97,6 +98,63 @@ class User extends Authenticatable
     public function pollVotes(): HasMany
     {
         return $this->hasMany(PollVote::class);
+    }
+
+    /**
+     * Get the bookmarks made by the user.
+     */
+    public function bookmarks(): HasMany
+    {
+        return $this->hasMany(Bookmark::class);
+    }
+
+    /**
+     * Get the reading history of the user.
+     */
+    public function readingHistory(): HasMany
+    {
+        return $this->hasMany(ReadingHistory::class)->orderBy('read_at', 'desc');
+    }
+
+    /**
+     * Get the users that this user follows.
+     */
+    public function follows(): HasMany
+    {
+        return $this->hasMany(Follow::class, 'follower_id');
+    }
+
+    /**
+     * Get the users that follow this user.
+     */
+    public function followers(): HasMany
+    {
+        return $this->hasMany(Follow::class, 'following_id');
+    }
+
+    /**
+     * Get the authors that this user follows.
+     */
+    public function followingAuthors(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'follows', 'follower_id', 'following_id')
+            ->withTimestamps();
+    }
+
+    /**
+     * Check if user has bookmarked an article.
+     */
+    public function hasBookmarked(Article $article): bool
+    {
+        return $this->bookmarks()->where('article_id', $article->id)->exists();
+    }
+
+    /**
+     * Check if user is following another user.
+     */
+    public function isFollowing(User $user): bool
+    {
+        return $this->follows()->where('following_id', $user->id)->exists();
     }
 
     /**

@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Article;
 use App\Models\Category;
+use App\Models\ReadingHistory;
 use App\Services\WeatherService;
 use App\Services\PrayerTimeService;
 use App\Services\EventService;
 use App\Services\PollService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ArticleController extends Controller
 {
@@ -45,6 +47,23 @@ class ArticleController extends Controller
         
         // Increment view count
         $article->incrementViewCount();
+
+        // Track reading history for authenticated users
+        if (Auth::check()) {
+            $existing = ReadingHistory::where('user_id', Auth::id())
+                ->where('article_id', $article->id)
+                ->first();
+
+            if ($existing) {
+                $existing->update(['read_at' => now()]);
+            } else {
+                ReadingHistory::create([
+                    'user_id' => Auth::id(),
+                    'article_id' => $article->id,
+                    'read_at' => now(),
+                ]);
+            }
+        }
 
         // Get related articles
         $relatedArticles = Article::published()

@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 
 class PenulisDashboardController extends Controller
 {
@@ -22,6 +23,10 @@ class PenulisDashboardController extends Controller
         $this->middleware(function ($request, $next) {
             $user = Auth::user();
             
+            // Refresh user dari database untuk memastikan data terbaru (terutama role)
+            // Ini penting ketika role user berubah saat mereka masih login
+            $user->refresh();
+            
             // Admin dan editor bisa akses semua
             if ($user->isAdmin() || $user->isEditor()) {
                 return $next($request);
@@ -29,7 +34,9 @@ class PenulisDashboardController extends Controller
             
             // Hanya penulis yang bisa akses
             if (!$user->isPenulis()) {
-                abort(403, 'Akses ditolak. Hanya penulis yang dapat mengakses halaman ini.');
+                // Jika user bukan penulis lagi, redirect ke user dashboard
+                return redirect()->route('user.dashboard')
+                    ->with('error', 'Akses ditolak. Anda tidak lagi memiliki akses sebagai penulis.');
             }
             
             return $next($request);
@@ -580,5 +587,566 @@ class PenulisDashboardController extends Controller
         return response($content)
             ->header('Content-Type', 'text/html; charset=utf-8')
             ->header('Content-Disposition', 'attachment; filename="' . \Str::slug($article->title) . '.html"');
+    }
+
+    /**
+     * Analytics Dashboard
+     */
+    public function analytics(Request $request)
+    {
+        $user = Auth::user();
+        $days = $request->get('days', 30);
+        
+        // Get user's articles
+        $articles = $user->articles()->with(['category', 'tags'])->get();
+        $publishedArticles = $articles->where('status', 'published');
+        
+        // Overall stats
+        $stats = [
+            'total_articles' => $articles->count(),
+            'published_articles' => $publishedArticles->count(),
+            'total_views' => $publishedArticles->sum('views'),
+            'total_comments' => Comment::whereIn('article_id', $articles->pluck('id'))
+                ->where('is_approved', true)
+                ->count(),
+            'avg_views_per_article' => $publishedArticles->count() > 0 
+                ? round($publishedArticles->sum('views') / $publishedArticles->count(), 2) 
+                : 0,
+            'engagement_rate' => $this->calculateEngagementRate(
+                $publishedArticles->sum('views'),
+                Comment::whereIn('article_id', $articles->pluck('id'))->where('is_approved', true)->count()
+            ),
+        ];
+        
+        // Views over time
+        $viewsOverTime = [];
+        for ($i = $days - 1; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $dayArticles = $publishedArticles->filter(function($article) use ($date) {
+                return $article->published_at && $article->published_at->format('Y-m-d') === $date->format('Y-m-d');
+            });
+            $viewsOverTime[] = [
+                'date' => $date->format('Y-m-d'),
+                'date_formatted' => $date->format('d/m'),
+                'views' => $dayArticles->sum('views'),
+                'articles' => $dayArticles->count(),
+            ];
+        }
+        
+        // Top performing articles
+        $topArticles = $publishedArticles
+            ->sortByDesc('views')
+            ->take(10)
+            ->map(function($article) {
+                $commentsCount = $article->comments()->where('is_approved', true)->count();
+                $daysSincePublished = $article->published_at ? now()->diffInDays($article->published_at) : 0;
+                return [
+                    'id' => $article->id,
+                    'title' => $article->title,
+                    'slug' => $article->slug,
+                    'views' => $article->views,
+                    'comments' => $commentsCount,
+                    'engagement_rate' => $this->calculateEngagementRate($article->views, $commentsCount),
+                    'avg_views_per_day' => $daysSincePublished > 0 ? round($article->views / $daysSincePublished, 2) : $article->views,
+                    'published_at' => $article->published_at,
+                    'category' => $article->category->name ?? 'N/A',
+                ];
+            })
+            ->values();
+        
+        // Performance by category
+        $categoryPerformance = [];
+        $categories = \App\Models\Category::whereIn('id', $publishedArticles->pluck('category_id')->unique())->get();
+        foreach ($categories as $category) {
+            $catArticles = $publishedArticles->where('category_id', $category->id);
+            $totalViews = $catArticles->sum('views');
+            $totalComments = Comment::whereIn('article_id', $catArticles->pluck('id'))
+                ->where('is_approved', true)
+                ->count();
+            
+            $categoryPerformance[] = [
+                'category_id' => $category->id,
+                'category_name' => $category->name,
+                'total_articles' => $catArticles->count(),
+                'total_views' => $totalViews,
+                'total_comments' => $totalComments,
+                'avg_views_per_article' => $catArticles->count() > 0 ? round($totalViews / $catArticles->count(), 2) : 0,
+                'engagement_rate' => $this->calculateEngagementRate($totalViews, $totalComments),
+            ];
+        }
+        usort($categoryPerformance, fn($a, $b) => $b['total_views'] <=> $a['total_views']);
+        
+        return view('penulis.analytics.index', compact('stats', 'viewsOverTime', 'topArticles', 'categoryPerformance', 'days'));
+    }
+
+    /**
+     * Media Library
+     */
+    public function mediaLibrary(Request $request)
+    {
+        $user = Auth::user();
+        
+        // Get all media files from articles
+        $articles = $user->articles()->whereNotNull('featured_image')->get();
+        $mediaFiles = [];
+        
+        foreach ($articles as $article) {
+            if ($article->featured_image && Storage::disk('public')->exists($article->featured_image)) {
+                $filePath = $article->featured_image;
+                $fullPath = storage_path('app/public/' . $filePath);
+                $fileInfo = pathinfo($filePath);
+                
+                $mediaFiles[] = [
+                    'id' => $article->id,
+                    'name' => $fileInfo['basename'],
+                    'path' => $filePath,
+                    'url' => Storage::disk('public')->url($filePath),
+                    'size' => file_exists($fullPath) ? filesize($fullPath) : 0,
+                    'type' => mime_content_type($fullPath) ?? 'image/jpeg',
+                    'article_id' => $article->id,
+                    'article_title' => $article->title,
+                    'uploaded_at' => $article->created_at,
+                ];
+            }
+        }
+        
+        // Sort by uploaded_at desc
+        usort($mediaFiles, fn($a, $b) => $b['uploaded_at']->timestamp <=> $a['uploaded_at']->timestamp);
+        
+        // Pagination
+        $perPage = 24;
+        $currentPage = $request->get('page', 1);
+        $offset = ($currentPage - 1) * $perPage;
+        $paginatedFiles = array_slice($mediaFiles, $offset, $perPage);
+        $totalPages = ceil(count($mediaFiles) / $perPage);
+        
+        return view('penulis.media.index', compact('paginatedFiles', 'currentPage', 'totalPages', 'perPage'));
+    }
+
+    /**
+     * Upload media
+     */
+    public function uploadMedia(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB max
+        ]);
+        
+        $file = $request->file('file');
+        $path = $file->store('media/penulis/' . Auth::id(), 'public');
+        
+        return response()->json([
+            'success' => true,
+            'url' => Storage::disk('public')->url($path),
+            'path' => $path,
+            'name' => $file->getClientOriginalName(),
+        ]);
+    }
+
+    /**
+     * Delete media
+     */
+    public function deleteMedia(Request $request)
+    {
+        $request->validate([
+            'path' => 'required|string',
+        ]);
+        
+        $path = $request->path;
+        
+        // Check if file belongs to user's articles
+        $user = Auth::user();
+        $article = $user->articles()->where('featured_image', $path)->first();
+        
+        if (!$article && !str_contains($path, 'media/penulis/' . $user->id)) {
+            return response()->json(['success' => false, 'message' => 'File tidak ditemukan atau tidak memiliki akses'], 403);
+        }
+        
+        if (Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
+            
+            // If it's an article featured image, remove it
+            if ($article) {
+                $article->update(['featured_image' => null]);
+            }
+        }
+        
+        return response()->json(['success' => true, 'message' => 'File berhasil dihapus']);
+    }
+
+    /**
+     * Advanced Comment Management
+     */
+    public function commentsAdvanced(Request $request)
+    {
+        $user = Auth::user();
+        
+        $query = Comment::whereIn('article_id', $user->articles()->pluck('id'))
+            ->with(['article', 'user', 'parent'])
+            ->withCount(['allReplies as replies_count', 'likes as likes_count']);
+        
+        // Filters
+        if ($request->has('status') && $request->status !== '') {
+            $query->where('is_approved', $request->status === 'approved');
+        }
+        
+        if ($request->has('article_id') && $request->article_id !== '') {
+            $query->where('article_id', $request->article_id);
+        }
+        
+        if ($request->has('search') && $request->search !== '') {
+            $query->where(function($q) use ($request) {
+                $q->where('comment', 'like', '%' . $request->search . '%')
+                  ->orWhere('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('email', 'like', '%' . $request->search . '%');
+            });
+        }
+        
+        if ($request->has('date_from') && $request->date_from !== '') {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        
+        if ($request->has('date_to') && $request->date_to !== '') {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+        
+        // Sorting
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+        $query->orderBy($sortBy, $sortOrder);
+        
+        $comments = $query->paginate(20)->withQueryString();
+        $articles = $user->articles()->published()->get(['id', 'title']);
+        
+        // Stats
+        $stats = [
+            'total' => Comment::whereIn('article_id', $user->articles()->pluck('id'))->count(),
+            'approved' => Comment::whereIn('article_id', $user->articles()->pluck('id'))->where('is_approved', true)->count(),
+            'pending' => Comment::whereIn('article_id', $user->articles()->pluck('id'))->where('is_approved', false)->count(),
+            'with_replies' => Comment::whereIn('article_id', $user->articles()->pluck('id'))->whereNotNull('parent_id')->count(),
+        ];
+        
+        return view('penulis.comments.advanced', compact('comments', 'articles', 'stats'));
+    }
+
+    /**
+     * Bulk comment actions
+     */
+    public function bulkCommentAction(Request $request)
+    {
+        $request->validate([
+            'action' => 'required|in:approve,reject,delete',
+            'comment_ids' => 'required|array',
+            'comment_ids.*' => 'exists:comments,id',
+        ]);
+        
+        $user = Auth::user();
+        $userArticleIds = $user->articles()->pluck('id');
+        
+        $comments = Comment::whereIn('id', $request->comment_ids)
+            ->whereIn('article_id', $userArticleIds)
+            ->get();
+        
+        $count = 0;
+        foreach ($comments as $comment) {
+            switch ($request->action) {
+                case 'approve':
+                    $comment->update(['is_approved' => true]);
+                    $count++;
+                    break;
+                case 'reject':
+                    $comment->update(['is_approved' => false]);
+                    $count++;
+                    break;
+                case 'delete':
+                    $comment->delete();
+                    $count++;
+                    break;
+            }
+        }
+        
+        return redirect()->back()->with('success', "Berhasil {$request->action} {$count} komentar");
+    }
+
+    /**
+     * Reply to comment
+     */
+    public function replyComment(Request $request, Article $article, Comment $comment)
+    {
+        $this->authorize('view', $article);
+        
+        if ($comment->article_id !== $article->id) {
+            abort(403);
+        }
+        
+        $request->validate([
+            'comment' => 'required|string|max:1000',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+        ]);
+        
+        Comment::create([
+            'article_id' => $article->id,
+            'parent_id' => $comment->id,
+            'name' => $request->name,
+            'email' => $request->email,
+            'comment' => $request->comment,
+            'is_approved' => true, // Author replies are auto-approved
+            'ip_address' => $request->ip(),
+        ]);
+        
+        return redirect()->back()->with('success', 'Balasan berhasil ditambahkan');
+    }
+
+    /**
+     * Export comments
+     */
+    public function exportComments(Article $article)
+    {
+        $this->authorize('view', $article);
+        
+        $comments = $article->comments()->with('user', 'parent')->get();
+        
+        $csv = "ID,Artikel,Penulis,Email,Komentar,Status,Parent ID,Tanggal\n";
+        foreach ($comments as $comment) {
+            $csv .= sprintf(
+                "%d,\"%s\",\"%s\",\"%s\",\"%s\",%s,%s,%s\n",
+                $comment->id,
+                $article->title,
+                $comment->name,
+                $comment->email,
+                str_replace('"', '""', $comment->comment),
+                $comment->is_approved ? 'Approved' : 'Pending',
+                $comment->parent_id ?? '',
+                $comment->created_at->format('Y-m-d H:i:s')
+            );
+        }
+        
+        return response($csv)
+            ->header('Content-Type', 'text/csv; charset=utf-8')
+            ->header('Content-Disposition', 'attachment; filename="komentar-' . \Str::slug($article->title) . '.csv"');
+    }
+
+    /**
+     * SEO Tools
+     */
+    public function seoTools(Request $request, Article $article = null)
+    {
+        $user = Auth::user();
+        $articles = $user->articles()->published()->get(['id', 'title', 'slug']);
+        
+        // If article ID is provided in request but not as route parameter
+        if (!$article && $request->has('article_id')) {
+            $article = $user->articles()->find($request->article_id);
+        }
+        
+        if ($article) {
+            $this->authorize('view', $article);
+            
+            $seoAnalysis = $this->analyzeArticleSEO($article);
+            
+            return view('penulis.seo.analyze', compact('article', 'articles', 'seoAnalysis'));
+        }
+        
+        return view('penulis.seo.index', compact('articles'));
+    }
+
+    /**
+     * Analyze article SEO
+     */
+    protected function analyzeArticleSEO(Article $article): array
+    {
+        $analysis = [
+            'score' => 0,
+            'max_score' => 100,
+            'checks' => [],
+            'meta_title' => [
+                'value' => $article->title,
+                'length' => strlen($article->title),
+                'optimal' => strlen($article->title) >= 30 && strlen($article->title) <= 60,
+                'score' => 0,
+            ],
+            'meta_description' => [
+                'value' => $article->meta_description ?? $article->excerpt,
+                'length' => strlen($article->meta_description ?? $article->excerpt),
+                'optimal' => strlen($article->meta_description ?? $article->excerpt) >= 120 && strlen($article->meta_description ?? $article->excerpt) <= 160,
+                'score' => 0,
+            ],
+            'meta_keywords' => [
+                'value' => $article->meta_keywords,
+                'has_keywords' => !empty($article->meta_keywords),
+                'score' => 0,
+            ],
+            'slug' => [
+                'value' => $article->slug,
+                'optimal' => strlen($article->slug) <= 100 && preg_match('/^[a-z0-9-]+$/', $article->slug),
+                'score' => 0,
+            ],
+            'featured_image' => [
+                'has_image' => !empty($article->featured_image),
+                'score' => 0,
+            ],
+            'content' => [
+                'word_count' => str_word_count(strip_tags($article->content)),
+                'optimal' => str_word_count(strip_tags($article->content)) >= 300,
+                'score' => 0,
+            ],
+            'headings' => [
+                'h1_count' => substr_count($article->content, '<h1'),
+                'h2_count' => substr_count($article->content, '<h2'),
+                'has_h1' => substr_count($article->content, '<h1') > 0,
+                'has_h2' => substr_count($article->content, '<h2') > 0,
+                'score' => 0,
+            ],
+            'links' => [
+                'internal_links' => substr_count($article->content, '<a href'),
+                'has_links' => substr_count($article->content, '<a href') > 0,
+                'score' => 0,
+            ],
+            'readability' => $this->calculateReadability($article->content),
+        ];
+        
+        // Calculate scores
+        $score = 0;
+        
+        // Meta title (15 points)
+        if ($analysis['meta_title']['optimal']) {
+            $analysis['meta_title']['score'] = 15;
+            $score += 15;
+        } elseif (strlen($analysis['meta_title']['value']) > 0) {
+            $analysis['meta_title']['score'] = 8;
+            $score += 8;
+        }
+        
+        // Meta description (15 points)
+        if ($analysis['meta_description']['optimal']) {
+            $analysis['meta_description']['score'] = 15;
+            $score += 15;
+        } elseif (strlen($analysis['meta_description']['value']) > 0) {
+            $analysis['meta_description']['score'] = 8;
+            $score += 8;
+        }
+        
+        // Meta keywords (10 points)
+        if ($analysis['meta_keywords']['has_keywords']) {
+            $analysis['meta_keywords']['score'] = 10;
+            $score += 10;
+        }
+        
+        // Slug (10 points)
+        if ($analysis['slug']['optimal']) {
+            $analysis['slug']['score'] = 10;
+            $score += 10;
+        } elseif (strlen($analysis['slug']['value']) > 0) {
+            $analysis['slug']['score'] = 5;
+            $score += 5;
+        }
+        
+        // Featured image (10 points)
+        if ($analysis['featured_image']['has_image']) {
+            $analysis['featured_image']['score'] = 10;
+            $score += 10;
+        }
+        
+        // Content length (15 points)
+        if ($analysis['content']['optimal']) {
+            $analysis['content']['score'] = 15;
+            $score += 15;
+        } elseif ($analysis['content']['word_count'] >= 150) {
+            $analysis['content']['score'] = 8;
+            $score += 8;
+        }
+        
+        // Headings (10 points)
+        if ($analysis['headings']['has_h1'] && $analysis['headings']['has_h2']) {
+            $analysis['headings']['score'] = 10;
+            $score += 10;
+        } elseif ($analysis['headings']['has_h2']) {
+            $analysis['headings']['score'] = 5;
+            $score += 5;
+        }
+        
+        // Links (5 points)
+        if ($analysis['links']['has_links']) {
+            $analysis['links']['score'] = 5;
+            $score += 5;
+        }
+        
+        $analysis['score'] = $score;
+        
+        return $analysis;
+    }
+
+    /**
+     * Calculate readability score (Flesch Reading Ease)
+     */
+    protected function calculateReadability(string $content): array
+    {
+        $text = strip_tags($content);
+        $text = preg_replace('/[^\p{L}\p{N}\s]/u', '', $text);
+        
+        $words = str_word_count($text);
+        $sentences = preg_split('/[.!?]+/', $text, -1, PREG_SPLIT_NO_EMPTY);
+        $syllables = 0;
+        
+        $wordArray = explode(' ', $text);
+        foreach ($wordArray as $word) {
+            $syllables += max(1, preg_match_all('/[aeiou]+/i', $word));
+        }
+        
+        if ($words == 0 || count($sentences) == 0) {
+            return [
+                'score' => 0,
+                'level' => 'Tidak dapat dihitung',
+                'description' => 'Konten terlalu pendek untuk dihitung',
+            ];
+        }
+        
+        $avgSentenceLength = $words / count($sentences);
+        $avgSyllablesPerWord = $syllables / $words;
+        
+        $score = 206.835 - (1.015 * $avgSentenceLength) - (84.6 * $avgSyllablesPerWord);
+        $score = max(0, min(100, $score));
+        
+        $level = 'Sangat Sulit';
+        $description = 'Sangat sulit dibaca, memerlukan tingkat pendidikan tinggi';
+        
+        if ($score >= 90) {
+            $level = 'Sangat Mudah';
+            $description = 'Sangat mudah dibaca, cocok untuk anak-anak';
+        } elseif ($score >= 80) {
+            $level = 'Mudah';
+            $description = 'Mudah dibaca, cocok untuk siswa sekolah dasar';
+        } elseif ($score >= 70) {
+            $level = 'Cukup Mudah';
+            $description = 'Cukup mudah dibaca, cocok untuk siswa sekolah menengah';
+        } elseif ($score >= 60) {
+            $level = 'Standar';
+            $description = 'Tingkat bacaan standar, cocok untuk siswa sekolah menengah atas';
+        } elseif ($score >= 50) {
+            $level = 'Cukup Sulit';
+            $description = 'Cukup sulit dibaca, memerlukan tingkat pendidikan menengah';
+        } elseif ($score >= 30) {
+            $level = 'Sulit';
+            $description = 'Sulit dibaca, memerlukan tingkat pendidikan tinggi';
+        }
+        
+        return [
+            'score' => round($score, 1),
+            'level' => $level,
+            'description' => $description,
+        ];
+    }
+
+    /**
+     * Calculate engagement rate
+     */
+    protected function calculateEngagementRate(int $views, int $comments): float
+    {
+        if ($views === 0) {
+            return 0.0;
+        }
+        
+        return round(($comments / $views) * 100, 2);
     }
 }

@@ -21,6 +21,10 @@ class RoleMiddleware
 
         $user = auth()->user();
         
+        // Refresh user dari database untuk memastikan data terbaru (terutama role)
+        // Ini penting ketika role user berubah saat mereka masih login
+        $user->refresh();
+        
         // Pastikan user memiliki role yang valid
         if (!$user->role || trim($user->role) === '') {
             abort(403, 'Akses ditolak. Anda tidak memiliki izin untuk mengakses halaman ini.');

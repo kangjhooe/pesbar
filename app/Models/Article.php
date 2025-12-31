@@ -76,6 +76,16 @@ class Article extends Model
         return $this->hasMany(Comment::class)->where('is_approved', true)->with('user');
     }
 
+    public function bookmarks(): HasMany
+    {
+        return $this->hasMany(Bookmark::class);
+    }
+
+    public function readingHistory(): HasMany
+    {
+        return $this->hasMany(ReadingHistory::class);
+    }
+
     public function scopePublished($query)
     {
         return $query->where('status', 'published')

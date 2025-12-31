@@ -124,6 +124,18 @@
                                 <i class="fas fa-user mr-2"></i>
                                 Profil Saya
                             </a>
+                            <a href="{{ route('user.bookmarks') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-bookmark mr-2"></i>
+                                Bookmark Saya
+                            </a>
+                            <a href="{{ route('user.reading-history') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-history mr-2"></i>
+                                Riwayat Membaca
+                            </a>
+                            <a href="{{ route('user.following') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-user-plus mr-2"></i>
+                                Penulis yang Diikuti
+                            </a>
                             @if(auth()->user()->role === 'user')
                                 <a href="{{ route('user.upgrade-request') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                     <i class="fas fa-arrow-up mr-2"></i>

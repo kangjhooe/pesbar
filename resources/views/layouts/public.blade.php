@@ -512,10 +512,17 @@
                 </div>
                 
                 <!-- Quick Links -->
-                <div class="flex justify-center space-x-6 mb-6">
+                <div class="flex justify-center space-x-6 mb-6 flex-wrap gap-2">
                     <a href="{{ route('home') }}" class="text-gray-300 hover:text-white transition-colors text-sm">Beranda</a>
                     <a href="{{ route('articles.index') }}" class="text-gray-300 hover:text-white transition-colors text-sm">Berita</a>
                     {{-- <a href="{{ route('about') }}" class="text-gray-300 hover:text-white transition-colors text-sm">Tentang Kami</a> --}}
+                </div>
+                
+                <!-- Legal Links -->
+                <div class="flex justify-center space-x-4 mb-6">
+                    <a href="{{ route('terms') }}" class="text-gray-400 hover:text-white transition-colors text-xs">Syarat dan Ketentuan</a>
+                    <span class="text-gray-500">|</span>
+                    <a href="{{ route('privacy') }}" class="text-gray-400 hover:text-white transition-colors text-xs">Kebijakan Privasi</a>
                 </div>
 
                 <!-- Social Media & Copyright -->

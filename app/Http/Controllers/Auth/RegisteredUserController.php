@@ -49,8 +49,8 @@ class RegisteredUserController extends Controller
             'email.unique' => 'Email ini sudah terdaftar.',
             'password.required' => 'Kata sandi wajib diisi.',
             'password.confirmed' => 'Konfirmasi kata sandi tidak cocok.',
-            'terms.required' => 'Anda harus menyetujui syarat dan ketentuan.',
-            'terms.accepted' => 'Anda harus menyetujui syarat dan ketentuan.',
+            'terms.required' => 'Anda harus menyetujui Syarat dan Ketentuan serta Kebijakan Privasi.',
+            'terms.accepted' => 'Anda harus menyetujui Syarat dan Ketentuan serta Kebijakan Privasi.',
         ]);
 
         $user = User::create([

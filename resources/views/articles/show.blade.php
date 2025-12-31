@@ -149,7 +149,7 @@
                     </h1>
                     
                     <!-- Meta Information -->
-                    <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                    <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-4">
                         <div class="flex items-center space-x-2">
                             <i class="fas fa-user text-primary-600"></i>
                             @if($article->author && $article->author->isPenulis() && $article->author->username)
@@ -176,6 +176,30 @@
                             <span>{{ number_format($article->views) }} kali dilihat</span>
                         </div>
                     </div>
+
+                    <!-- User Actions (Bookmark & Follow) -->
+                    @auth
+                    <div class="flex items-center gap-3 pt-4 border-t border-gray-200">
+                        <button onclick="toggleBookmark({{ $article->id }})" 
+                                id="bookmark-btn-{{ $article->id }}"
+                                class="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 {{ auth()->user()->hasBookmarked($article) ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' : 'bg-gray-50 text-gray-700 border border-gray-200 hover:bg-yellow-50 hover:text-yellow-700 hover:border-yellow-200' }}">
+                            <i class="fas {{ auth()->user()->hasBookmarked($article) ? 'fa-bookmark' : 'fa-bookmark' }}"></i>
+                            <span class="text-sm font-medium" id="bookmark-text-{{ $article->id }}">
+                                {{ auth()->user()->hasBookmarked($article) ? 'Bookmarked' : 'Bookmark' }}
+                            </span>
+                        </button>
+                        @if($article->author && $article->author->id !== auth()->id())
+                        <button onclick="toggleFollow({{ $article->author->id }})" 
+                                id="follow-btn-{{ $article->author->id }}"
+                                class="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 {{ auth()->user()->isFollowing($article->author) ? 'bg-primary-600 text-white border border-primary-600' : 'bg-gray-50 text-gray-700 border border-gray-200 hover:bg-primary-50 hover:text-primary-700 hover:border-primary-200' }}">
+                            <i class="fas {{ auth()->user()->isFollowing($article->author) ? 'fa-user-check' : 'fa-user-plus' }}"></i>
+                            <span class="text-sm font-medium" id="follow-text-{{ $article->author->id }}">
+                                {{ auth()->user()->isFollowing($article->author) ? 'Mengikuti' : 'Ikuti Penulis' }}
+                            </span>
+                        </button>
+                        @endif
+                    </div>
+                    @endauth
                 </div>
 
                 <!-- Featured Image -->
@@ -517,6 +541,94 @@
 
 @section('scripts')
 <script>
+// Toggle Bookmark
+function toggleBookmark(articleId) {
+    @guest
+    window.location.href = '{{ route("login") }}';
+    return;
+    @endguest
+
+    const btn = document.getElementById(`bookmark-btn-${articleId}`);
+    const text = document.getElementById(`bookmark-text-${articleId}`);
+    const icon = btn.querySelector('i');
+    
+    btn.disabled = true;
+    
+    fetch(`/articles/${articleId}/bookmark`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (data.bookmarked) {
+                btn.classList.remove('bg-gray-50', 'text-gray-700', 'border-gray-200', 'hover:bg-yellow-50', 'hover:text-yellow-700', 'hover:border-yellow-200');
+                btn.classList.add('bg-yellow-50', 'text-yellow-700', 'border-yellow-200');
+                text.textContent = 'Bookmarked';
+            } else {
+                btn.classList.remove('bg-yellow-50', 'text-yellow-700', 'border-yellow-200');
+                btn.classList.add('bg-gray-50', 'text-gray-700', 'border-gray-200', 'hover:bg-yellow-50', 'hover:text-yellow-700', 'hover:border-yellow-200');
+                text.textContent = 'Bookmark';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    })
+    .finally(() => {
+        btn.disabled = false;
+    });
+}
+
+// Toggle Follow
+function toggleFollow(userId) {
+    @guest
+    window.location.href = '{{ route("login") }}';
+    return;
+    @endguest
+
+    const btn = document.getElementById(`follow-btn-${userId}`);
+    const text = document.getElementById(`follow-text-${userId}`);
+    const icon = btn.querySelector('i');
+    
+    btn.disabled = true;
+    
+    fetch(`/users/${userId}/follow`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (data.following) {
+                btn.classList.remove('bg-gray-50', 'text-gray-700', 'border-gray-200', 'hover:bg-primary-50', 'hover:text-primary-700', 'hover:border-primary-200');
+                btn.classList.add('bg-primary-600', 'text-white', 'border-primary-600');
+                icon.classList.remove('fa-user-plus');
+                icon.classList.add('fa-user-check');
+                text.textContent = 'Mengikuti';
+            } else {
+                btn.classList.remove('bg-primary-600', 'text-white', 'border-primary-600');
+                btn.classList.add('bg-gray-50', 'text-gray-700', 'border-gray-200', 'hover:bg-primary-50', 'hover:text-primary-700', 'hover:border-primary-200');
+                icon.classList.remove('fa-user-check');
+                icon.classList.add('fa-user-plus');
+                text.textContent = 'Ikuti Penulis';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    })
+    .finally(() => {
+        btn.disabled = false;
+    });
+}
+
 // CRITICAL: Define toggleLike FIRST before anything else to ensure it's always available
 window.toggleLike = window.toggleLike || function(commentId, isLike) {
         if (!commentId) {
