@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ReadingHistory extends Model
 {
+    protected $table = 'reading_history';
+
     protected $fillable = [
         'user_id',
         'article_id',
