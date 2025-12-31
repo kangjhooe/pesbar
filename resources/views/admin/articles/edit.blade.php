@@ -181,6 +181,67 @@
             @endif
         </div>
 
+        <!-- SEO Fields -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">SEO Settings</h3>
+            
+            <div class="space-y-4">
+                <div>
+                    <label for="slug" class="block text-sm font-medium text-gray-700 mb-2">
+                        Custom Slug (URL)
+                    </label>
+                    <input 
+                        type="text" 
+                        id="slug" 
+                        name="slug" 
+                        value="{{ old('slug', $article->slug) }}"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('slug') border-red-500 @enderror"
+                        placeholder="Akan otomatis dibuat dari judul jika kosong"
+                    >
+                    @error('slug')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                    <p class="mt-1 text-sm text-gray-500">URL artikel: {{ url('/articles/') }}/<span id="slug-preview">{{ $article->slug }}</span></p>
+                </div>
+
+                <div>
+                    <label for="meta_description" class="block text-sm font-medium text-gray-700 mb-2">
+                        Meta Description
+                    </label>
+                    <textarea 
+                        id="meta_description" 
+                        name="meta_description" 
+                        rows="3" 
+                        maxlength="500"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('meta_description') border-red-500 @enderror"
+                        placeholder="Deskripsi singkat untuk SEO (maksimal 500 karakter)"
+                    >{{ old('meta_description', $article->meta_description) }}</textarea>
+                    <p class="mt-1 text-sm text-gray-500"><span id="meta-desc-count">{{ strlen($article->meta_description ?? '') }}</span>/500 karakter</p>
+                    @error('meta_description')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label for="meta_keywords" class="block text-sm font-medium text-gray-700 mb-2">
+                        Meta Keywords
+                    </label>
+                    <input 
+                        type="text" 
+                        id="meta_keywords" 
+                        name="meta_keywords" 
+                        value="{{ old('meta_keywords', $article->meta_keywords) }}"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('meta_keywords') border-red-500 @enderror"
+                        placeholder="Kata kunci dipisahkan koma, contoh: berita, pesisir barat, lampung"
+                    >
+                    @error('meta_keywords')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                    <p class="mt-1 text-sm text-gray-500">Pisahkan dengan koma untuk optimasi SEO</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Options -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Opsi Tambahan</h3>
@@ -278,6 +339,25 @@ function previewImage(input) {
     } else {
         previewContainer.classList.add('hidden');
     }
+}
+
+// Meta description counter
+const metaDescInput = document.getElementById('meta_description');
+const metaDescCount = document.getElementById('meta-desc-count');
+if (metaDescInput && metaDescCount) {
+    metaDescInput.addEventListener('input', function() {
+        metaDescCount.textContent = this.value.length;
+    });
+}
+
+// Slug update
+const slugInput = document.getElementById('slug');
+const slugPreview = document.getElementById('slug-preview');
+
+if (slugInput && slugPreview) {
+    slugInput.addEventListener('input', function() {
+        slugPreview.textContent = this.value || '{{ $article->slug }}';
+    });
 }
 </script>
 @endpush

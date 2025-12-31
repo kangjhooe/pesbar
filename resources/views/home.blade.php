@@ -988,6 +988,184 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
+/* Weather Widget Animations */
+@keyframes rotateSun {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.9; }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes numberChange {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); color: #f39c12; }
+    100% { transform: scale(1); }
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* Weather Icon Animations - Applied directly to icons */
+#home-weather-widget i.fa-sun,
+#home-weather-widget i[class*="fa-sun"]:not([class*="fa-cloud-sun"]) {
+    animation: rotateSun 20s linear infinite !important;
+    display: inline-block;
+}
+
+#home-weather-widget i.fa-cloud:not([class*="fa-cloud-sun"]):not([class*="fa-cloud-rain"]):not([class*="fa-cloud-showers"]) {
+    animation: float 3s ease-in-out infinite !important;
+    display: inline-block;
+}
+
+#home-weather-widget i[class*="fa-cloud-sun"] {
+    animation: pulse 2s ease-in-out infinite !important;
+    display: inline-block;
+}
+
+#home-weather-widget i[class*="fa-cloud-rain"],
+#home-weather-widget i[class*="fa-cloud-showers"] {
+    animation: float 2s ease-in-out infinite !important;
+    display: inline-block;
+}
+
+#home-weather-widget i[class*="fa-bolt"] {
+    animation: pulse 1s ease-in-out infinite !important;
+    display: inline-block;
+    color: #f1c40f !important;
+}
+
+#home-weather-widget i[class*="fa-smog"] {
+    animation: float 4s ease-in-out infinite !important;
+    display: inline-block;
+}
+
+/* Widget Container Animations */
+#home-weather-widget {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease !important;
+}
+
+#home-weather-widget::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
+    z-index: 1;
+    pointer-events: none;
+}
+
+#home-weather-widget:hover::before {
+    left: 100%;
+}
+
+#home-weather-widget:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+#home-weather-widget.updating {
+    animation: shake 0.5s ease !important;
+}
+
+/* Temperature Animation */
+.home-weather-temp {
+    transition: all 0.3s ease !important;
+    display: inline-block;
+}
+
+.home-weather-temp.updating {
+    animation: numberChange 0.5s ease !important;
+}
+
+/* Forecast Items Animation */
+.home-weather-forecast-container > div {
+    animation: fadeInUp 0.5s ease forwards !important;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.home-weather-forecast-container > div:nth-child(1) {
+    animation-delay: 0.1s !important;
+}
+
+.home-weather-forecast-container > div:nth-child(2) {
+    animation-delay: 0.2s !important;
+}
+
+.home-weather-forecast-container > div:nth-child(3) {
+    animation-delay: 0.3s !important;
+}
+
+.home-weather-forecast-container > div:hover {
+    transform: translateX(5px) scale(1.02) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.home-weather-forecast-container > div::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(to bottom, #f39c12, #3498db);
+    transform: scaleY(0);
+    transition: transform 0.3s ease;
+}
+
+.home-weather-forecast-container > div:hover::before {
+    transform: scaleY(1);
+}
+
+.home-weather-forecast-container > div:hover i {
+    transform: scale(1.2) rotate(5deg) !important;
+}
+
+/* Live Badge Animation */
+#home-weather-widget .bg-green-100 {
+    position: relative;
+    overflow: hidden;
+}
+
+#home-weather-widget .bg-green-100::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+    animation: shimmer 2s infinite;
+    z-index: 1;
+    pointer-events: none;
+}
+
 .trending-number {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;

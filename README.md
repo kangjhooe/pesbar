@@ -36,6 +36,7 @@ Platform informasi Kabupaten Pesisir Barat yang dibangun dengan Laravel. Aplikas
 
 ### Backend & Admin Panel
 - ✅ **Sistem Autentikasi** - Login dengan Laravel Breeze dan OAuth Google
+- ✅ **Multi-URL Login** - Login terpisah untuk Admin/Editor (`/admin/login`), Penulis (`/penulis/login`), dan User (`/login`)
 - ✅ **Role Management** - User, Penulis, Editor, Admin dengan hak akses berbeda
 - ✅ **Dashboard Admin** - Statistik dan overview sistem
 - ✅ **Manajemen Artikel** - CRUD artikel dengan status (draft/pending_review/published/rejected)
@@ -86,6 +87,41 @@ Platform informasi Kabupaten Pesisir Barat yang dibangun dengan Laravel. Aplikas
 - **Redis**: 6.0+ (untuk caching dan queue)
 - **ImageMagick** atau **GD**: (untuk image processing)
 
+## ⚡ Quick Start
+
+Untuk memulai dengan cepat:
+
+```bash
+# Clone repository
+git clone [repository-url]
+cd pesbar
+
+# Install dependencies
+composer install
+npm install
+
+# Setup environment
+cp .env.example .env
+php artisan key:generate
+
+# Konfigurasi database di .env, lalu:
+php artisan migrate
+php artisan db:seed
+
+# Build assets
+npm run build
+
+# Setup storage link
+php artisan storage:link
+
+# Jalankan aplikasi
+php artisan serve
+```
+
+Login dengan:
+- **Admin**: `admin@pesisirbarat.id` / `password`
+- **URL**: `http://localhost:8000/admin/login`
+
 ## 🛠️ Instalasi
 
 ### 1. Clone Repository
@@ -134,9 +170,14 @@ DB_PASSWORD=password_database
 # Jalankan migration
 php artisan migrate
 
-# Jalankan seeder (opsional)
+# Jalankan seeder (membuat admin dan data awal)
 php artisan db:seed
+
+# Atau jalankan seeder spesifik untuk user tambahan (opsional)
+php artisan db:seed --class=AdminUserSeeder
 ```
+
+> **Catatan:** Seeder default akan membuat admin dengan email `admin@pesisirbarat.id`. Untuk mendapatkan user tambahan (editor, penulis, dll), jalankan `AdminUserSeeder`.
 
 ### 6. Build Assets
 
@@ -610,23 +651,51 @@ pesbar/
 - **Frontend**: Tailwind CSS, Alpine.js, Vite
 - **Caching**: Redis (opsional)
 - **Queue**: Redis/Database
-- **Image Processing**: Intervention Image
+- **Image Processing**: Native PHP GD/Imagick (multiple sizes, WebP conversion)
 - **Authentication**: Laravel Breeze, Laravel Socialite
 - **Email**: Laravel Mail
 
 ## 📝 Default Login
 
-Setelah menjalankan seeder, Anda dapat login dengan:
+Setelah menjalankan seeder (`php artisan db:seed`), Anda dapat login dengan:
 
-**Admin:**
-- Email: `admin@example.com`
-- Password: `password`
+### Admin
+- **Email:** `admin@pesisirbarat.id`
+- **Password:** `password`
+- **Role:** Admin
+- **URL Login:** `/admin/login`
 
-**Penulis:**
-- Email: `penulis@example.com`
-- Password: `password`
+### Editor
+- **Email:** `editor@pesbar.com` (jika menjalankan `AdminUserSeeder`)
+- **Password:** `password`
+- **Role:** Editor
+- **URL Login:** `/admin/login`
 
-> ⚠️ **PENTING**: Segera ubah password default setelah pertama kali login!
+### Penulis Terverifikasi
+- **Email:** `penulis@pesbar.com` (jika menjalankan `AdminUserSeeder`)
+- **Password:** `password`
+- **Role:** Penulis
+- **Status:** Terverifikasi
+- **URL Login:** `/penulis/login`
+
+### Penulis Belum Terverifikasi
+- **Email:** `penulis2@pesbar.com` (jika menjalankan `AdminUserSeeder`)
+- **Password:** `password`
+- **Role:** Penulis
+- **Status:** Belum Terverifikasi
+- **URL Login:** `/penulis/login`
+
+### User Biasa
+- **Email:** `user@pesbar.com` (jika menjalankan `AdminUserSeeder`)
+- **Password:** `password`
+- **Role:** User
+- **URL Login:** `/login`
+
+> ⚠️ **PENTING**: 
+> - Segera ubah password default setelah pertama kali login!
+> - Email admin default dari `DatabaseSeeder` adalah `admin@pesisirbarat.id`
+> - Untuk mendapatkan user tambahan (editor, penulis, dll), jalankan: `php artisan db:seed --class=AdminUserSeeder`
+> - Detail lengkap login tersedia di [LOGIN_DATA.md](LOGIN_DATA.md)
 
 ## 🔒 Keamanan
 

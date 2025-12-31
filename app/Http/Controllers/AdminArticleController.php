@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use App\Helpers\CacheHelper;
+use App\Helpers\ActivityLogHelper;
 
 class AdminArticleController extends Controller
 {
@@ -24,6 +25,14 @@ class AdminArticleController extends Controller
     public function index(Request $request)
     {
         $query = Article::with(['category', 'author', 'tags']);
+
+        // Filter by tab: my_articles (only admin's articles) or all_articles (all articles)
+        $tab = $request->get('tab', 'all');
+        if ($tab === 'my') {
+            // Only show articles created by current admin
+            $query->where('author_id', Auth::id());
+        }
+        // If tab is 'all' or not set, show all articles (no additional filter)
 
         // Filter by status
         if ($request->has('status') && $request->status !== '') {
@@ -45,10 +54,10 @@ class AdminArticleController extends Controller
             $query->where('title', 'like', '%' . $request->search . '%');
         }
 
-        $articles = $query->orderBy('created_at', 'desc')->paginate(15);
+        $articles = $query->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
         $categories = Category::where('is_active', true)->get();
 
-        return view('admin.articles.index', compact('articles', 'categories'));
+        return view('admin.articles.index', compact('articles', 'categories', 'tab'));
     }
 
     /**
@@ -80,11 +89,29 @@ class AdminArticleController extends Controller
             'tags' => 'array',
             'tags.*' => 'exists:tags,id',
             'published_at' => 'nullable|date',
+            'slug' => 'nullable|string|max:255|unique:articles,slug',
+            'meta_description' => 'nullable|string|max:500',
+            'meta_keywords' => 'nullable|string|max:255',
         ]);
 
         $data = $request->all();
         $data['author_id'] = Auth::id();
-        $data['slug'] = Str::slug($request->title);
+        
+        // Handle slug - use custom slug if provided, otherwise generate from title
+        if ($request->slug) {
+            $baseSlug = Str::slug($request->slug);
+        } else {
+            $baseSlug = Str::slug($request->title);
+        }
+        
+        // Ensure slug is unique
+        $uniqueSlug = $baseSlug;
+        $counter = 1;
+        while (Article::where('slug', $uniqueSlug)->exists()) {
+            $uniqueSlug = $baseSlug . '-' . $counter;
+            $counter++;
+        }
+        $data['slug'] = $uniqueSlug;
         
         // Set default values for boolean fields
         $data['is_featured'] = $request->has('is_featured') ? true : false;
@@ -155,10 +182,38 @@ class AdminArticleController extends Controller
             'tags' => 'array',
             'tags.*' => 'exists:tags,id',
             'published_at' => 'nullable|date',
+            'slug' => 'nullable|string|max:255|unique:articles,slug,' . $article->id,
+            'meta_description' => 'nullable|string|max:500',
+            'meta_keywords' => 'nullable|string|max:255',
         ]);
 
         $data = $request->all();
-        $data['slug'] = Str::slug($request->title);
+        
+        // Handle slug - use custom slug if provided and changed, otherwise keep existing or generate from title
+        if ($request->slug && $request->slug !== $article->slug) {
+            $baseSlug = Str::slug($request->slug);
+            // Ensure slug is unique
+            $uniqueSlug = $baseSlug;
+            $counter = 1;
+            while (Article::where('slug', $uniqueSlug)->where('id', '!=', $article->id)->exists()) {
+                $uniqueSlug = $baseSlug . '-' . $counter;
+                $counter++;
+            }
+            $data['slug'] = $uniqueSlug;
+        } elseif (!$request->slug && $request->title !== $article->title) {
+            // If title changed but no custom slug, regenerate from title
+            $baseSlug = Str::slug($request->title);
+            $uniqueSlug = $baseSlug;
+            $counter = 1;
+            while (Article::where('slug', $uniqueSlug)->where('id', '!=', $article->id)->exists()) {
+                $uniqueSlug = $baseSlug . '-' . $counter;
+                $counter++;
+            }
+            $data['slug'] = $uniqueSlug;
+        } else {
+            // Keep existing slug
+            $data['slug'] = $article->slug;
+        }
         
         // Set default values for boolean fields
         $data['is_featured'] = $request->has('is_featured') ? true : false;
@@ -196,18 +251,37 @@ class AdminArticleController extends Controller
      */
     public function destroy(Article $article)
     {
-        // Delete featured image
-        if ($article->featured_image) {
-            Storage::disk('public')->delete($article->featured_image);
+        try {
+            $articleTitle = $article->title;
+            
+            // Delete featured image
+            if ($article->featured_image) {
+                Storage::disk('public')->delete($article->featured_image);
+            }
+
+            // Detach tags
+            $article->tags()->detach();
+
+            $article->delete();
+
+            // Clear cache
+            CacheHelper::clearArticleCache();
+            CacheHelper::clearDashboardCache();
+            
+            // Log activity
+            ActivityLogHelper::log('article', 'deleted', 'Artikel dihapus: ' . $articleTitle);
+
+            return redirect()->back()
+                ->with('success', 'Artikel berhasil dihapus!');
+        } catch (\Exception $e) {
+            \Log::error('Article Deletion Error: ' . $e->getMessage(), [
+                'article_id' => $article->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->back()
+                ->with('error', 'Terjadi kesalahan saat menghapus artikel. Silakan coba lagi.');
         }
-
-        // Detach tags
-        $article->tags()->detach();
-
-        $article->delete();
-
-        return redirect()->back()
-            ->with('success', 'Artikel berhasil dihapus!');
     }
 
     /**
@@ -291,39 +365,93 @@ class AdminArticleController extends Controller
             'articles.*' => 'exists:articles,id',
         ]);
 
-        $articles = Article::whereIn('id', $request->articles);
+        try {
+            $articleIds = $request->articles;
+            $articles = Article::whereIn('id', $articleIds)->get();
 
-        switch ($request->action) {
-            case 'delete':
-                // Delete featured images
-                $articles->get()->each(function ($article) {
-                    if ($article->featured_image) {
-                        Storage::disk('public')->delete($article->featured_image);
-                    }
-                });
-                $articles->delete();
-                $message = 'Artikel berhasil dihapus!';
-                break;
+            if ($articles->isEmpty()) {
+                return back()->with('error', 'Tidak ada artikel yang ditemukan.');
+            }
 
-            case 'publish':
-                $articles->update([
-                    'status' => 'published',
-                    'published_at' => now()
-                ]);
-                $message = 'Artikel berhasil dipublikasi!';
-                break;
+            switch ($request->action) {
+                case 'delete':
+                    $count = $articles->count();
+                    
+                    // Delete featured images and detach tags for each article
+                    $articles->each(function ($article) {
+                        // Delete featured image
+                        if ($article->featured_image) {
+                            Storage::disk('public')->delete($article->featured_image);
+                        }
+                        
+                        // Detach tags
+                        $article->tags()->detach();
+                    });
+                    
+                    // Delete articles
+                    Article::whereIn('id', $articleIds)->delete();
+                    
+                    // Clear cache
+                    CacheHelper::clearArticleCache();
+                    CacheHelper::clearDashboardCache();
+                    
+                    // Log activity
+                    ActivityLogHelper::log('article', 'bulk_deleted', $count . ' artikel dihapus secara massal');
+                    
+                    $message = $count . ' artikel berhasil dihapus!';
+                    break;
 
-            case 'draft':
-                $articles->update(['status' => 'draft']);
-                $message = 'Artikel berhasil diubah ke draft!';
-                break;
+                case 'publish':
+                    $count = Article::whereIn('id', $articleIds)->update([
+                        'status' => 'published',
+                        'published_at' => now()
+                    ]);
+                    
+                    // Clear cache
+                    CacheHelper::clearArticleCache();
+                    CacheHelper::clearDashboardCache();
+                    
+                    // Log activity
+                    ActivityLogHelper::log('article', 'bulk_published', $count . ' artikel dipublikasi secara massal');
+                    
+                    $message = $count . ' artikel berhasil dipublikasi!';
+                    break;
 
-            case 'featured':
-                $articles->update(['is_featured' => true]);
-                $message = 'Artikel berhasil ditandai sebagai featured!';
-                break;
+                case 'draft':
+                    $count = Article::whereIn('id', $articleIds)->update(['status' => 'draft']);
+                    
+                    // Clear cache
+                    CacheHelper::clearArticleCache();
+                    CacheHelper::clearDashboardCache();
+                    
+                    // Log activity
+                    ActivityLogHelper::log('article', 'bulk_drafted', $count . ' artikel diubah ke draft secara massal');
+                    
+                    $message = $count . ' artikel berhasil diubah ke draft!';
+                    break;
+
+                case 'featured':
+                    $count = Article::whereIn('id', $articleIds)->update(['is_featured' => true]);
+                    
+                    // Clear cache
+                    CacheHelper::clearArticleCache();
+                    
+                    // Log activity
+                    ActivityLogHelper::log('article', 'bulk_featured', $count . ' artikel ditandai sebagai featured secara massal');
+                    
+                    $message = $count . ' artikel berhasil ditandai sebagai featured!';
+                    break;
+            }
+
+            return back()->with('success', $message);
+        } catch (\Exception $e) {
+            \Log::error('Bulk Action Error: ' . $e->getMessage(), [
+                'action' => $request->action,
+                'article_ids' => $request->articles,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return back()->with('error', 'Terjadi kesalahan saat memproses aksi bulk. Silakan coba lagi.');
         }
-
-        return back()->with('success', $message);
     }
 }

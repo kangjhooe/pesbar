@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Comment extends Model
 {
@@ -55,6 +56,12 @@ class Comment extends Model
         return $this->hasMany(CommentLike::class);
     }
 
+    /**
+     * Get the current user's like for this comment.
+     * Returns null if user is not authenticated.
+     * 
+     * @return HasOne|null
+     */
     public function userLike()
     {
         if (!auth()->check()) {

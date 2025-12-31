@@ -745,30 +745,53 @@ body {
 }
 
 /* Weather Icon Animations */
+.weather-widget.fa-sun,
+.home-weather-icon.fa-sun,
+.weather-widget-large.fa-sun,
+.home-weather-icon-large.fa-sun,
 .weather-widget .fa-sun,
 .home-weather-icon .fa-sun,
 .weather-widget-large .fa-sun,
-.home-weather-icon-large .fa-sun {
-    animation: rotateSun 20s linear infinite;
+.home-weather-icon-large .fa-sun,
+i.fa-sun {
+    animation: rotateSun 20s linear infinite !important;
     display: inline-block;
 }
 
+.weather-widget.fa-cloud,
+.home-weather-icon.fa-cloud,
+.weather-widget-large.fa-cloud,
+.home-weather-icon-large.fa-cloud,
 .weather-widget .fa-cloud,
 .home-weather-icon .fa-cloud,
 .weather-widget-large .fa-cloud,
-.home-weather-icon-large .fa-cloud {
-    animation: float 3s ease-in-out infinite;
+.home-weather-icon-large .fa-cloud,
+i.fa-cloud {
+    animation: float 3s ease-in-out infinite !important;
     display: inline-block;
 }
 
+.weather-widget.fa-cloud-sun,
+.home-weather-icon.fa-cloud-sun,
+.weather-widget-large.fa-cloud-sun,
+.home-weather-icon-large.fa-cloud-sun,
 .weather-widget .fa-cloud-sun,
 .home-weather-icon .fa-cloud-sun,
 .weather-widget-large .fa-cloud-sun,
-.home-weather-icon-large .fa-cloud-sun {
-    animation: pulse 2s ease-in-out infinite;
+.home-weather-icon-large .fa-cloud-sun,
+i.fa-cloud-sun {
+    animation: pulse 2s ease-in-out infinite !important;
     display: inline-block;
 }
 
+.weather-widget.fa-cloud-rain,
+.weather-widget.fa-cloud-showers-heavy,
+.home-weather-icon.fa-cloud-rain,
+.home-weather-icon.fa-cloud-showers-heavy,
+.weather-widget-large.fa-cloud-rain,
+.weather-widget-large.fa-cloud-showers-heavy,
+.home-weather-icon-large.fa-cloud-rain,
+.home-weather-icon-large.fa-cloud-showers-heavy,
 .weather-widget .fa-cloud-rain,
 .weather-widget .fa-cloud-showers-heavy,
 .home-weather-icon .fa-cloud-rain,
@@ -776,25 +799,45 @@ body {
 .weather-widget-large .fa-cloud-rain,
 .weather-widget-large .fa-cloud-showers-heavy,
 .home-weather-icon-large .fa-cloud-rain,
-.home-weather-icon-large .fa-cloud-showers-heavy {
-    animation: float 2s ease-in-out infinite;
+.home-weather-icon-large .fa-cloud-showers-heavy,
+i.fa-cloud-rain,
+i.fa-cloud-showers-heavy {
+    animation: float 2s ease-in-out infinite !important;
     display: inline-block;
 }
 
+.weather-widget.fa-bolt,
+.home-weather-icon.fa-bolt,
+.weather-widget-large.fa-bolt,
+.home-weather-icon-large.fa-bolt,
 .weather-widget .fa-bolt,
 .home-weather-icon .fa-bolt,
 .weather-widget-large .fa-bolt,
-.home-weather-icon-large .fa-bolt {
-    animation: pulse 1s ease-in-out infinite;
+.home-weather-icon-large .fa-bolt,
+i.fa-bolt {
+    animation: pulse 1s ease-in-out infinite !important;
     display: inline-block;
-    color: #f1c40f;
+    color: #f1c40f !important;
+}
+
+.weather-widget.fa-smog,
+.home-weather-icon.fa-smog,
+.weather-widget-large.fa-smog,
+.home-weather-icon-large.fa-smog,
+.weather-widget .fa-smog,
+.home-weather-icon .fa-smog,
+.weather-widget-large .fa-smog,
+.home-weather-icon-large .fa-smog,
+i.fa-smog {
+    animation: float 4s ease-in-out infinite !important;
+    display: inline-block;
 }
 
 /* Weather Widget Container */
 .widget {
     position: relative;
     overflow: hidden;
-    transition: all 0.3s ease;
+    transition: all 0.3s ease !important;
 }
 
 .widget::before {
@@ -806,6 +849,8 @@ body {
     height: 100%;
     background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
     transition: left 0.5s;
+    z-index: 1;
+    pointer-events: none;
 }
 
 .widget:hover::before {
@@ -813,48 +858,49 @@ body {
 }
 
 .widget:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Weather Temperature Animation */
 .weather-temp,
 .home-weather-temp {
-    transition: all 0.3s ease;
+    transition: all 0.3s ease !important;
     display: inline-block;
 }
 
 .weather-temp.updating,
 .home-weather-temp.updating {
-    animation: numberChange 0.5s ease;
+    animation: numberChange 0.5s ease !important;
 }
 
 /* Weather Forecast Items */
 .weather-forecast-container > div,
 .home-weather-forecast-container > div {
-    animation: fadeInUp 0.5s ease forwards;
+    animation: fadeInUp 0.5s ease forwards !important;
     opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 .weather-forecast-container > div:nth-child(1),
 .home-weather-forecast-container > div:nth-child(1) {
-    animation-delay: 0.1s;
+    animation-delay: 0.1s !important;
 }
 
 .weather-forecast-container > div:nth-child(2),
 .home-weather-forecast-container > div:nth-child(2) {
-    animation-delay: 0.2s;
+    animation-delay: 0.2s !important;
 }
 
 .weather-forecast-container > div:nth-child(3),
 .home-weather-forecast-container > div:nth-child(3) {
-    animation-delay: 0.3s;
+    animation-delay: 0.3s !important;
 }
 
 .weather-forecast-container > div:hover,
 .home-weather-forecast-container > div:hover {
-    transform: translateX(5px) scale(1.02);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateX(5px) scale(1.02) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Live Badge Animation */
@@ -872,6 +918,8 @@ body {
     height: 100%;
     background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
     animation: shimmer 2s infinite;
+    z-index: 1;
+    pointer-events: none;
 }
 
 @keyframes shimmer {
@@ -886,11 +934,11 @@ body {
 /* Weather Update Animation */
 .weather-update,
 .home-weather-update {
-    transition: all 0.3s ease;
+    transition: all 0.3s ease !important;
 }
 
 .widget.updating {
-    animation: shake 0.5s ease;
+    animation: shake 0.5s ease !important;
 }
 
 /* Loading State */

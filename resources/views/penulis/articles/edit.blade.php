@@ -430,23 +430,171 @@ function previewArticle() {
     const content = quill.root.innerHTML || {!! json_encode($article->content) !!};
     const category = document.getElementById('category_id').options[document.getElementById('category_id').selectedIndex]?.text || '{{ $article->category->name ?? "Kategori" }}';
     
-    const previewWindow = window.open('', '_blank', 'width=800,height=600');
+    const previewWindow = window.open('', '_blank', 'width=900,height=700');
     previewWindow.document.write(`
         <!DOCTYPE html>
         <html>
         <head>
             <title>Preview: ${title}</title>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <style>
-                body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
-                h1 { color: #333; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
-                .meta { color: #666; font-size: 14px; margin-bottom: 20px; }
-                .content { line-height: 1.6; }
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+                body { 
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; 
+                    padding: 30px 20px; 
+                    max-width: 800px; 
+                    margin: 0 auto;
+                    line-height: 1.7;
+                    color: #333;
+                    background: #f9fafb;
+                }
+                .preview-container {
+                    background: white;
+                    padding: 40px;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                }
+                h1 { 
+                    color: #1f2937; 
+                    border-bottom: 3px solid #3b82f6; 
+                    padding-bottom: 15px;
+                    margin-bottom: 20px;
+                    font-size: 2em;
+                }
+                h2 {
+                    color: #1f2937;
+                    margin-top: 1.5em;
+                    margin-bottom: 0.75em;
+                    font-size: 1.5em;
+                }
+                h3 {
+                    color: #374151;
+                    margin-top: 1.25em;
+                    margin-bottom: 0.5em;
+                    font-size: 1.25em;
+                }
+                .meta { 
+                    color: #6b7280; 
+                    font-size: 14px; 
+                    margin-bottom: 30px;
+                    padding: 10px;
+                    background: #f3f4f6;
+                    border-radius: 6px;
+                }
+                .content { 
+                    line-height: 1.8;
+                    color: #374151;
+                }
+                .content p {
+                    margin-bottom: 1.25em;
+                }
+                .content img {
+                    max-width: 100%;
+                    height: auto;
+                    border-radius: 6px;
+                    margin: 1.5em 0;
+                }
+                /* List Styling */
+                .content ul,
+                .content ol {
+                    margin-top: 1.25em;
+                    margin-bottom: 1.25em;
+                    padding-left: 2em;
+                }
+                .content ul {
+                    list-style-type: disc;
+                }
+                .content ol {
+                    list-style-type: decimal;
+                }
+                .content ul ul,
+                .content ol ol,
+                .content ul ol,
+                .content ol ul {
+                    margin-top: 0.75em;
+                    margin-bottom: 0.75em;
+                }
+                .content li {
+                    margin-top: 0.5em;
+                    margin-bottom: 0.5em;
+                    padding-left: 0.5em;
+                    line-height: 1.8;
+                }
+                .content ul > li::marker {
+                    color: #3b82f6;
+                    font-size: 1.2em;
+                }
+                .content ol > li::marker {
+                    color: #3b82f6;
+                    font-weight: 600;
+                }
+                /* Nested lists */
+                .content ul ul {
+                    list-style-type: circle;
+                }
+                .content ul ul ul {
+                    list-style-type: square;
+                }
+                .content ol ol {
+                    list-style-type: lower-alpha;
+                }
+                .content ol ol ol {
+                    list-style-type: lower-roman;
+                }
+                .content blockquote {
+                    border-left: 4px solid #3b82f6;
+                    padding-left: 1.5em;
+                    margin: 1.5em 0;
+                    color: #6b7280;
+                    font-style: italic;
+                }
+                .content a {
+                    color: #3b82f6;
+                    text-decoration: underline;
+                }
+                .content a:hover {
+                    color: #2563eb;
+                }
+                .content strong {
+                    font-weight: 600;
+                    color: #1f2937;
+                }
+                .content em {
+                    font-style: italic;
+                }
+                .content code {
+                    background: #f3f4f6;
+                    padding: 2px 6px;
+                    border-radius: 4px;
+                    font-family: 'Courier New', monospace;
+                    font-size: 0.9em;
+                }
+                .content pre {
+                    background: #1f2937;
+                    color: #f9fafb;
+                    padding: 1.5em;
+                    border-radius: 6px;
+                    overflow-x: auto;
+                    margin: 1.5em 0;
+                }
+                .content pre code {
+                    background: transparent;
+                    padding: 0;
+                    color: inherit;
+                }
             </style>
         </head>
         <body>
-            <h1>${title}</h1>
-            <div class="meta">Kategori: ${category}</div>
-            <div class="content">${content}</div>
+            <div class="preview-container">
+                <h1>${title}</h1>
+                <div class="meta">Kategori: ${category}</div>
+                <div class="content">${content}</div>
+            </div>
         </body>
         </html>
     `);

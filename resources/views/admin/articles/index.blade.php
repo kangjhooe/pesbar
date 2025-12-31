@@ -26,9 +26,29 @@
         </div>
     </div>
 
+    <!-- Tab Navigation -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="border-b border-gray-200">
+            <nav class="flex -mb-px" aria-label="Tabs">
+                <a href="{{ route('admin.articles.index', array_merge(request()->except('tab'), ['tab' => 'my'])) }}" 
+                   class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors {{ ($tab ?? 'all') === 'my' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                    <i class="fas fa-user-edit mr-2"></i>
+                    Artikel Saya
+                </a>
+                <a href="{{ route('admin.articles.index', array_merge(request()->except('tab'), ['tab' => 'all'])) }}" 
+                   class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors {{ ($tab ?? 'all') === 'all' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                    <i class="fas fa-list mr-2"></i>
+                    Semua Artikel
+                </a>
+            </nav>
+        </div>
+    </div>
+
     <!-- Filters -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <form method="GET" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <!-- Hidden field to preserve tab selection -->
+            <input type="hidden" name="tab" value="{{ $tab ?? 'all' }}">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                 <select name="status" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -69,7 +89,7 @@
                 <button type="submit" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
                     <i class="fas fa-search mr-2"></i>Filter
                 </button>
-                <a href="{{ route('admin.articles.index') }}" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
+                <a href="{{ route('admin.articles.index', ['tab' => $tab ?? 'all']) }}" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
                     <i class="fas fa-times mr-2"></i>Reset
                 </a>
             </div>
@@ -77,7 +97,7 @@
     </div>
 
     <!-- Bulk Actions -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4" id="bulk-actions" style="display: none;">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hidden" id="bulk-actions">
         <form id="bulk-form" method="POST" action="{{ route('admin.articles.bulk') }}">
             @csrf
             <div class="flex items-center gap-4">
@@ -245,38 +265,66 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex items-center space-x-2">
-                                <a href="{{ route('admin.articles.show', $article) }}" 
-                                   class="text-blue-600 hover:text-blue-900 p-2 rounded-md transition-colors" 
-                                   title="Lihat Detail">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                @can('update', $article)
-                                <a href="{{ route('admin.articles.edit', $article) }}" 
-                                   class="text-green-600 hover:text-green-900 p-2 rounded-md transition-colors" 
-                                   title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                @endcan
-                                @if($article->status !== 'archived')
-                                <form action="{{ route('admin.articles.archive', $article) }}" 
-                                      method="POST" class="inline archive-form" 
-                                      data-article-id="{{ $article->id }}"
-                                      onsubmit="return confirm('Apakah Anda yakin ingin mengarsipkan artikel ini? Penulis akan diberi kesempatan untuk mereview kembali tulisannya.')">
-                                    @csrf
-                                    <button type="submit" class="text-purple-600 hover:text-purple-900 p-2 rounded-md transition-colors" title="Arsipkan (beri kesempatan penulis untuk review)">
-                                        <i class="fas fa-archive"></i>
-                                    </button>
-                                </form>
+                                @php
+                                    $isMyArticle = $article->author_id === auth()->id();
+                                @endphp
+                                
+                                @if($isMyArticle)
+                                    {{-- Tombol Aksi untuk Artikel Admin Sendiri --}}
+                                    <a href="{{ route('admin.articles.show', $article) }}" 
+                                       class="text-blue-600 hover:text-blue-900 p-2 rounded-md transition-colors" 
+                                       title="Lihat Detail">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ route('admin.articles.edit', $article) }}" 
+                                       class="text-green-600 hover:text-green-900 p-2 rounded-md transition-colors" 
+                                       title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form action="{{ route('admin.articles.destroy', $article) }}" 
+                                          method="POST" class="inline" 
+                                          onsubmit="return confirm('Apakah Anda yakin ingin menghapus artikel ini? Tindakan ini tidak dapat dibatalkan.')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-red-600 hover:text-red-900 p-2 rounded-md transition-colors" title="Hapus">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                @else
+                                    {{-- Tombol Aksi untuk Artikel User Lain --}}
+                                    <a href="{{ route('admin.articles.show', $article) }}" 
+                                       class="text-blue-600 hover:text-blue-900 p-2 rounded-md transition-colors" 
+                                       title="Lihat Detail">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    @if($article->status === 'pending_review')
+                                        <a href="{{ route('admin.articles.detail', $article) }}" 
+                                           class="text-yellow-600 hover:text-yellow-900 p-2 rounded-md transition-colors" 
+                                           title="Review Artikel">
+                                            <i class="fas fa-clipboard-check"></i>
+                                        </a>
+                                    @endif
+                                    @if($article->status !== 'archived')
+                                    <form action="{{ route('admin.articles.archive', $article) }}" 
+                                          method="POST" class="inline archive-form" 
+                                          data-article-id="{{ $article->id }}"
+                                          onsubmit="return confirm('Apakah Anda yakin ingin mengarsipkan artikel ini? Penulis akan diberi kesempatan untuk mereview kembali tulisannya.')">
+                                        @csrf
+                                        <button type="submit" class="text-purple-600 hover:text-purple-900 p-2 rounded-md transition-colors" title="Arsipkan (beri kesempatan penulis untuk review)">
+                                            <i class="fas fa-archive"></i>
+                                        </button>
+                                    </form>
+                                    @endif
+                                    <form action="{{ route('admin.articles.destroy', $article) }}" 
+                                          method="POST" class="inline" 
+                                          onsubmit="return confirm('Apakah Anda yakin ingin menghapus artikel ini? Tindakan ini tidak dapat dibatalkan.')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-red-600 hover:text-red-900 p-2 rounded-md transition-colors" title="Hapus (jika melanggar kode etik jurnalistik)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
                                 @endif
-                                <form action="{{ route('admin.articles.destroy', $article) }}" 
-                                      method="POST" class="inline" 
-                                      onsubmit="return confirm('Apakah Anda yakin ingin menghapus artikel ini? Tindakan ini tidak dapat dibatalkan.')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-900 p-2 rounded-md transition-colors" title="Hapus (jika melanggar kode etik jurnalistik)">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
                             </div>
                         </td>
                     </tr>
@@ -331,7 +379,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const count = checkedBoxes.length;
         
         if (count > 0) {
-            bulkActions.style.display = 'block';
+            bulkActions.classList.remove('hidden');
+            bulkActions.classList.add('block');
             selectedCount.textContent = `${count} artikel dipilih`;
             
             // Update form with selected articles
@@ -345,25 +394,67 @@ document.addEventListener('DOMContentLoaded', function() {
                 form.appendChild(input);
             });
         } else {
-            bulkActions.style.display = 'none';
+            bulkActions.classList.remove('block');
+            bulkActions.classList.add('hidden');
         }
     }
 
     // Bulk form submission
     bulkForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
         const action = this.querySelector('select[name="action"]').value;
         if (!action) {
-            e.preventDefault();
             alert('Pilih aksi yang akan dilakukan');
             return;
         }
         
         if (action === 'delete') {
-            if (!confirm('Apakah Anda yakin ingin menghapus artikel yang dipilih?')) {
-                e.preventDefault();
+            if (!confirm('Apakah Anda yakin ingin menghapus artikel yang dipilih? Tindakan ini tidak dapat dibatalkan.')) {
                 return;
             }
         }
+        
+        // Show loading state
+        const submitButton = this.querySelector('button[type="submit"]');
+        const originalText = submitButton.innerHTML;
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
+        
+        const formData = new FormData(this);
+        
+        fetch(this.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.text();
+            }
+            throw new Error('Network response was not ok');
+        })
+        .then(html => {
+            // Check if response contains success message
+            if (html.includes('success') || html.includes('berhasil')) {
+                // Clear selection
+                clearSelection();
+                // Reload page to show updated state
+                location.reload();
+            } else {
+                throw new Error('Terjadi kesalahan saat memproses aksi');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalText;
+            alert('Terjadi kesalahan saat memproses aksi bulk. Silakan coba lagi.');
+        });
     });
 
     // Toggle Featured with AJAX for better UX
@@ -498,7 +589,9 @@ function clearSelection() {
         checkbox.checked = false;
     });
     document.getElementById('select-all').checked = false;
-    document.getElementById('bulk-actions').style.display = 'none';
+    const bulkActions = document.getElementById('bulk-actions');
+    bulkActions.classList.remove('block');
+    bulkActions.classList.add('hidden');
 }
 </script>
 @endpush
