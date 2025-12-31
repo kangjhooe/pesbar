@@ -300,7 +300,10 @@ class AdminArticleController extends Controller
             CacheHelper::clearDashboardCache();
             
             // Log activity
-            ActivityLogHelper::log('article', 'deleted', 'Artikel dihapus: ' . $articleTitle);
+            ActivityLogHelper::log('article.deleted', 'Artikel dihapus: ' . $articleTitle, [
+                'article_id' => $articleId,
+                'article_title' => $articleTitle
+            ]);
 
             return redirect()->back()
                 ->with('success', 'Artikel berhasil dihapus!');
@@ -464,7 +467,10 @@ class AdminArticleController extends Controller
                         CacheHelper::clearDashboardCache();
                         
                         // Log activity
-                        ActivityLogHelper::log('article', 'bulk_deleted', $count . ' artikel dihapus secara massal');
+                        ActivityLogHelper::log('article.bulk_deleted', $count . ' artikel dihapus secara massal', [
+                            'count' => $count,
+                            'article_ids' => $articleIds
+                        ]);
                         
                         $message = $count . ' artikel berhasil dihapus!';
                     } catch (\Exception $e) {
@@ -484,7 +490,10 @@ class AdminArticleController extends Controller
                     CacheHelper::clearDashboardCache();
                     
                     // Log activity
-                    ActivityLogHelper::log('article', 'bulk_published', $count . ' artikel dipublikasi secara massal');
+                    ActivityLogHelper::log('article.bulk_published', $count . ' artikel dipublikasi secara massal', [
+                        'count' => $count,
+                        'article_ids' => $articleIds
+                    ]);
                     
                     $message = $count . ' artikel berhasil dipublikasi!';
                     break;
@@ -497,7 +506,10 @@ class AdminArticleController extends Controller
                     CacheHelper::clearDashboardCache();
                     
                     // Log activity
-                    ActivityLogHelper::log('article', 'bulk_drafted', $count . ' artikel diubah ke draft secara massal');
+                    ActivityLogHelper::log('article.bulk_drafted', $count . ' artikel diubah ke draft secara massal', [
+                        'count' => $count,
+                        'article_ids' => $articleIds
+                    ]);
                     
                     $message = $count . ' artikel berhasil diubah ke draft!';
                     break;
@@ -509,7 +521,10 @@ class AdminArticleController extends Controller
                     CacheHelper::clearArticleCache();
                     
                     // Log activity
-                    ActivityLogHelper::log('article', 'bulk_featured', $count . ' artikel ditandai sebagai featured secara massal');
+                    ActivityLogHelper::log('article.bulk_featured', $count . ' artikel ditandai sebagai featured secara massal', [
+                        'count' => $count,
+                        'article_ids' => $articleIds
+                    ]);
                     
                     $message = $count . ' artikel berhasil ditandai sebagai featured!';
                     break;

@@ -383,9 +383,12 @@ document.addEventListener('DOMContentLoaded', function() {
             bulkActions.classList.add('block');
             selectedCount.textContent = `${count} artikel dipilih`;
             
-            // Update form with selected articles
+            // Remove existing article input fields
             const form = bulkForm;
-            form.innerHTML = form.innerHTML.replace(/<input[^>]*name="articles\[\]"[^>]*>/g, '');
+            const existingInputs = form.querySelectorAll('input[name="articles[]"]');
+            existingInputs.forEach(input => input.remove());
+            
+            // Add new input fields for selected articles
             checkedBoxes.forEach(checkbox => {
                 const input = document.createElement('input');
                 input.type = 'hidden';
@@ -396,6 +399,11 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             bulkActions.classList.remove('block');
             bulkActions.classList.add('hidden');
+            
+            // Remove all article input fields when nothing is selected
+            const form = bulkForm;
+            const existingInputs = form.querySelectorAll('input[name="articles[]"]');
+            existingInputs.forEach(input => input.remove());
         }
     }
 
@@ -403,7 +411,8 @@ document.addEventListener('DOMContentLoaded', function() {
     bulkForm.addEventListener('submit', function(e) {
         e.preventDefault();
         
-        const action = this.querySelector('select[name="action"]').value;
+        const actionSelect = this.querySelector('select[name="action"]');
+        const action = actionSelect ? actionSelect.value : null;
         if (!action) {
             alert('Pilih aksi yang akan dilakukan');
             return;
@@ -421,9 +430,20 @@ document.addEventListener('DOMContentLoaded', function() {
         submitButton.disabled = true;
         submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
         
-        const formData = new FormData(this);
+        // Get form action URL - ensure it's a string
+        const form = this;
+        const formAction = form.getAttribute('action') || form.action;
+        if (!formAction || typeof formAction !== 'string') {
+            console.error('Form action is not valid:', formAction);
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalText;
+            alert('Terjadi kesalahan: Form action tidak valid');
+            return;
+        }
         
-        fetch(this.action, {
+        const formData = new FormData(form);
+        
+        fetch(formAction, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
