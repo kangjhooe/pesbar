@@ -21,6 +21,11 @@ class RoleMiddleware
 
         $user = auth()->user();
         
+        // Pastikan user memiliki role yang valid
+        if (!$user->role || trim($user->role) === '') {
+            abort(403, 'Akses ditolak. Anda tidak memiliki izin untuk mengakses halaman ini.');
+        }
+        
         // Admin bisa akses semua
         if ($user->isAdmin()) {
             return $next($request);
@@ -36,6 +41,7 @@ class RoleMiddleware
             return $next($request);
         }
 
+        // Jika tidak memenuhi kondisi di atas, tolak akses
         abort(403, 'Akses ditolak. Anda tidak memiliki izin untuk mengakses halaman ini.');
     }
 }

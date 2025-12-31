@@ -14,6 +14,28 @@ use Illuminate\Validation\Rule;
 
 class PenulisDashboardController extends Controller
 {
+    /**
+     * Constructor - memastikan hanya penulis, admin, atau editor yang bisa akses
+     */
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            $user = Auth::user();
+            
+            // Admin dan editor bisa akses semua
+            if ($user->isAdmin() || $user->isEditor()) {
+                return $next($request);
+            }
+            
+            // Hanya penulis yang bisa akses
+            if (!$user->isPenulis()) {
+                abort(403, 'Akses ditolak. Hanya penulis yang dapat mengakses halaman ini.');
+            }
+            
+            return $next($request);
+        });
+    }
+
     public function index(Request $request)
     {
         $user = Auth::user();

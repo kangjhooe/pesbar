@@ -240,11 +240,27 @@ class AdminDashboardController extends Controller
                 return redirect()->back()->with('error', 'Hanya penulis yang bisa diverifikasi!');
             }
 
-            $user->update(['verified' => !$user->verified]);
-            $status = $user->verified ? 'diverifikasi' : 'tidak diverifikasi';
-            ActivityLogHelper::logUser('user.verification.toggled', $user, "User {$user->name} {$status}");
+            $wasVerified = $user->verified;
+            $newVerifiedStatus = !$wasVerified;
             
-            return redirect()->back()->with('success', "User berhasil {$status}!");
+            // Jika membatalkan verifikasi (dari verified ke tidak verified), kembalikan role ke user
+            if ($wasVerified && !$newVerifiedStatus) {
+                $user->update([
+                    'verified' => false,
+                    'role' => 'user',
+                    'verification_request_status' => null, // Reset status verifikasi request
+                ]);
+                $status = 'tidak diverifikasi dan role dikembalikan ke user biasa';
+                ActivityLogHelper::logUser('user.verification.toggled', $user, "User {$user->name} {$status}");
+                return redirect()->back()->with('success', "Verifikasi berhasil dibatalkan dan user dikembalikan menjadi user biasa!");
+            } 
+            // Jika memberikan verifikasi (dari tidak verified ke verified)
+            else {
+                $user->update(['verified' => true]);
+                $status = 'diverifikasi';
+                ActivityLogHelper::logUser('user.verification.toggled', $user, "User {$user->name} {$status}");
+                return redirect()->back()->with('success', "User berhasil {$status}!");
+            }
         } catch (\Exception $e) {
             \Log::error('Toggle Verified Error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Terjadi kesalahan saat mengubah status verifikasi.');
@@ -253,8 +269,16 @@ class AdminDashboardController extends Controller
 
     public function approveArticle(Request $request, Article $article)
     {
+        // Authorization check
+        if (!Auth::user()->isAdmin() && !Auth::user()->isEditor()) {
+            abort(403, 'Anda tidak memiliki izin untuk menyetujui artikel.');
+        }
+        
         try {
-            $article->update(['status' => 'published']);
+            $article->update([
+                'status' => 'published',
+                'published_at' => $article->published_at ?? now()
+            ]);
             ActivityLogHelper::logArticle('article.approved', $article, "Artikel '{$article->title}' disetujui dan dipublikasikan");
             
             if ($request->expectsJson()) {
@@ -276,6 +300,11 @@ class AdminDashboardController extends Controller
 
     public function rejectArticle(Request $request, Article $article)
     {
+        // Authorization check
+        if (!Auth::user()->isAdmin() && !Auth::user()->isEditor()) {
+            abort(403, 'Anda tidak memiliki izin untuk menolak artikel.');
+        }
+        
         try {
             $request->validate([
                 'reason' => 'nullable|string|max:1000'
@@ -319,6 +348,11 @@ class AdminDashboardController extends Controller
     
     public function bulkApprove(Request $request)
     {
+        // Authorization check
+        if (!Auth::user()->isAdmin() && !Auth::user()->isEditor()) {
+            abort(403, 'Anda tidak memiliki izin untuk menyetujui artikel secara massal.');
+        }
+        
         try {
             // Handle both array and JSON string formats
             $articleIds = $request->article_ids;
@@ -326,31 +360,50 @@ class AdminDashboardController extends Controller
                 $articleIds = json_decode($articleIds, true);
             }
             
+            // Validate that article_ids is an array and contains only integers
             $request->validate([
-                'article_ids' => 'required',
+                'article_ids' => 'required|array',
+                'article_ids.*' => 'required|integer|exists:articles,id',
             ]);
             
-            // Validate that article_ids is an array after decoding
+            // Additional validation: ensure article_ids is an array after decoding
             if (!is_array($articleIds)) {
-                throw new \Exception('article_ids must be an array');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'article_ids must be an array'
+                ], 422);
             }
             
-            // Validate each article ID exists
-            foreach ($articleIds as $id) {
-                if (!\App\Models\Article::where('id', $id)->exists()) {
-                    throw new \Exception("Article with ID {$id} does not exist");
-                }
+            // Filter to only pending articles
+            $validIds = Article::whereIn('id', $articleIds)
+                ->where('status', 'pending_review')
+                ->pluck('id')
+                ->toArray();
+            
+            if (empty($validIds)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak ada artikel pending yang dapat disetujui'
+                ], 422);
             }
             
-            $updated = Article::whereIn('id', $articleIds)
-                   ->where('status', 'pending_review')
-                   ->update(['status' => 'published']);
+            $updated = Article::whereIn('id', $validIds)
+                   ->update(['status' => 'published', 'published_at' => now()]);
+            
+            ActivityLogHelper::log('article', 'bulk_approved', count($validIds) . ' artikel disetujui secara massal');
             
             return response()->json([
                 'success' => true,
-                'message' => count($articleIds) . ' artikel berhasil disetujui!'
+                'message' => count($validIds) . ' artikel berhasil disetujui!'
             ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
+            \Log::error('Bulk Approve Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage()
@@ -360,6 +413,11 @@ class AdminDashboardController extends Controller
     
     public function bulkReject(Request $request)
     {
+        // Authorization check
+        if (!Auth::user()->isAdmin() && !Auth::user()->isEditor()) {
+            abort(403, 'Anda tidak memiliki izin untuk menolak artikel secara massal.');
+        }
+        
         try {
             // Handle both array and JSON string formats
             $articleIds = $request->article_ids;
@@ -367,31 +425,50 @@ class AdminDashboardController extends Controller
                 $articleIds = json_decode($articleIds, true);
             }
             
+            // Validate that article_ids is an array and contains only integers
             $request->validate([
-                'article_ids' => 'required',
+                'article_ids' => 'required|array',
+                'article_ids.*' => 'required|integer|exists:articles,id',
             ]);
             
-            // Validate that article_ids is an array after decoding
+            // Additional validation: ensure article_ids is an array after decoding
             if (!is_array($articleIds)) {
-                throw new \Exception('article_ids must be an array');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'article_ids must be an array'
+                ], 422);
             }
             
-            // Validate each article ID exists
-            foreach ($articleIds as $id) {
-                if (!\App\Models\Article::where('id', $id)->exists()) {
-                    throw new \Exception("Article with ID {$id} does not exist");
-                }
+            // Filter to only pending articles
+            $validIds = Article::whereIn('id', $articleIds)
+                ->where('status', 'pending_review')
+                ->pluck('id')
+                ->toArray();
+            
+            if (empty($validIds)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak ada artikel pending yang dapat ditolak'
+                ], 422);
             }
             
-            $updated = Article::whereIn('id', $articleIds)
-                   ->where('status', 'pending_review')
+            $updated = Article::whereIn('id', $validIds)
                    ->update(['status' => 'rejected']);
+            
+            ActivityLogHelper::log('article', 'bulk_rejected', count($validIds) . ' artikel ditolak secara massal');
             
             return response()->json([
                 'success' => true,
-                'message' => count($articleIds) . ' artikel berhasil ditolak!'
+                'message' => count($validIds) . ' artikel berhasil ditolak!'
             ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
+            \Log::error('Bulk Reject Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage()
@@ -534,8 +611,25 @@ class AdminDashboardController extends Controller
 
     public function demoteFromPenulis(User $user)
     {
-        $user->update(['role' => 'user']);
-        return redirect()->back()->with('success', 'Penulis berhasil diturunkan menjadi user!');
+        try {
+            if ($user->role !== 'penulis') {
+                return redirect()->back()->with('error', 'User ini bukan penulis!');
+            }
+
+            $user->update([
+                'role' => 'user',
+                'verified' => false, // Reset verified status saat diturunkan
+                'verification_request_status' => null, // Reset status verifikasi request
+            ]);
+
+            ActivityLogHelper::logUser('user.demoted', $user, "Penulis {$user->name} diturunkan menjadi user biasa");
+            
+            return redirect()->back()->with('success', 'Penulis berhasil diturunkan menjadi user!');
+        } catch (\Exception $e) {
+            \Log::error('Demote From Penulis Error: ' . $e->getMessage());
+            ActivityLogHelper::logSecurity('user.demote.failed', 'Gagal demote penulis', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat menurunkan penulis.');
+        }
     }
 
     // Newsletter Management
@@ -590,12 +684,23 @@ class AdminDashboardController extends Controller
     public function uploadMedia(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|max:10240', // 10MB max
+            'file' => [
+                'required',
+                'file',
+                'max:10240', // 10MB max
+                'mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx,mp4,avi,mov,wmv,mp3,wav,ogg',
+            ],
         ]);
 
         $file = $request->file('file');
-        $filename = time() . '_' . $file->getClientOriginalName();
+        
+        // Sanitize filename
+        $originalName = $file->getClientOriginalName();
+        $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', $originalName);
+        
         $file->storeAs('public', $filename);
+        
+        ActivityLogHelper::log('media', 'uploaded', 'File diupload: ' . $filename);
 
         return redirect()->back()->with('success', 'File berhasil diupload!');
     }

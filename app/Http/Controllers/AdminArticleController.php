@@ -23,7 +23,7 @@ class AdminArticleController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Article::with(['category', 'user', 'tags']);
+        $query = Article::with(['category', 'author', 'tags']);
 
         // Filter by status
         if ($request->has('status') && $request->status !== '') {

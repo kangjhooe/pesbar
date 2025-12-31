@@ -50,7 +50,7 @@ class AdminController extends Controller
         ];
 
         // Artikel terbaru
-        $recentArticles = Article::with('category', 'user')
+        $recentArticles = Article::with('category', 'author')
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
@@ -82,7 +82,7 @@ class AdminController extends Controller
                 'type' => 'article',
                 'action' => $article->status === 'published' ? 'published' : 'created',
                 'title' => $article->title,
-                'user' => $article->user->name ?? 'Sistem',
+                'user' => $article->author->name ?? 'Sistem',
                 'time' => $article->created_at,
                 'icon' => 'fas fa-newspaper',
                 'color' => $article->status === 'published' ? 'green' : 'yellow'
@@ -158,7 +158,7 @@ class AdminController extends Controller
      */
     public function articles()
     {
-        $articles = Article::with(['category', 'user'])
+        $articles = Article::with(['category', 'author'])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
         

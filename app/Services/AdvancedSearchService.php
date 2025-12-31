@@ -45,11 +45,21 @@ class AdvancedSearchService
         }
 
         if ($dateFrom) {
-            $articles->whereDate('published_at', '>=', Carbon::parse($dateFrom));
+            try {
+                $dateFromParsed = Carbon::parse($dateFrom);
+                $articles->whereDate('published_at', '>=', $dateFromParsed);
+            } catch (\Exception $e) {
+                Log::warning('Invalid date_from in search: ' . $dateFrom);
+            }
         }
 
         if ($dateTo) {
-            $articles->whereDate('published_at', '<=', Carbon::parse($dateTo));
+            try {
+                $dateToParsed = Carbon::parse($dateTo);
+                $articles->whereDate('published_at', '<=', $dateToParsed);
+            } catch (\Exception $e) {
+                Log::warning('Invalid date_to in search: ' . $dateTo);
+            }
         }
 
         if ($type) {
@@ -90,15 +100,14 @@ class AdvancedSearchService
     protected function applyTextSearch($query, string $searchQuery)
     {
         $searchTerms = $this->extractSearchTerms($searchQuery);
-        $escapedQuery = addslashes($searchQuery);
+        // Laravel's query builder handles parameter binding automatically, no need for addslashes()
 
-        return $query->where(function ($q) use ($searchTerms, $escapedQuery) {
+        return $query->where(function ($q) use ($searchTerms, $searchQuery) {
             foreach ($searchTerms as $term) {
-                $escapedTerm = addslashes($term);
-                $q->where(function ($subQ) use ($escapedTerm) {
-                    $subQ->where('title', 'like', "%{$escapedTerm}%")
-                         ->orWhere('excerpt', 'like', "%{$escapedTerm}%")
-                         ->orWhere('content', 'like', "%{$escapedTerm}%");
+                $q->where(function ($subQ) use ($term) {
+                    $subQ->where('title', 'like', "%{$term}%")
+                         ->orWhere('excerpt', 'like', "%{$term}%")
+                         ->orWhere('content', 'like', "%{$term}%");
                 });
             }
         })
@@ -111,10 +120,10 @@ class AdvancedSearchService
                 ELSE 0
             END) as relevance',
             [
-                "%{$escapedQuery}%",
-                "%{$escapedQuery}%",
-                "%{$escapedQuery}%",
-                "%{$escapedQuery}%"
+                "%{$searchQuery}%",
+                "%{$searchQuery}%",
+                "%{$searchQuery}%",
+                "%{$searchQuery}%"
             ]
         );
     }

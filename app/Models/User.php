@@ -76,6 +76,30 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the comments made by the user.
+     */
+    public function comments(): HasMany
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    /**
+     * Get the comment likes/dislikes made by the user.
+     */
+    public function commentLikes(): HasMany
+    {
+        return $this->hasMany(CommentLike::class);
+    }
+
+    /**
+     * Get the poll votes made by the user.
+     */
+    public function pollVotes(): HasMany
+    {
+        return $this->hasMany(PollVote::class);
+    }
+
+    /**
      * Check if user is admin.
      */
     public function isAdmin(): bool

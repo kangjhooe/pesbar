@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Carbon\Carbon;
 
 class Poll extends Model
@@ -37,7 +38,7 @@ class Poll extends Model
     /**
      * Relationship dengan poll options
      */
-    public function options()
+    public function options(): HasMany
     {
         return $this->hasMany(PollOption::class)->orderBy('sort_order');
     }
@@ -45,7 +46,7 @@ class Poll extends Model
     /**
      * Relationship dengan poll votes
      */
-    public function votes()
+    public function votes(): HasMany
     {
         return $this->hasMany(PollVote::class);
     }

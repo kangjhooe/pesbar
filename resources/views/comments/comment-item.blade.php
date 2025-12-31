@@ -50,7 +50,7 @@
                     
                     @if($isOwner)
                     <div class="flex items-center gap-1">
-                        <button onclick="editComment({{ $comment->id }}, '{{ addslashes($comment->comment) }}')" 
+                        <button onclick="editComment({{ $comment->id }}, {!! json_encode($comment->comment, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!})" 
                                 class="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-all duration-200" 
                                 title="Edit Komentar">
                             <i class="fas fa-edit text-sm"></i>
@@ -98,7 +98,7 @@
                     
                     <!-- Reply Button -->
                     @auth
-                    <button onclick="replyToComment({{ $comment->id }}, '{{ addslashes($comment->name) }}')" 
+                    <button onclick="replyToComment({{ $comment->id }}, {!! json_encode($comment->name, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!})" 
                             class="flex items-center gap-2 px-3 py-1.5 text-primary-600 hover:text-primary-800 hover:bg-primary-50 font-medium rounded-lg transition-all duration-200 border border-transparent hover:border-primary-200">
                         <i class="fas fa-reply text-sm"></i>
                         <span class="text-sm">Balas</span>

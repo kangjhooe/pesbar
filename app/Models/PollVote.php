@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PollVote extends Model
 {
@@ -20,7 +21,7 @@ class PollVote extends Model
     /**
      * Relationship dengan poll
      */
-    public function poll()
+    public function poll(): BelongsTo
     {
         return $this->belongsTo(Poll::class);
     }
@@ -28,7 +29,7 @@ class PollVote extends Model
     /**
      * Relationship dengan poll option
      */
-    public function pollOption()
+    public function pollOption(): BelongsTo
     {
         return $this->belongsTo(PollOption::class);
     }
@@ -36,7 +37,7 @@ class PollVote extends Model
     /**
      * Relationship dengan user
      */
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }

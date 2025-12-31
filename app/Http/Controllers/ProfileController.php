@@ -16,14 +16,20 @@ class ProfileController extends Controller
     /**
      * Display the user's profile form.
      */
-    public function edit(Request $request): View
+    public function edit(Request $request): View|RedirectResponse
     {
         $user = $request->user();
+        
+        // Redirect penulis ke profile penulis mereka
+        if ($user->isPenulis()) {
+            return redirect()->route('penulis.profile');
+        }
+        
         $user->load('profile');
         
         // Determine which view to use based on user role
         $view = 'profile.edit';
-        if ($user->isAdmin() || $user->isEditor() || $user->isPenulis()) {
+        if ($user->isAdmin() || $user->isEditor()) {
             $view = 'profile.edit-admin';
         }
         
@@ -38,6 +44,12 @@ class ProfileController extends Controller
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
         $user = $request->user();
+        
+        // Redirect penulis ke profile penulis mereka
+        if ($user->isPenulis()) {
+            return redirect()->route('penulis.profile')
+                ->with('error', 'Silakan gunakan halaman profil penulis untuk mengupdate profil Anda.');
+        }
         
         // Update basic user info
         $userData = $request->only(['name', 'email']);
