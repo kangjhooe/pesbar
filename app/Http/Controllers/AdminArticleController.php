@@ -116,7 +116,7 @@ class AdminArticleController extends Controller
      */
     public function show(Article $article)
     {
-        $article->load(['category', 'user', 'tags', 'comments']);
+        $article->load(['category', 'author', 'tags', 'comments']);
         
         return view('admin.articles.show', compact('article'));
     }
