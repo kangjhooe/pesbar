@@ -87,7 +87,7 @@ class AdminArticleController extends Controller
             'content' => 'required|string',
             'category_id' => 'required|exists:categories,id',
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'status' => 'required|in:draft,published',
+            'status' => 'required|in:draft,pending_review,published,rejected,archived',
             'type' => 'required|in:berita,artikel',
             'is_featured' => 'boolean',
             'is_breaking' => 'boolean',
@@ -180,7 +180,7 @@ class AdminArticleController extends Controller
             'content' => 'required|string',
             'category_id' => 'required|exists:categories,id',
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'status' => 'required|in:draft,published',
+            'status' => 'required|in:draft,pending_review,published,rejected,archived',
             'type' => 'required|in:berita,artikel',
             'is_featured' => 'boolean',
             'is_breaking' => 'boolean',
@@ -305,8 +305,13 @@ class AdminArticleController extends Controller
                 'article_title' => $articleTitle
             ]);
 
-            return redirect()->back()
-                ->with('success', 'Artikel berhasil dihapus!');
+            // Preserve query parameters for redirect, but remove page if it exists
+            // This prevents 404 when deleting the last item on a page
+            $queryParams = request()->only(['tab', 'status', 'category', 'featured', 'search']);
+            // Don't preserve page parameter - let it redirect to page 1 or appropriate page
+            
+            return redirect()->route('admin.articles.index', $queryParams)
+                ->with('success', 'Artikel "' . Str::limit($articleTitle, 50) . '" berhasil dihapus!');
         } catch (\Exception $e) {
             DB::rollBack();
             
@@ -315,7 +320,10 @@ class AdminArticleController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             
-            return redirect()->back()
+            // Preserve query parameters for redirect
+            $queryParams = request()->only(['tab', 'status', 'category', 'featured', 'search', 'page']);
+            
+            return redirect()->route('admin.articles.index', $queryParams)
                 ->with('error', 'Terjadi kesalahan saat menghapus artikel: ' . $e->getMessage());
         }
     }

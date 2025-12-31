@@ -499,52 +499,71 @@ function previewArticle() {
                     border-radius: 6px;
                     margin: 1.5em 0;
                 }
-                /* List Styling */
+                /* List Styling - Enhanced with !important */
                 .content ul,
                 .content ol {
-                    margin-top: 1.25em;
-                    margin-bottom: 1.25em;
-                    padding-left: 2em;
+                    margin-top: 1.25em !important;
+                    margin-bottom: 1.25em !important;
+                    padding-left: 2em !important;
+                    list-style-position: outside !important;
                 }
                 .content ul {
-                    list-style-type: disc;
+                    list-style-type: disc !important;
                 }
                 .content ol {
-                    list-style-type: decimal;
+                    list-style-type: decimal !important;
                 }
                 .content ul ul,
                 .content ol ol,
                 .content ul ol,
                 .content ol ul {
-                    margin-top: 0.75em;
-                    margin-bottom: 0.75em;
+                    margin-top: 0.75em !important;
+                    margin-bottom: 0.75em !important;
                 }
                 .content li {
-                    margin-top: 0.5em;
-                    margin-bottom: 0.5em;
-                    padding-left: 0.5em;
-                    line-height: 1.8;
+                    margin-top: 0.75em !important;
+                    margin-bottom: 0.75em !important;
+                    padding-left: 0.5em !important;
+                    line-height: 1.8 !important;
+                    display: list-item !important;
+                    list-style-position: outside !important;
+                }
+                .content ul > li {
+                    list-style-type: disc !important;
+                }
+                .content ol > li {
+                    list-style-type: decimal !important;
                 }
                 .content ul > li::marker {
-                    color: #3b82f6;
-                    font-size: 1.2em;
+                    color: #3b82f6 !important;
+                    font-size: 1.2em !important;
+                    font-weight: normal !important;
                 }
                 .content ol > li::marker {
-                    color: #3b82f6;
-                    font-weight: 600;
+                    color: #3b82f6 !important;
+                    font-weight: 600 !important;
                 }
                 /* Nested lists */
                 .content ul ul {
-                    list-style-type: circle;
+                    list-style-type: circle !important;
                 }
                 .content ul ul ul {
-                    list-style-type: square;
+                    list-style-type: square !important;
                 }
                 .content ol ol {
-                    list-style-type: lower-alpha;
+                    list-style-type: lower-alpha !important;
                 }
                 .content ol ol ol {
-                    list-style-type: lower-roman;
+                    list-style-type: lower-roman !important;
+                }
+                /* Fix for Quill editor classes */
+                .content ul[class*="ql-"],
+                .content ol[class*="ql-"] {
+                    list-style-type: disc !important;
+                    padding-left: 2em !important;
+                }
+                .content ol[class*="ql-"] {
+                    list-style-type: decimal !important;
                 }
                 .content blockquote {
                     border-left: 4px solid #3b82f6;

@@ -103,9 +103,102 @@
                     </div>
                 @endif
 
-                <div class="prose max-w-none">
+                <div class="prose max-w-none article-content">
                     {!! $article->content !!}
                 </div>
+                
+                <!-- Article Content List Styling -->
+                <style>
+                    /* Enhanced list styling for article content */
+                    .article-content ul,
+                    .article-content ol,
+                    .prose ul,
+                    .prose ol {
+                        margin-top: 1.25em !important;
+                        margin-bottom: 1.25em !important;
+                        padding-left: 2em !important;
+                        list-style-position: outside !important;
+                    }
+                    
+                    .article-content ul,
+                    .prose ul {
+                        list-style-type: disc !important;
+                    }
+                    
+                    .article-content ol,
+                    .prose ol {
+                        list-style-type: decimal !important;
+                    }
+                    
+                    .article-content li,
+                    .prose li {
+                        margin-top: 0.75em !important;
+                        margin-bottom: 0.75em !important;
+                        padding-left: 0.5em !important;
+                        line-height: 1.8 !important;
+                        display: list-item !important;
+                    }
+                    
+                    .article-content ul > li,
+                    .prose ul > li {
+                        list-style-type: disc !important;
+                    }
+                    
+                    .article-content ol > li,
+                    .prose ol > li {
+                        list-style-type: decimal !important;
+                    }
+                    
+                    /* Nested lists */
+                    .article-content ul ul,
+                    .prose ul ul {
+                        list-style-type: circle !important;
+                        margin-top: 0.5em !important;
+                        margin-bottom: 0.5em !important;
+                    }
+                    
+                    .article-content ul ul ul,
+                    .prose ul ul ul {
+                        list-style-type: square !important;
+                    }
+                    
+                    .article-content ol ol,
+                    .prose ol ol {
+                        list-style-type: lower-alpha !important;
+                    }
+                    
+                    .article-content ol ol ol,
+                    .prose ol ol ol {
+                        list-style-type: lower-roman !important;
+                    }
+                    
+                    /* Ensure list markers are visible */
+                    .article-content ul li::marker,
+                    .prose ul li::marker {
+                        color: #3b82f6 !important;
+                        font-size: 1.2em !important;
+                        font-weight: normal !important;
+                    }
+                    
+                    .article-content ol li::marker,
+                    .prose ol li::marker {
+                        color: #3b82f6 !important;
+                        font-weight: 600 !important;
+                    }
+                    
+                    /* Fix for Quill editor output */
+                    .article-content ul[class*="ql-"],
+                    .prose ul[class*="ql-"] {
+                        list-style-type: disc !important;
+                        padding-left: 2em !important;
+                    }
+                    
+                    .article-content ol[class*="ql-"],
+                    .prose ol[class*="ql-"] {
+                        list-style-type: decimal !important;
+                        padding-left: 2em !important;
+                    }
+                </style>
 
                 @if($article->status === 'published')
                     <div class="mt-6 pt-6 border-t border-gray-200">

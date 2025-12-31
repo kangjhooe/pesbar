@@ -46,6 +46,38 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
+    <!-- Notification Styles -->
+    <style>
+        /* Notification Toast Animations */
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-slide-down {
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        .notification-toast {
+            position: relative;
+            z-index: 50;
+        }
+        
+        .notification-toast button {
+            transition: all 0.2s ease;
+        }
+        
+        .notification-toast button:hover {
+            transform: scale(1.1);
+        }
+    </style>
+    
     <!-- Additional Styles -->
     @stack('styles')
 </head>
@@ -221,19 +253,43 @@
             <!-- Page Content -->
             <main class="flex-1 p-4 lg:p-6 safe-bottom overflow-y-auto">
                 @if(session('success'))
-                    <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-6">
-                        <div class="flex items-center">
-                            <i class="fas fa-check-circle mr-2"></i>
-                            {{ session('success') }}
+                    <div class="notification-toast notification-success mb-6 animate-slide-down">
+                        <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 rounded-lg shadow-lg p-4">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-check-circle text-green-600 text-lg"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4 flex-1">
+                                    <p class="text-sm font-semibold text-green-900">Berhasil!</p>
+                                    <p class="text-sm text-green-700 mt-1">{{ session('success') }}</p>
+                                </div>
+                                <button onclick="this.closest('.notification-toast').remove()" class="ml-4 text-green-600 hover:text-green-800">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 @endif
 
                 @if(session('error'))
-                    <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-6">
-                        <div class="flex items-center">
-                            <i class="fas fa-exclamation-circle mr-2"></i>
-                            {{ session('error') }}
+                    <div class="notification-toast notification-error mb-6 animate-slide-down">
+                        <div class="bg-gradient-to-r from-red-50 to-rose-50 border-l-4 border-red-500 rounded-lg shadow-lg p-4">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-exclamation-circle text-red-600 text-lg"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4 flex-1">
+                                    <p class="text-sm font-semibold text-red-900">Error!</p>
+                                    <p class="text-sm text-red-700 mt-1">{{ session('error') }}</p>
+                                </div>
+                                <button onclick="this.closest('.notification-toast').remove()" class="ml-4 text-red-600 hover:text-red-800">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 @endif
@@ -245,15 +301,16 @@
 
     <!-- JavaScript -->
     <script>
-        // Auto-hide alerts after 5 seconds
+        // Auto-hide notification toasts after 5 seconds with smooth animation
         document.addEventListener('DOMContentLoaded', function() {
-            const alerts = document.querySelectorAll('.bg-green-50, .bg-red-50');
-            alerts.forEach(function(alert) {
+            const notifications = document.querySelectorAll('.notification-toast');
+            notifications.forEach(function(notification) {
                 setTimeout(function() {
-                    alert.style.transition = 'opacity 0.5s ease-out';
-                    alert.style.opacity = '0';
+                    notification.style.transition = 'all 0.5s ease-out';
+                    notification.style.opacity = '0';
+                    notification.style.transform = 'translateY(-20px)';
                     setTimeout(function() {
-                        alert.remove();
+                        notification.remove();
                     }, 500);
                 }, 5000);
             });

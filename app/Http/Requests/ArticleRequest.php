@@ -33,7 +33,7 @@ class ArticleRequest extends FormRequest
             'type' => 'required|in:berita,artikel',
             'is_featured' => 'boolean',
             'is_breaking' => 'boolean',
-            'status' => 'required|in:draft,pending_review,published,rejected',
+            'status' => 'required|in:draft,pending_review,published,rejected,archived',
         ];
     }
 
