@@ -154,6 +154,21 @@ class SettingsHelper
         return self::get('meta_keywords', '');
     }
 
+    public static function googleAnalytics()
+    {
+        return self::get('google_analytics', '');
+    }
+
+    public static function googleSearchConsole()
+    {
+        return self::get('google_search_console', '');
+    }
+
+    public static function facebookPixel()
+    {
+        return self::get('facebook_pixel', '');
+    }
+
     /**
      * Get system settings
      */
