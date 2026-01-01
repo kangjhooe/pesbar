@@ -587,7 +587,7 @@
             </div>
 
             <!-- Prayer Times Widget -->
-            <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-6 mb-8">
+            <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-6 mb-8" id="prayer-times-widget">
                 <div class="flex items-center space-x-2 mb-4">
                     <div class="bg-green-100 p-2 rounded-lg">
                         <i class="fas fa-mosque text-green-600 text-lg"></i>
@@ -598,7 +598,7 @@
                     <div class="prayer-location text-sm font-semibold text-green-800">{{ $prayerData['location'] ?? 'Pesisir Barat' }}</div>
                     <div class="prayer-date text-xs text-green-600">{{ $prayerData['date'] ? \Carbon\Carbon::parse($prayerData['date'])->format('d-m-Y') : date('d-m-Y') }}</div>
                 </div>
-                <div class="space-y-3">
+                <div class="space-y-3 prayer-times-list">
                     @php
                         $prayers = [
                             'fajr' => ['name' => 'Subuh', 'icon' => 'fas fa-sun', 'bg' => 'bg-yellow-100', 'color' => 'text-yellow-600'],
@@ -1163,20 +1163,51 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function updatePrayerTimesWidget(prayerData) {
+        const widget = document.getElementById('prayer-times-widget');
         const prayerLocation = document.querySelector('.prayer-location');
         const prayerDate = document.querySelector('.prayer-date');
         const prayerUpdate = document.querySelector('.prayer-update');
         
-        if (prayerLocation) prayerLocation.textContent = prayerData.location;
-        if (prayerDate) prayerDate.textContent = new Date(prayerData.date).toLocaleDateString('id-ID');
-        if (prayerUpdate) prayerUpdate.textContent = 'Update: ' + prayerData.updated_at;
+        // Add updating animation
+        if (widget) {
+            widget.classList.add('updating');
+            setTimeout(() => widget.classList.remove('updating'), 500);
+        }
         
-        // Update prayer times
+        if (prayerLocation) {
+            prayerLocation.style.opacity = '0';
+            setTimeout(() => {
+                prayerLocation.textContent = prayerData.location;
+                prayerLocation.style.opacity = '1';
+            }, 200);
+        }
+        
+        if (prayerDate) {
+            prayerDate.style.opacity = '0';
+            setTimeout(() => {
+                prayerDate.textContent = new Date(prayerData.date).toLocaleDateString('id-ID');
+                prayerDate.style.opacity = '1';
+            }, 300);
+        }
+        
+        if (prayerUpdate) {
+            prayerUpdate.style.opacity = '0';
+            setTimeout(() => {
+                prayerUpdate.textContent = 'Update: ' + prayerData.updated_at;
+                prayerUpdate.style.opacity = '1';
+            }, 400);
+        }
+        
+        // Update prayer times with animation
         const prayers = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
-        prayers.forEach(prayer => {
+        prayers.forEach((prayer, index) => {
             const element = document.querySelector(`.prayer-${prayer}`);
             if (element && prayerData.prayers[prayer]) {
-                element.textContent = prayerData.prayers[prayer];
+                element.classList.add('updating');
+                setTimeout(() => {
+                    element.textContent = prayerData.prayers[prayer];
+                    setTimeout(() => element.classList.remove('updating'), 500);
+                }, 100 + (index * 50));
             }
         });
     }
@@ -1444,35 +1475,106 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 /* Weather Icon Animations - Applied directly to icons */
-#weather-widget i.fa-sun,
-#weather-widget i[class*="fa-sun"]:not([class*="fa-cloud-sun"]) {
+/* Universal selector for all weather icons inside the widget */
+#weather-widget i[class*="fa-"],
+#weather-widget .weather-widget[class*="fa-"],
+#weather-widget .weather-widget-large[class*="fa-"] {
+    display: inline-block !important;
+}
+
+/* Sun animation - rotate */
+#weather-widget i[class*="fa-sun"]:not([class*="fa-cloud-sun"]),
+#weather-widget .weather-widget[class*="fa-sun"]:not([class*="fa-cloud-sun"]),
+#weather-widget .weather-widget-large[class*="fa-sun"]:not([class*="fa-cloud-sun"]) {
     animation: rotateSun 20s linear infinite !important;
     display: inline-block;
 }
 
-#weather-widget i.fa-cloud:not([class*="fa-cloud-sun"]):not([class*="fa-cloud-rain"]):not([class*="fa-cloud-showers"]) {
+/* Cloud animation - float */
+#weather-widget i[class*="fa-cloud"]:not([class*="fa-cloud-sun"]):not([class*="fa-cloud-rain"]):not([class*="fa-cloud-showers"]):not([class*="fa-cloud-showers-heavy"]),
+#weather-widget .weather-widget[class*="fa-cloud"]:not([class*="fa-cloud-sun"]):not([class*="fa-cloud-rain"]):not([class*="fa-cloud-showers"]):not([class*="fa-cloud-showers-heavy"]),
+#weather-widget .weather-widget-large[class*="fa-cloud"]:not([class*="fa-cloud-sun"]):not([class*="fa-cloud-rain"]):not([class*="fa-cloud-showers"]):not([class*="fa-cloud-showers-heavy"]) {
     animation: float 3s ease-in-out infinite !important;
     display: inline-block;
 }
 
-#weather-widget i[class*="fa-cloud-sun"] {
+/* Cloud-sun animation - pulse */
+#weather-widget i[class*="fa-cloud-sun"],
+#weather-widget .weather-widget[class*="fa-cloud-sun"],
+#weather-widget .weather-widget-large[class*="fa-cloud-sun"] {
     animation: pulse 2s ease-in-out infinite !important;
     display: inline-block;
 }
 
+/* Rain animation - float */
 #weather-widget i[class*="fa-cloud-rain"],
-#weather-widget i[class*="fa-cloud-showers"] {
+#weather-widget i[class*="fa-cloud-showers"],
+#weather-widget i[class*="fa-cloud-showers-heavy"],
+#weather-widget .weather-widget[class*="fa-cloud-rain"],
+#weather-widget .weather-widget[class*="fa-cloud-showers"],
+#weather-widget .weather-widget[class*="fa-cloud-showers-heavy"],
+#weather-widget .weather-widget-large[class*="fa-cloud-rain"],
+#weather-widget .weather-widget-large[class*="fa-cloud-showers"],
+#weather-widget .weather-widget-large[class*="fa-cloud-showers-heavy"] {
     animation: float 2s ease-in-out infinite !important;
     display: inline-block;
 }
 
-#weather-widget i[class*="fa-bolt"] {
+/* Lightning animation - pulse */
+#weather-widget i[class*="fa-bolt"],
+#weather-widget i[class*="fa-lightning"],
+#weather-widget .weather-widget[class*="fa-bolt"],
+#weather-widget .weather-widget[class*="fa-lightning"],
+#weather-widget .weather-widget-large[class*="fa-bolt"],
+#weather-widget .weather-widget-large[class*="fa-lightning"] {
     animation: pulse 1s ease-in-out infinite !important;
     display: inline-block;
     color: #f1c40f !important;
 }
 
-#weather-widget i[class*="fa-smog"] {
+/* Fog/Smog animation - float */
+#weather-widget i[class*="fa-smog"],
+#weather-widget i[class*="fa-fog"],
+#weather-widget .weather-widget[class*="fa-smog"],
+#weather-widget .weather-widget[class*="fa-fog"],
+#weather-widget .weather-widget-large[class*="fa-smog"],
+#weather-widget .weather-widget-large[class*="fa-fog"] {
+    animation: float 4s ease-in-out infinite !important;
+    display: inline-block;
+}
+
+/* Forecast icons animation - same as above but scoped to forecast container */
+#weather-widget .weather-forecast-container i[class*="fa-sun"]:not([class*="fa-cloud-sun"]) {
+    animation: rotateSun 20s linear infinite !important;
+    display: inline-block;
+}
+
+#weather-widget .weather-forecast-container i[class*="fa-cloud"]:not([class*="fa-cloud-sun"]):not([class*="fa-cloud-rain"]):not([class*="fa-cloud-showers"]):not([class*="fa-cloud-showers-heavy"]) {
+    animation: float 3s ease-in-out infinite !important;
+    display: inline-block;
+}
+
+#weather-widget .weather-forecast-container i[class*="fa-cloud-sun"] {
+    animation: pulse 2s ease-in-out infinite !important;
+    display: inline-block;
+}
+
+#weather-widget .weather-forecast-container i[class*="fa-cloud-rain"],
+#weather-widget .weather-forecast-container i[class*="fa-cloud-showers"],
+#weather-widget .weather-forecast-container i[class*="fa-cloud-showers-heavy"] {
+    animation: float 2s ease-in-out infinite !important;
+    display: inline-block;
+}
+
+#weather-widget .weather-forecast-container i[class*="fa-bolt"],
+#weather-widget .weather-forecast-container i[class*="fa-lightning"] {
+    animation: pulse 1s ease-in-out infinite !important;
+    display: inline-block;
+    color: #f1c40f !important;
+}
+
+#weather-widget .weather-forecast-container i[class*="fa-smog"],
+#weather-widget .weather-forecast-container i[class*="fa-fog"] {
     animation: float 4s ease-in-out infinite !important;
     display: inline-block;
 }
@@ -1612,6 +1714,142 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .animate-slide-out {
     animation: slide-out 0.3s ease-out;
+}
+
+/* Prayer Times Widget Animations */
+@keyframes pulseMoon {
+    0%, 100% { 
+        transform: scale(1); 
+        opacity: 1; 
+        filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.5));
+    }
+    50% { 
+        transform: scale(1.15); 
+        opacity: 0.9; 
+        filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.8));
+    }
+}
+
+/* Mosque icon animation */
+#prayer-times-widget i.fa-mosque {
+    animation: pulse 2s ease-in-out infinite !important;
+    display: inline-block;
+}
+
+/* Sun icons in prayer times - rotate */
+#prayer-times-widget i.fa-sun,
+#prayer-times-widget .prayer-times-list i.fa-sun {
+    animation: rotateSun 20s linear infinite !important;
+    display: inline-block;
+}
+
+/* Moon icon in prayer times - pulse with glow */
+#prayer-times-widget i.fa-moon,
+#prayer-times-widget .prayer-times-list i.fa-moon {
+    animation: pulseMoon 3s ease-in-out infinite !important;
+    display: inline-block;
+}
+
+/* Prayer times container hover effect */
+#prayer-times-widget {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease !important;
+}
+
+#prayer-times-widget::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.1), transparent);
+    transition: left 0.5s;
+    z-index: 1;
+    pointer-events: none;
+}
+
+#prayer-times-widget:hover::before {
+    left: 100%;
+}
+
+#prayer-times-widget:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+#prayer-times-widget.updating {
+    animation: shake 0.5s ease !important;
+}
+
+/* Prayer items animation - fade in with delay */
+#prayer-times-widget .prayer-times-list > div {
+    animation: fadeInUp 0.5s ease forwards !important;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+#prayer-times-widget .prayer-times-list > div:nth-child(1) {
+    animation-delay: 0.1s !important;
+}
+
+#prayer-times-widget .prayer-times-list > div:nth-child(2) {
+    animation-delay: 0.2s !important;
+}
+
+#prayer-times-widget .prayer-times-list > div:nth-child(3) {
+    animation-delay: 0.3s !important;
+}
+
+#prayer-times-widget .prayer-times-list > div:nth-child(4) {
+    animation-delay: 0.4s !important;
+}
+
+#prayer-times-widget .prayer-times-list > div:nth-child(5) {
+    animation-delay: 0.5s !important;
+}
+
+/* Prayer item hover effect */
+#prayer-times-widget .prayer-times-list > div:hover {
+    transform: translateX(5px) scale(1.02) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    background-color: rgba(34, 197, 94, 0.05) !important;
+}
+
+/* Prayer item icon container hover */
+#prayer-times-widget .prayer-times-list > div:hover .w-8.h-8 {
+    transform: scale(1.15) rotate(5deg) !important;
+    transition: all 0.3s ease !important;
+}
+
+/* Prayer time text animation on update */
+#prayer-times-widget .prayer-times-list > div span[class*="prayer-"] {
+    transition: all 0.3s ease !important;
+    display: inline-block;
+}
+
+#prayer-times-widget .prayer-times-list > div span[class*="prayer-"].updating {
+    animation: numberChange 0.5s ease !important;
+}
+
+/* Green header shimmer effect */
+#prayer-times-widget .bg-green-50 {
+    position: relative;
+    overflow: hidden;
+}
+
+#prayer-times-widget .bg-green-50::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+    animation: shimmer 3s infinite;
+    z-index: 1;
+    pointer-events: none;
 }
 </style>
 @endsection

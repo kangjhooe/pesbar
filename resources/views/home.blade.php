@@ -418,7 +418,7 @@
             </div>
 
             <!-- Prayer Times Widget -->
-            <div class="widget">
+            <div class="widget" id="home-prayer-times-widget">
                 <div class="p-4">
                     <div class="flex items-center justify-between mb-3">
                         <h3 class="text-base font-bold text-gray-800 flex items-center">
@@ -430,7 +430,7 @@
                         <div class="home-prayer-location text-xs font-semibold text-green-800">{{ $prayerData['location'] ?? 'Pesisir Barat' }}</div>
                         <div class="home-prayer-date text-xs text-green-600">{{ $prayerData['date'] ? \Carbon\Carbon::parse($prayerData['date'])->format('d-m-Y') : date('d-m-Y') }}</div>
                     </div>
-                    <div class="space-y-1">
+                    <div class="space-y-1 home-prayer-times-list">
                         @php
                             $prayers = [
                                 'fajr' => ['name' => 'Subuh', 'icon' => 'fas fa-sun', 'color' => 'text-yellow-600'],
@@ -967,20 +967,51 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function updateHomePrayerTimesWidget(prayerData) {
+        const widget = document.getElementById('home-prayer-times-widget');
         const prayerLocation = document.querySelector('.home-prayer-location');
         const prayerDate = document.querySelector('.home-prayer-date');
         const prayerUpdate = document.querySelector('.home-prayer-update');
         
-        if (prayerLocation) prayerLocation.textContent = prayerData.location;
-        if (prayerDate) prayerDate.textContent = new Date(prayerData.date).toLocaleDateString('id-ID');
-        if (prayerUpdate) prayerUpdate.textContent = 'Update: ' + prayerData.updated_at;
+        // Add updating animation
+        if (widget) {
+            widget.classList.add('updating');
+            setTimeout(() => widget.classList.remove('updating'), 500);
+        }
         
-        // Update prayer times
+        if (prayerLocation) {
+            prayerLocation.style.opacity = '0';
+            setTimeout(() => {
+                prayerLocation.textContent = prayerData.location;
+                prayerLocation.style.opacity = '1';
+            }, 200);
+        }
+        
+        if (prayerDate) {
+            prayerDate.style.opacity = '0';
+            setTimeout(() => {
+                prayerDate.textContent = new Date(prayerData.date).toLocaleDateString('id-ID');
+                prayerDate.style.opacity = '1';
+            }, 300);
+        }
+        
+        if (prayerUpdate) {
+            prayerUpdate.style.opacity = '0';
+            setTimeout(() => {
+                prayerUpdate.textContent = 'Update: ' + prayerData.updated_at;
+                prayerUpdate.style.opacity = '1';
+            }, 400);
+        }
+        
+        // Update prayer times with animation
         const prayers = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
-        prayers.forEach(prayer => {
+        prayers.forEach((prayer, index) => {
             const element = document.querySelector(`.home-prayer-${prayer}`);
             if (element && prayerData.prayers[prayer]) {
-                element.textContent = prayerData.prayers[prayer];
+                element.classList.add('updating');
+                setTimeout(() => {
+                    element.textContent = prayerData.prayers[prayer];
+                    setTimeout(() => element.classList.remove('updating'), 500);
+                }, 100 + (index * 50));
             }
         });
     }
@@ -1343,6 +1374,142 @@ document.addEventListener('DOMContentLoaded', function() {
     .breaking-news-link:hover {
         text-decoration: underline;
     }
+}
+
+/* Prayer Times Widget Animations */
+@keyframes pulseMoon {
+    0%, 100% { 
+        transform: scale(1); 
+        opacity: 1; 
+        filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.5));
+    }
+    50% { 
+        transform: scale(1.15); 
+        opacity: 0.9; 
+        filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.8));
+    }
+}
+
+/* Mosque icon animation */
+#home-prayer-times-widget i.fa-mosque {
+    animation: pulse 2s ease-in-out infinite !important;
+    display: inline-block;
+}
+
+/* Sun icons in prayer times - rotate */
+#home-prayer-times-widget i.fa-sun,
+#home-prayer-times-widget .home-prayer-times-list i.fa-sun {
+    animation: rotateSun 20s linear infinite !important;
+    display: inline-block;
+}
+
+/* Moon icon in prayer times - pulse with glow */
+#home-prayer-times-widget i.fa-moon,
+#home-prayer-times-widget .home-prayer-times-list i.fa-moon {
+    animation: pulseMoon 3s ease-in-out infinite !important;
+    display: inline-block;
+}
+
+/* Prayer times container hover effect */
+#home-prayer-times-widget {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease !important;
+}
+
+#home-prayer-times-widget::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.1), transparent);
+    transition: left 0.5s;
+    z-index: 1;
+    pointer-events: none;
+}
+
+#home-prayer-times-widget:hover::before {
+    left: 100%;
+}
+
+#home-prayer-times-widget:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+#home-prayer-times-widget.updating {
+    animation: shake 0.5s ease !important;
+}
+
+/* Prayer items animation - fade in with delay */
+#home-prayer-times-widget .home-prayer-times-list > div {
+    animation: fadeInUp 0.5s ease forwards !important;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+#home-prayer-times-widget .home-prayer-times-list > div:nth-child(1) {
+    animation-delay: 0.1s !important;
+}
+
+#home-prayer-times-widget .home-prayer-times-list > div:nth-child(2) {
+    animation-delay: 0.2s !important;
+}
+
+#home-prayer-times-widget .home-prayer-times-list > div:nth-child(3) {
+    animation-delay: 0.3s !important;
+}
+
+#home-prayer-times-widget .home-prayer-times-list > div:nth-child(4) {
+    animation-delay: 0.4s !important;
+}
+
+#home-prayer-times-widget .home-prayer-times-list > div:nth-child(5) {
+    animation-delay: 0.5s !important;
+}
+
+/* Prayer item hover effect */
+#home-prayer-times-widget .home-prayer-times-list > div:hover {
+    transform: translateX(5px) scale(1.02) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    background-color: rgba(34, 197, 94, 0.05) !important;
+}
+
+/* Prayer item icon hover */
+#home-prayer-times-widget .home-prayer-times-list > div:hover i {
+    transform: scale(1.2) rotate(5deg) !important;
+    transition: all 0.3s ease !important;
+}
+
+/* Prayer time text animation on update */
+#home-prayer-times-widget .home-prayer-times-list > div span[class*="home-prayer-"] {
+    transition: all 0.3s ease !important;
+    display: inline-block;
+}
+
+#home-prayer-times-widget .home-prayer-times-list > div span[class*="home-prayer-"].updating {
+    animation: numberChange 0.5s ease !important;
+}
+
+/* Green header shimmer effect */
+#home-prayer-times-widget .bg-green-50 {
+    position: relative;
+    overflow: hidden;
+}
+
+#home-prayer-times-widget .bg-green-50::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+    animation: shimmer 3s infinite;
+    z-index: 1;
+    pointer-events: none;
 }
 </style>
 @endsection

@@ -6,6 +6,7 @@ use App\Models\Article;
 use App\Models\User;
 use App\Helpers\ActivityLogHelper;
 use App\Services\BackupService;
+use App\Services\AnalyticsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 

@@ -685,6 +685,19 @@ body {
     }
 }
 
+@keyframes pulseMoon {
+    0%, 100% { 
+        transform: scale(1); 
+        opacity: 1; 
+        filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.5));
+    }
+    50% { 
+        transform: scale(1.15); 
+        opacity: 0.9; 
+        filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.8));
+    }
+}
+
 @keyframes shake {
     0%, 100% {
         transform: translateX(0);
@@ -984,6 +997,140 @@ i.fa-smog {
 .weather-temp.updating,
 .home-weather-temp.updating {
     text-shadow: 0 0 10px rgba(243, 156, 18, 0.5);
+}
+
+/* Prayer Times Widget Animations */
+/* Mosque icon animation */
+i.fa-mosque,
+.prayer-times-widget i.fa-mosque,
+#prayer-times-widget i.fa-mosque,
+#home-prayer-times-widget i.fa-mosque {
+    animation: pulse 2s ease-in-out infinite !important;
+    display: inline-block;
+}
+
+/* Sun icons in prayer times - rotate */
+.prayer-times-list i.fa-sun,
+.home-prayer-times-list i.fa-sun,
+#prayer-times-widget i.fa-sun,
+#home-prayer-times-widget i.fa-sun {
+    animation: rotateSun 20s linear infinite !important;
+    display: inline-block;
+}
+
+/* Moon icon in prayer times - pulse with glow */
+.prayer-times-list i.fa-moon,
+.home-prayer-times-list i.fa-moon,
+#prayer-times-widget i.fa-moon,
+#home-prayer-times-widget i.fa-moon {
+    animation: pulseMoon 3s ease-in-out infinite !important;
+    display: inline-block;
+}
+
+/* Prayer times widget container hover effect */
+#prayer-times-widget,
+#home-prayer-times-widget {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease !important;
+}
+
+#prayer-times-widget::before,
+#home-prayer-times-widget::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.1), transparent);
+    transition: left 0.5s;
+    z-index: 1;
+    pointer-events: none;
+}
+
+#prayer-times-widget:hover::before,
+#home-prayer-times-widget:hover::before {
+    left: 100%;
+}
+
+#prayer-times-widget:hover,
+#home-prayer-times-widget:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+#prayer-times-widget.updating,
+#home-prayer-times-widget.updating {
+    animation: shake 0.5s ease !important;
+}
+
+/* Prayer items animation - fade in with delay */
+.prayer-times-list > div,
+.home-prayer-times-list > div {
+    animation: fadeInUp 0.5s ease forwards !important;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.prayer-times-list > div:nth-child(1),
+.home-prayer-times-list > div:nth-child(1) {
+    animation-delay: 0.1s !important;
+}
+
+.prayer-times-list > div:nth-child(2),
+.home-prayer-times-list > div:nth-child(2) {
+    animation-delay: 0.2s !important;
+}
+
+.prayer-times-list > div:nth-child(3),
+.home-prayer-times-list > div:nth-child(3) {
+    animation-delay: 0.3s !important;
+}
+
+.prayer-times-list > div:nth-child(4),
+.home-prayer-times-list > div:nth-child(4) {
+    animation-delay: 0.4s !important;
+}
+
+.prayer-times-list > div:nth-child(5),
+.home-prayer-times-list > div:nth-child(5) {
+    animation-delay: 0.5s !important;
+}
+
+/* Prayer item hover effect */
+.prayer-times-list > div:hover,
+.home-prayer-times-list > div:hover {
+    transform: translateX(5px) scale(1.02) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    background-color: rgba(34, 197, 94, 0.05) !important;
+}
+
+/* Prayer time text animation on update */
+.prayer-times-list > div span[class*="prayer-"].updating,
+.home-prayer-times-list > div span[class*="prayer-"].updating {
+    animation: numberChange 0.5s ease !important;
+}
+
+/* Green header shimmer effect */
+#prayer-times-widget .bg-green-50,
+#home-prayer-times-widget .bg-green-50 {
+    position: relative;
+    overflow: hidden;
+}
+
+#prayer-times-widget .bg-green-50::before,
+#home-prayer-times-widget .bg-green-50::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+    animation: shimmer 3s infinite;
+    z-index: 1;
+    pointer-events: none;
 }
 
 /* Forecast Item Hover Enhancement */
