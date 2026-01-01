@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Api\BaseApiController;
 use App\Services\WeatherService;
 use App\Services\PrayerTimeService;
+use App\Services\MaritimeService;
 use App\Services\EventService;
 use App\Services\PollService;
 use App\Models\ContactImportant;
@@ -15,17 +16,20 @@ class WidgetController extends BaseApiController
 {
     protected $weatherService;
     protected $prayerTimeService;
+    protected $maritimeService;
     protected $eventService;
     protected $pollService;
     
     public function __construct(
         WeatherService $weatherService, 
         PrayerTimeService $prayerTimeService,
+        MaritimeService $maritimeService,
         EventService $eventService,
         PollService $pollService
     ) {
         $this->weatherService = $weatherService;
         $this->prayerTimeService = $prayerTimeService;
+        $this->maritimeService = $maritimeService;
         $this->eventService = $eventService;
         $this->pollService = $pollService;
     }
@@ -73,6 +77,21 @@ class WidgetController extends BaseApiController
         } catch (\Exception $e) {
             \Log::error('Next Prayer API Error: ' . $e->getMessage());
             return $this->errorResponse('Gagal mengambil data sholat berikutnya', 500);
+        }
+    }
+    
+    /**
+     * Get maritime data
+     */
+    public function getMaritime(): JsonResponse
+    {
+        try {
+            $maritimeData = $this->maritimeService->getMaritimeData();
+            
+            return $this->successResponse($maritimeData, 'Data maritim berhasil diambil');
+        } catch (\Exception $e) {
+            \Log::error('Maritime API Error: ' . $e->getMessage());
+            return $this->errorResponse('Gagal mengambil data maritim', 500);
         }
     }
     
@@ -192,6 +211,7 @@ class WidgetController extends BaseApiController
             $weatherData = $this->weatherService->getWeatherData();
             $prayerData = $this->prayerTimeService->getPrayerTimes();
             $nextPrayer = $this->prayerTimeService->getNextPrayer();
+            $maritimeData = $this->maritimeService->getMaritimeData();
             $contactImportants = ContactImportant::active()->ordered()->get();
             $eventsData = $this->eventService->getWidgetEvents();
             $pollData = $this->pollService->getActivePoll();
@@ -200,6 +220,7 @@ class WidgetController extends BaseApiController
                 'weather' => $weatherData,
                 'prayer_times' => $prayerData,
                 'next_prayer' => $nextPrayer,
+                'maritime' => $maritimeData,
                 'contact_importants' => $contactImportants,
                 'events' => $eventsData,
                 'active_poll' => $pollData

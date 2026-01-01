@@ -20,6 +20,7 @@ class AppServiceProvider extends ServiceProvider
         // Register widget services
         $this->app->singleton(\App\Services\WeatherService::class);
         $this->app->singleton(\App\Services\PrayerTimeService::class);
+        $this->app->singleton(\App\Services\MaritimeService::class);
         
         // Register new services
         $this->app->singleton(\App\Services\ImageProcessingService::class);

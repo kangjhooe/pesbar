@@ -78,6 +78,7 @@ Route::prefix('api/widgets')->middleware('rate.limit.api:60,60')->group(function
     Route::get('/weather', [WidgetController::class, 'getWeather'])->name('widgets.weather');
     Route::get('/prayer-times', [WidgetController::class, 'getPrayerTimes'])->name('widgets.prayer-times');
     Route::get('/next-prayer', [WidgetController::class, 'getNextPrayer'])->name('widgets.next-prayer');
+    Route::get('/maritime', [WidgetController::class, 'getMaritime'])->name('widgets.maritime');
     Route::get('/contact-importants', [WidgetController::class, 'getContactImportants'])->name('widgets.contact-importants');
     Route::get('/events', [WidgetController::class, 'getEvents'])->name('widgets.events');
     Route::get('/active-poll', [WidgetController::class, 'getActivePoll'])->name('widgets.active-poll');

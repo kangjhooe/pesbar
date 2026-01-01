@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\ReadingHistory;
 use App\Services\WeatherService;
 use App\Services\PrayerTimeService;
+use App\Services\MaritimeService;
 use App\Services\EventService;
 use App\Services\PollService;
 use Illuminate\Http\Request;
@@ -16,17 +17,20 @@ class ArticleController extends Controller
 {
     protected $weatherService;
     protected $prayerTimeService;
+    protected $maritimeService;
     protected $eventService;
     protected $pollService;
     
     public function __construct(
         WeatherService $weatherService, 
         PrayerTimeService $prayerTimeService,
+        MaritimeService $maritimeService,
         EventService $eventService,
         PollService $pollService
     ) {
         $this->weatherService = $weatherService;
         $this->prayerTimeService = $prayerTimeService;
+        $this->maritimeService = $maritimeService;
         $this->eventService = $eventService;
         $this->pollService = $pollService;
     }
@@ -77,10 +81,11 @@ class ArticleController extends Controller
         // Get widget data
         $weatherData = $this->weatherService->getWeatherData();
         $prayerData = $this->prayerTimeService->getPrayerTimes();
+        $maritimeData = $this->maritimeService->getMaritimeData();
         $eventsData = $this->eventService->getWidgetEvents();
         $pollData = $this->pollService->getActivePoll();
 
-        return view('articles.show', compact('article', 'relatedArticles', 'weatherData', 'prayerData', 'eventsData', 'pollData'));
+        return view('articles.show', compact('article', 'relatedArticles', 'weatherData', 'prayerData', 'maritimeData', 'eventsData', 'pollData'));
     }
 
     public function index()

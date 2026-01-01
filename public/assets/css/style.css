@@ -1969,3 +1969,314 @@ i.fa-mosque,
         border: 1px solid #ddd;
     }
 }
+
+/* ============================================
+   MARITIME WIDGET ANIMATIONS
+   ============================================ */
+
+/* Wave Animation */
+.wave-animation {
+    position: relative;
+    overflow: hidden;
+}
+
+.wave-bar {
+    width: 100%;
+    background: linear-gradient(90deg, 
+        rgba(59, 130, 246, 0.6) 0%, 
+        rgba(6, 182, 212, 0.8) 50%, 
+        rgba(59, 130, 246, 0.6) 100%);
+    border-radius: 4px;
+    animation: waveFlow 3s ease-in-out infinite;
+    position: relative;
+}
+
+.wave-bar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.3), 
+        transparent);
+    animation: waveShine 2s ease-in-out infinite;
+}
+
+@keyframes waveFlow {
+    0%, 100% {
+        transform: translateX(0) scaleY(1);
+    }
+    25% {
+        transform: translateX(5px) scaleY(1.1);
+    }
+    50% {
+        transform: translateX(0) scaleY(1);
+    }
+    75% {
+        transform: translateX(-5px) scaleY(0.9);
+    }
+}
+
+@keyframes waveShine {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+/* Tide Animation */
+.tide-animation {
+    animation: tidePulse 2s ease-in-out infinite;
+}
+
+@keyframes tidePulse {
+    0%, 100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    50% {
+        transform: translateY(-3px);
+        opacity: 0.8;
+    }
+}
+
+.tide-level-indicator {
+    position: relative;
+    overflow: hidden;
+}
+
+.tide-level-indicator::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.4), 
+        transparent);
+    animation: tideShine 3s ease-in-out infinite;
+}
+
+@keyframes tideShine {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+/* Wind Icon Animation */
+.wind-icon {
+    animation: windBlow 2s ease-in-out infinite;
+}
+
+@keyframes windBlow {
+    0%, 100% {
+        transform: rotate(0deg) scale(1);
+    }
+    25% {
+        transform: rotate(-10deg) scale(1.1);
+    }
+    50% {
+        transform: rotate(0deg) scale(1);
+    }
+    75% {
+        transform: rotate(10deg) scale(1.1);
+    }
+}
+
+/* Maritime Icon Animation */
+.maritime-icon {
+    animation: waterRipple 3s ease-in-out infinite;
+}
+
+@keyframes waterRipple {
+    0%, 100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+    25% {
+        transform: scale(1.1) rotate(5deg);
+        opacity: 0.9;
+    }
+    50% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+    75% {
+        transform: scale(1.1) rotate(-5deg);
+        opacity: 0.9;
+    }
+}
+
+/* Warning Animation */
+.warning-animation {
+    animation: warningPulse 2s ease-in-out infinite;
+    position: relative;
+}
+
+.warning-animation::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: inherit;
+    background: inherit;
+    opacity: 0;
+    animation: warningGlow 2s ease-in-out infinite;
+}
+
+@keyframes warningPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0);
+    }
+}
+
+@keyframes warningGlow {
+    0%, 100% {
+        opacity: 0;
+    }
+    50% {
+        opacity: 0.3;
+    }
+}
+
+/* Maritime Forecast Animation */
+.maritime-forecast-container > div {
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.maritime-forecast-container > div::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0;
+    background: linear-gradient(90deg, 
+        rgba(59, 130, 246, 0.1), 
+        transparent);
+    transition: width 0.3s ease;
+}
+
+.maritime-forecast-container > div:hover::before {
+    width: 100%;
+}
+
+.maritime-forecast-container > div:hover {
+    transform: translateX(5px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Maritime Widget Update Animation */
+.maritime-wave-height,
+.maritime-tide-status,
+.maritime-update {
+    transition: all 0.5s ease;
+}
+
+.maritime-wave-height.updating,
+.maritime-tide-status.updating {
+    animation: dataUpdate 0.5s ease;
+}
+
+@keyframes dataUpdate {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(0.95);
+    }
+}
+
+/* Maritime Widget Container Effects */
+#maritime-widget {
+    position: relative;
+    overflow: hidden;
+}
+
+#maritime-widget::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, 
+        rgba(59, 130, 246, 0.05) 0%, 
+        transparent 70%);
+    animation: widgetGlow 8s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes widgetGlow {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+        opacity: 0.5;
+    }
+    50% {
+        transform: translate(10%, 10%) scale(1.1);
+        opacity: 0.3;
+    }
+}
+
+/* Responsive Maritime Widget */
+@media (max-width: 768px) {
+    .maritime-wave-height {
+        font-size: 2rem;
+    }
+    
+    .wave-animation {
+        height: 24px;
+    }
+    
+    .maritime-forecast-container > div {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}
+
+/* Maritime Widget Loading State */
+#maritime-widget.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+#maritime-widget.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid rgba(59, 130, 246, 0.3);
+    border-top-color: rgba(59, 130, 246, 1);
+    border-radius: 50%;
+    animation: maritimeSpin 0.8s linear infinite;
+}
+
+@keyframes maritimeSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
