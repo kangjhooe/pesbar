@@ -461,6 +461,9 @@
                 </div>
             </div>
 
+            <!-- Maritime Widget -->
+            @include('widgets.maritime', ['maritimeData' => $maritimeData ?? [], 'isHome' => true])
+
             <!-- Events Widget -->
             @include('widgets.events')
 
@@ -851,6 +854,18 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 console.log('Home prayer times update failed:', error);
             });
+        
+        // Update maritime widget
+        fetch('/api/widgets/maritime')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateHomeMaritimeWidget(data.data);
+                }
+            })
+            .catch(error => {
+                console.log('Home maritime update failed:', error);
+            });
     }
     
     function updateHomeWeatherWidget(weatherData) {
@@ -1014,6 +1029,181 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, 100 + (index * 50));
             }
         });
+    }
+    
+    function updateHomeMaritimeWidget(maritimeData) {
+        const widget = document.getElementById('home-maritime-widget');
+        if (!widget) return;
+        
+        // Add updating animation
+        widget.classList.add('loading');
+        setTimeout(() => widget.classList.remove('loading'), 500);
+        
+        // Update wave height
+        const waveHeight = widget.querySelector('.maritime-wave-height');
+        if (waveHeight) {
+            waveHeight.classList.add('updating');
+            setTimeout(() => {
+                waveHeight.textContent = maritimeData.wave_height || '1.2';
+                setTimeout(() => waveHeight.classList.remove('updating'), 500);
+            }, 200);
+        }
+        
+        // Update wave category
+        const waveCategory = widget.querySelector('.maritime-wave-category');
+        if (waveCategory && maritimeData.wave_height_category) {
+            waveCategory.textContent = maritimeData.wave_height_category;
+            const category = maritimeData.wave_height_category;
+            waveCategory.className = 'maritime-wave-category px-2 py-0.5 rounded-full text-xs font-bold ' + (
+                category === 'Sangat Tinggi' ? 'bg-red-100 text-red-800' : 
+                category === 'Tinggi' ? 'bg-orange-100 text-orange-800' : 
+                category === 'Sedang' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
+            );
+        }
+        
+        // Update wave bar
+        const waveBar = widget.querySelector('.wave-bar');
+        if (waveBar && maritimeData.wave_height) {
+            const height = Math.min(100, (maritimeData.wave_height / 4) * 100);
+            waveBar.style.height = height + '%';
+        }
+        
+        // Update tide status
+        const tideStatus = widget.querySelector('.maritime-tide-status');
+        if (tideStatus && maritimeData.tide) {
+            tideStatus.textContent = maritimeData.tide.status || 'Pasang';
+            tideStatus.className = 'maritime-tide-status font-bold text-xs ' + (
+                maritimeData.tide.status === 'Pasang' ? 'text-blue-600' : 'text-gray-600'
+            );
+        }
+        
+        // Update tide icon
+        const tideIcon = widget.querySelector('.maritime-tide-icon');
+        if (tideIcon && maritimeData.tide) {
+            tideIcon.className = 'maritime-tide-icon ' + (maritimeData.tide.icon || 'fas fa-arrow-up') + ' ' + (
+                maritimeData.tide.status === 'Pasang' ? 'text-blue-600' : 'text-gray-600'
+            ) + ' tide-animation text-sm';
+        }
+        
+        // Update tide times
+        const nextHighTide = widget.querySelector('.maritime-next-high-tide');
+        const nextLowTide = widget.querySelector('.maritime-next-low-tide');
+        if (nextHighTide && maritimeData.tide) {
+            nextHighTide.textContent = maritimeData.tide.next_high_tide || '07:00';
+        }
+        if (nextLowTide && maritimeData.tide) {
+            nextLowTide.textContent = maritimeData.tide.next_low_tide || '13:00';
+        }
+        
+        // Update tide level indicator
+        const tideLevelIndicator = widget.querySelector('.tide-level-indicator');
+        if (tideLevelIndicator && maritimeData.tide) {
+            tideLevelIndicator.style.width = (maritimeData.tide.level || 50) + '%';
+        }
+        
+        // Update wind
+        const windSpeed = widget.querySelector('.maritime-wind-speed');
+        const windDirection = widget.querySelector('.maritime-wind-direction');
+        if (windSpeed && maritimeData.wind_speed) {
+            windSpeed.textContent = maritimeData.wind_speed + ' ';
+        }
+        if (windDirection && maritimeData.wind_direction) {
+            windDirection.textContent = maritimeData.wind_direction;
+        }
+        
+        // Update location and timestamp
+        const location = widget.querySelector('.maritime-location');
+        const update = widget.querySelector('.maritime-update');
+        if (location && maritimeData.location) {
+            location.textContent = maritimeData.location;
+        }
+        if (update && maritimeData.updated_at) {
+            update.textContent = 'Update: ' + maritimeData.updated_at;
+        }
+        
+        // Update warnings
+        if (maritimeData.warning && maritimeData.warning.length > 0) {
+            updateHomeMaritimeWarnings(maritimeData.warning);
+        }
+        
+        // Update forecast
+        if (maritimeData.forecast && maritimeData.forecast.length > 0) {
+            updateHomeMaritimeForecast(maritimeData.forecast);
+        }
+    }
+    
+    function updateHomeMaritimeWarnings(warnings) {
+        const widget = document.getElementById('home-maritime-widget');
+        if (!widget) return;
+        
+        let warningsContainer = widget.querySelector('.mb-3.space-y-1\\.5');
+        if (!warningsContainer) {
+            const windInfo = widget.querySelector('.bg-gradient-to-r.from-gray-50');
+            if (windInfo) {
+                warningsContainer = document.createElement('div');
+                warningsContainer.className = 'mb-3 space-y-1.5';
+                windInfo.parentNode.insertBefore(warningsContainer, windInfo.nextSibling);
+            }
+        }
+        
+        if (warningsContainer) {
+            warningsContainer.innerHTML = '';
+            warnings.forEach(warning => {
+                const warningDiv = document.createElement('div');
+                warningDiv.className = 'p-2 rounded-lg border-l-4 warning-animation ' + (
+                    warning.level === 'danger' ? 'bg-red-50 border-red-500' : 'bg-yellow-50 border-yellow-500'
+                );
+                warningDiv.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <i class="${warning.icon} ${warning.level === 'danger' ? 'text-red-600' : 'text-yellow-600'} text-xs"></i>
+                        <span class="text-xs font-semibold ${warning.level === 'danger' ? 'text-red-800' : 'text-yellow-800'}">${warning.message}</span>
+                    </div>
+                `;
+                warningsContainer.appendChild(warningDiv);
+            });
+        }
+    }
+    
+    function updateHomeMaritimeForecast(forecastData) {
+        const forecastContainer = document.querySelector('#home-maritime-widget .maritime-forecast-container');
+        if (!forecastContainer) return;
+        
+        const existingItems = forecastContainer.querySelectorAll('.maritime-forecast-item');
+        existingItems.forEach((item, index) => {
+            item.style.opacity = '0';
+            item.style.transform = 'translateX(-20px)';
+        });
+        
+        setTimeout(() => {
+            forecastContainer.innerHTML = '';
+            
+            forecastData.forEach((forecast, index) => {
+                const forecastItem = document.createElement('div');
+                forecastItem.className = 'flex items-center justify-between p-1.5 hover:bg-gray-50 rounded transition-all duration-200 maritime-forecast-item';
+                forecastItem.style.opacity = '0';
+                forecastItem.style.transform = 'translateY(20px)';
+                forecastItem.innerHTML = `
+                    <div class="flex items-center space-x-2 flex-1">
+                        <i class="${forecast.icon || 'fas fa-water'} text-sm"></i>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-xs font-semibold text-gray-700 truncate">${forecast.day || 'N/A'}, ${forecast.date || ''}</div>
+                            <div class="text-xs text-gray-500">${forecast.wave_category || 'Sedang'}</div>
+                        </div>
+                    </div>
+                    <div class="text-right flex-shrink-0 ml-2">
+                        <div class="text-xs font-bold text-blue-600">${forecast.wave_height || '1.2'}m</div>
+                        <div class="text-xs text-gray-500">${forecast.wind_speed || '15'} km/j</div>
+                    </div>
+                `;
+                forecastContainer.appendChild(forecastItem);
+                
+                setTimeout(() => {
+                    forecastItem.style.transition = 'all 0.3s ease';
+                    forecastItem.style.opacity = '1';
+                    forecastItem.style.transform = 'translateY(0)';
+                }, 100 + (index * 50));
+            });
+        }, 300);
     }
 });
 </script>
