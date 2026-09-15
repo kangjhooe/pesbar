@@ -82,7 +82,7 @@
             <i class="fas fa-list text-blue-600 text-xl mr-3"></i>
             <div>
                 <p class="font-medium text-blue-900">Semua Komentar</p>
-                <p class="text-sm text-blue-700">Lihat semua komentar</p>
+                <p class="text-sm text-news-accent">Lihat semua komentar</p>
             </div>
         </a>
     </div>
@@ -123,7 +123,7 @@
                             </div>
                             <p class="text-sm text-gray-700 mb-2">{{ Str::limit($comment->content, 150) }}</p>
                             <div class="flex items-center space-x-4 text-xs text-gray-500">
-                                <span>
+                                <span class="line-clamp-1" title="{{ $comment->article->title ?? 'Artikel tidak ditemukan' }}">
                                     <i class="fas fa-newspaper text-gray-400 mr-1"></i>
                                     {{ $comment->article->title ?? 'Artikel tidak ditemukan' }}
                                 </span>
@@ -158,7 +158,7 @@
             
             <!-- Load More Button -->
             <div class="mt-6 text-center">
-                <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                <button class="px-4 py-2 bg-news-accent text-white rounded-lg hover:bg-red-800 transition-colors">
                     <i class="fas fa-plus mr-2"></i>
                     Lihat Semua Komentar
                 </button>
@@ -188,9 +188,9 @@
                         ->get();
                 @endphp
                 @forelse($mostCommented as $article)
-                    <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
-                        <span class="text-sm text-gray-900 truncate">{{ $article->title }}</span>
-                        <span class="text-xs text-gray-500">{{ $article->comments_count }} komentar</span>
+                    <div class="flex items-center justify-between gap-3 p-2 bg-gray-50 rounded">
+                        <span class="text-sm text-gray-900 min-w-0 line-clamp-2" title="{{ $article->title }}">{{ $article->title }}</span>
+                        <span class="text-xs text-gray-500 shrink-0">{{ $article->comments_count }} komentar</span>
                     </div>
                 @empty
                     <p class="text-sm text-gray-500">Belum ada data</p>

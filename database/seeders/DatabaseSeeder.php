@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'admin@pesisirbarat.id'],
             [
                 'name' => 'Administrator',
+                'username' => 'administrator',
                 'password' => bcrypt('password'),
                 'role' => 'admin',
                 'verified' => true,

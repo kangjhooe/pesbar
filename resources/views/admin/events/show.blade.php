@@ -201,7 +201,7 @@
                 </div>
                 <div class="flex space-x-2">
                     <a href="{{ route('admin.events.edit', $event) }}" 
-                       class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                       class="bg-news-accent text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors">
                         <i class="fas fa-edit mr-1"></i>Edit
                     </a>
                     <form action="{{ route('admin.events.destroy', $event) }}" method="POST" class="inline" 

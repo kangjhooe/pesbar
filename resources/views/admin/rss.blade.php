@@ -185,7 +185,7 @@
                 <i class="fas fa-rss mr-2"></i>
                 <span>Feedly</span>
             </a>
-            <a href="https://www.inoreader.com" target="_blank" class="flex items-center justify-center px-4 py-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors">
+            <a href="https://www.inoreader.com" target="_blank" class="flex items-center justify-center px-4 py-3 bg-blue-50 text-news-accent rounded-lg hover:bg-blue-100 transition-colors">
                 <i class="fas fa-rss mr-2"></i>
                 <span>Inoreader</span>
             </a>

@@ -83,26 +83,26 @@ class CacheHelper
     }
 
     /**
-     * Cache breaking news
+     * Cache breaking news (collection, newest first)
      */
-    public static function getBreakingNews()
+    public static function getBreakingNews($limit = 8)
     {
         return self::remember(
-            'breaking_news',
+            "breaking_news_{$limit}",
             self::CACHE_15_MINUTES,
-            function () {
+            function () use ($limit) {
                 return \App\Models\Article::published()
-                    ->berita()
                     ->breaking()
                     ->with(['author', 'category'])
                     ->latest()
-                    ->first();
+                    ->take($limit)
+                    ->get();
             }
         );
     }
 
     /**
-     * Cache categories
+     * Cache active categories ordered by published article count (navbar ranking).
      */
     public static function getActiveCategories()
     {
@@ -111,6 +111,10 @@ class CacheHelper
             self::CACHE_1_DAY,
             function () {
                 return \App\Models\Category::where('is_active', true)
+                    ->withCount(['articles' => function ($query) {
+                        $query->published();
+                    }])
+                    ->orderByDesc('articles_count')
                     ->orderBy('name')
                     ->get();
             }
@@ -159,20 +163,27 @@ class CacheHelper
     }
 
     /**
-     * Clear specific cache
+     * Clear specific cache by exact key, or by Redis key pattern when available.
+     * File/database drivers have no pattern API — always forget the exact key too.
      */
     public static function clearCache(string $pattern = null)
     {
-        if ($pattern) {
-            // Clear cache by pattern (requires Redis or similar)
-            if (config('cache.default') === 'redis') {
+        if ($pattern === null) {
+            Cache::flush();
+            return;
+        }
+
+        Cache::forget($pattern);
+
+        if (config('cache.default') === 'redis') {
+            try {
                 $keys = Cache::getRedis()->keys("*{$pattern}*");
                 if (!empty($keys)) {
                     Cache::getRedis()->del($keys);
                 }
+            } catch (\Throwable $e) {
+                // Ignore Redis pattern failures; exact key already forgotten above.
             }
-        } else {
-            Cache::flush();
         }
     }
 
@@ -181,20 +192,25 @@ class CacheHelper
      */
     public static function clearArticleCache()
     {
-        self::clearCache('articles');
-        self::clearCache('popular_articles');
-        self::clearCache('latest_articles');
-        self::clearCache('featured_articles');
-        self::clearCache('breaking_news');
+        Cache::forget('breaking_news');
+
+        foreach ([5, 6, 7, 8, 10] as $limit) {
+            Cache::forget("popular_articles_{$limit}");
+            Cache::forget("latest_articles_{$limit}");
+            Cache::forget("featured_articles_{$limit}");
+            Cache::forget("breaking_news_{$limit}");
+        }
+
+        // Navbar ranking depends on published article counts
+        self::clearCategoryCache();
     }
 
     /**
-     * Clear category related cache
+     * Clear category related cache (navbar uses active_categories)
      */
     public static function clearCategoryCache()
     {
-        self::clearCache('categories');
-        self::clearCache('active_categories');
+        Cache::forget('active_categories');
     }
 
     /**
@@ -202,7 +218,7 @@ class CacheHelper
      */
     public static function clearSettingsCache()
     {
-        self::clearCache('site_settings');
+        Cache::forget('site_settings');
     }
 
     /**
@@ -210,7 +226,7 @@ class CacheHelper
      */
     public static function clearDashboardCache()
     {
-        self::clearCache('dashboard_stats');
+        Cache::forget('dashboard_stats');
     }
 
     /**

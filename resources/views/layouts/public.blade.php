@@ -10,8 +10,7 @@
     <meta name="keywords" content="@yield('keywords', \App\Helpers\SeoHelper::generateKeywords())">
     <meta name="robots" content="@yield('robots', \App\Helpers\SeoHelper::generateRobotsMeta())">
     <link rel="canonical" href="@yield('canonical', \App\Helpers\SeoHelper::generateCanonicalUrl())">
-    
-    <!-- Open Graph Meta Tags -->
+
     @php
         $ogData = \App\Helpers\SeoHelper::generateOpenGraph([
             'og:title' => $__env->yieldContent('og:title', \App\Helpers\SeoHelper::generateTitle()),
@@ -23,8 +22,7 @@
     @foreach($ogData as $property => $content)
         <meta property="{{ $property }}" content="{{ $content }}">
     @endforeach
-    
-    <!-- Twitter Card Meta Tags -->
+
     @php
         $twitterData = \App\Helpers\SeoHelper::generateTwitterCard([
             'twitter:title' => $__env->yieldContent('twitter:title', \App\Helpers\SeoHelper::generateTitle()),
@@ -35,666 +33,364 @@
     @foreach($twitterData as $name => $content)
         <meta name="{{ $name }}" content="{{ $content }}">
     @endforeach
-    
-    <!-- Favicon -->
+
     <link rel="icon" type="image/x-icon" href="{{ \App\Helpers\SettingsHelper::siteFavicon() }}">
 
-    <!-- Google Search Console Verification -->
     @if(\App\Helpers\SettingsHelper::googleSearchConsole())
     <meta name="google-site-verification" content="{{ \App\Helpers\SettingsHelper::googleSearchConsole() }}" />
     @endif
 
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-    
-    <!-- Font Awesome -->
+    <link href="https://fonts.bunny.net/css?family=ibm-plex-sans:400,500,600,700|source-serif-4:600,700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Scripts -->
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
-    <!-- Custom Styles -->
+
     <style>
-        .line-clamp-2 {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+        :root {
+            --news-ink: #0a0a0a;
+            --news-muted: #5c5c5c;
+            --news-line: #e5e5e5;
+            --news-paper: #fafafa;
+            --news-accent: #b91c1c;
         }
-        .line-clamp-3 {
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+        .font-display { font-family: "Source Serif 4", Georgia, serif; }
+        .text-news-ink { color: var(--news-ink); }
+        .text-news-muted { color: var(--news-muted); }
+        .text-news-accent { color: var(--news-accent); }
+        .bg-news-ink { background-color: var(--news-ink); }
+        .bg-news-accent { background-color: var(--news-accent); }
+        .bg-news-paper { background-color: var(--news-paper); }
+        .border-news-ink { border-color: var(--news-ink); }
+        .border-news-line { border-color: var(--news-line); }
+        .border-news-accent { border-color: var(--news-accent); }
+        .hover\:text-news-accent:hover { color: var(--news-accent); }
+        .hover\:bg-news-accent:hover { background-color: var(--news-accent); }
+        .hover\:bg-news-paper:hover { background-color: var(--news-paper); }
+        .portal-nav-link.is-active,
+        .portal-nav-link:hover {
+            color: var(--news-accent);
+            box-shadow: inset 0 -2px 0 var(--news-accent);
         }
-        .fade-in-up {
-            animation: fadeInUp 0.6s ease-out;
-        }
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .fade-in {
-            animation: fadeIn 0.5s ease-out;
-        }
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-        
-        /* Popup Animation Styles */
-        #popupContent {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            transform: scale(0.95);
-            opacity: 0;
-        }
-        
-        /* Button hover effects */
-        .popup-button {
-            transition: all 0.2s ease;
-        }
-        
-        .popup-button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-        
-        /* Pulse animation for bell icon */
-        @keyframes pulse {
-            0%, 100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.05);
-            }
-        }
-        
-        .bell-pulse {
-            animation: pulse 2s infinite;
-        }
-        
-        /* Gradient text effect */
-        .gradient-text {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        /* Custom Card Styles */
-        .card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            transition: all 0.3s ease;
-            overflow: hidden;
-        }
-        
-        .card:hover {
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            transform: translateY(-2px);
-        }
-        
-        /* Button Styles */
-        .btn-primary {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-        }
-        
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #1d4ed8, #1e40af);
-            transform: translateY(-1px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-        
-        /* Input Styles */
-        .input-field {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.5rem;
-            font-size: 0.875rem;
-            transition: all 0.3s ease;
-            background: white;
-        }
-        
-        .input-field:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-        
-        /* Container Styles */
-        .container-responsive {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1rem;
-        }
-        
-        @media (min-width: 640px) {
-            .container-responsive {
-                padding: 0 1.5rem;
-            }
-        }
-        
-        @media (min-width: 1024px) {
-            .container-responsive {
-                padding: 0 2rem;
-            }
-        }
-        
-        /* Grid Styles */
-        .grid-responsive {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
-        
-        @media (min-width: 768px) {
-            .grid-responsive {
-                grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            }
-        }
-        
-        /* Heading Styles */
-        .heading-responsive {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #1f2937;
-        }
-        
-        @media (min-width: 768px) {
-            .heading-responsive {
-                font-size: 1.875rem;
-            }
-        }
-        
-        /* Widget Styles */
-        .widget {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-        
-        .widget:hover {
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-        
-        /* Trending Number Styles */
-        .trending-number {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-            color: white;
-            width: 2rem;
-            height: 2rem;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 0.875rem;
-            flex-shrink: 0;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        
-        /* Category Badge Styles */
-        .category-badge {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: white;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
-        }
-        
-        /* Breaking News Badge */
-        .breaking-badge {
-            background: linear-gradient(135deg, #dc2626, #b91c1c);
-            color: white;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.8;
-            }
-        }
-        
-        /* Image Hover Effects */
-        .image-hover {
-            transition: transform 0.3s ease;
-        }
-        
-        .card:hover .image-hover {
-            transform: scale(1.05);
-        }
-        
-        /* Loading Animation */
-        .loading {
-            display: inline-block;
-            width: 1rem;
-            height: 1rem;
-            border: 2px solid #f3f4f6;
-            border-top: 2px solid #3b82f6;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
+        [x-cloak] { display: none !important; }
     </style>
 </head>
-<body class="font-sans antialiased bg-gray-50">
-    <!-- Navigation -->
-    <nav class="bg-white shadow-md sticky top-0 z-50" x-data="{ mobileMenuOpen: false }">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <!-- Logo -->
-                <div class="flex items-center flex-shrink-0">
-                    <a href="{{ route('home') }}" class="flex items-center space-x-3 group">
-                        <div class="relative">
-                            <img src="{{ \App\Helpers\SettingsHelper::siteLogo() }}" alt="{{ \App\Helpers\SettingsHelper::siteName() }}" class="h-10 w-auto max-w-full object-contain">
-                        </div>
-                        <div>
-                            <h1 class="text-lg font-bold text-gray-800">{{ \App\Helpers\SettingsHelper::siteName() }}</h1>
-                        </div>
+<body class="font-sans antialiased bg-white text-news-ink overflow-x-clip" :class="{ 'overflow-hidden': mobileMenuOpen }" x-data="{ mobileMenuOpen: false, searchOpen: false }">
+    <nav class="bg-white border-b-2 border-news-ink sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+            <div class="relative flex justify-between items-center h-14 sm:h-16 gap-2 min-w-0">
+                {{-- Logo kiri (semua ukuran) + nama hanya dari sm ke atas --}}
+                <div class="flex items-center flex-shrink-0 min-w-0 z-10">
+                    <a href="{{ route('home') }}" class="flex items-center gap-2 sm:gap-3 min-w-0" title="{{ \App\Helpers\SettingsHelper::siteName() }}">
+                        <img src="{{ \App\Helpers\SettingsHelper::siteLogo() }}"
+                             alt="{{ \App\Helpers\SettingsHelper::siteName() }}"
+                             class="w-8 h-8 sm:w-9 sm:h-9 object-contain object-center flex-shrink-0"
+                             width="36"
+                             height="36">
+                        <span class="font-display text-base sm:text-lg md:text-xl font-bold tracking-tight text-news-ink hidden sm:block truncate max-w-[10rem] lg:max-w-[14rem] xl:max-w-none">{{ \App\Helpers\SettingsHelper::siteName() }}</span>
                     </a>
                 </div>
 
-                <!-- Navigation Links -->
-                {{-- <div class="hidden md:flex items-center space-x-6">
-                    <a href="{{ route('home') }}" class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('home') ? 'text-blue-600 border-b-2 border-blue-600' : '' }}">
-                        Beranda
-                    </a>
-                    <a href="{{ route('articles.index') }}" class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('articles.*') ? 'text-blue-600 border-b-2 border-blue-600' : '' }}">
-                        Berita
-                    </a>
-                    <a href="{{ route('articles.artikel') }}" class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('articles.artikel*') ? 'text-blue-600 border-b-2 border-blue-600' : '' }}">
-                        Artikel
-                    </a>
-                    <a href="{{ route('about') }}" class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('about') ? 'text-blue-600 border-b-2 border-blue-600' : '' }}">
-                        Tentang
-                    </a>
-                </div> --}}
+                {{-- Mobile: nama platform di tengah layar (tanpa logo) --}}
+                <span class="sm:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-display text-base font-bold tracking-tight text-news-ink truncate max-w-[calc(100%-9rem)] text-center pointer-events-none" aria-hidden="true">
+                    {{ \App\Helpers\SettingsHelper::siteName() }}
+                </span>
 
-                <!-- Right Side - Search and Auth -->
-                <div class="flex items-center space-x-4">
-                    <!-- Search Box -->
-                    <div class="hidden lg:block">
+                @php
+                    $navMore = $navMoreCategories ?? collect();
+                    $activeCategoryId = request()->routeIs('categories.show')
+                        ? optional(request()->route('category'))->id
+                        : null;
+                    $isMoreActive = $activeCategoryId && $navMore->contains('id', $activeCategoryId);
+                @endphp
+                <div class="hidden lg:flex items-center space-x-1 xl:space-x-2 flex-1 mx-2 xl:mx-4 overflow-x-auto nav-scroll portal-nav-strip min-w-0">
+                    @foreach($navCategories ?? [] as $navCategory)
+                        <a href="{{ route('categories.show', $navCategory) }}"
+                           class="portal-nav-link text-news-ink px-1 py-2 text-xs xl:text-sm font-bold uppercase tracking-wide whitespace-nowrap {{ $activeCategoryId === $navCategory->id ? 'is-active' : '' }}">
+                            {{ $navCategory->name }}
+                        </a>
+                    @endforeach
+                    @if($navMore->isNotEmpty())
+                        <div class="relative flex-shrink-0" x-data="{ open: false }">
+                            <button type="button"
+                                    @click="open = !open"
+                                    @click.away="open = false"
+                                    class="portal-nav-link text-news-ink px-1 py-2 text-xs xl:text-sm font-bold uppercase tracking-wide whitespace-nowrap inline-flex items-center gap-1 {{ $isMoreActive ? 'is-active' : '' }}"
+                                    :aria-expanded="open.toString()">
+                                Lainnya
+                                <i class="fas fa-chevron-down text-[10px]" :class="{ 'rotate-180': open }"></i>
+                            </button>
+                            <div x-show="open"
+                                 x-cloak
+                                 x-transition
+                                 class="absolute left-0 top-full mt-1 min-w-[12rem] max-h-72 overflow-y-auto bg-white border border-news-line shadow-lg py-1 z-50">
+                                @foreach($navMore as $moreCategory)
+                                    <a href="{{ route('categories.show', $moreCategory) }}"
+                                       class="block px-4 py-2 text-xs xl:text-sm font-bold uppercase tracking-wide whitespace-nowrap {{ $activeCategoryId === $moreCategory->id ? 'text-news-accent bg-news-paper' : 'text-news-ink hover:bg-news-paper hover:text-news-accent' }}">
+                                        {{ $moreCategory->name }}
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                </div>
+
+                <div class="flex items-center space-x-1 sm:space-x-2 flex-shrink-0 z-10">
+                    {{-- Compact search from md (covers tablet + laptop); full on xl --}}
+                    <div class="hidden md:block">
                         <form action="{{ route('search.index') }}" method="GET" class="relative">
-                            <input type="text" 
-                                   name="q" 
-                                   placeholder="Cari berita..." 
-                                   value="{{ request('q') }}"
-                                   class="w-48 pl-4 pr-10 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <button type="submit" 
-                                    class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-600">
-                                <i class="fas fa-search"></i>
+                            <input type="text" name="q" placeholder="Cari..." value="{{ request('q') }}"
+                                   class="w-28 lg:w-36 xl:w-48 pl-3 pr-8 py-1.5 border border-news-line text-sm focus:outline-none focus:ring-1 focus:ring-news-ink focus:border-news-ink"
+                                   aria-label="Cari berita">
+                            <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 text-news-muted hover:text-news-ink touch-target" aria-label="Submit pencarian">
+                                <i class="fas fa-search text-sm"></i>
                             </button>
                         </form>
                     </div>
+                    <button type="button" @click="searchOpen = !searchOpen; mobileMenuOpen = false" class="md:hidden text-news-ink p-2 touch-target" aria-label="Buka pencarian">
+                        <i class="fas fa-search text-lg"></i>
+                    </button>
 
-                    <!-- Auth Links -->
                     @auth
-                        <!-- User Menu -->
                         <div class="relative" x-data="{ open: false }">
-                            <button @click="open = !open" class="flex items-center space-x-2 text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">
+                            <button @click="open = !open" class="flex items-center space-x-1 sm:space-x-2 text-news-ink hover:text-news-accent px-1 sm:px-2 py-2 text-sm font-medium touch-target">
                                 @if(Auth::user()->profile && Auth::user()->profile->avatar)
-                                    <img src="{{ asset('storage/' . Auth::user()->profile->avatar) }}" alt="{{ Auth::user()->name }}" class="w-8 h-8 rounded-full object-cover border-2 border-blue-200">
+                                    <img src="{{ asset('storage/' . Auth::user()->profile->avatar) }}" alt="{{ Auth::user()->name }}" class="w-8 h-8 rounded-full object-cover border border-news-line">
                                 @else
-                                    <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                                    <div class="w-8 h-8 bg-news-ink rounded-full flex items-center justify-center">
                                         <i class="fas fa-user text-white text-sm"></i>
                                     </div>
                                 @endif
-                                <span class="hidden sm:block">{{ Auth::user()->name }}</span>
-                                <x-user-role-badge :user="Auth::user()" size="xs" />
-                                <i class="fas fa-chevron-down text-xs"></i>
+                                <span class="hidden xl:block font-semibold max-w-[8rem] truncate">{{ Auth::user()->name }}</span>
+                                <span class="hidden lg:inline-flex"><x-user-role-badge :user="Auth::user()" size="xs" /></span>
+                                <i class="fas fa-chevron-down text-xs hidden sm:inline"></i>
                             </button>
-                            
-                            <div x-show="open" @click.away="open = false" x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border">
+                            <div x-show="open" @click.away="open = false" x-transition class="absolute right-0 mt-2 w-48 bg-white shadow-lg py-1 z-50 border border-news-line">
                                 @if(auth()->user()->role !== 'user')
-                                    <a href="{{ route('dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        Dashboard
-                                    </a>
+                                    <a href="{{ route('dashboard') }}" class="block px-4 py-2 text-sm text-news-ink hover:bg-news-paper">Dashboard</a>
                                 @endif
-                                <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    Profil
-                                </a>
-                                <hr class="my-1">
+                                <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-news-ink hover:bg-news-paper">Profil</a>
+                                <hr class="my-1 border-news-line">
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
-                                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        Logout
-                                    </button>
+                                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-news-ink hover:bg-news-paper">Logout</button>
                                 </form>
                             </div>
                         </div>
                     @else
-                        <!-- Guest Links - Desktop -->
-                        <div class="hidden md:flex items-center space-x-3">
-                            <a href="{{ route('login') }}" class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">
-                                Login
-                            </a>
-                            <a href="{{ route('register') }}" class="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium transition-colors">
-                                Daftar
-                            </a>
+                        <div class="hidden md:flex items-center space-x-1 lg:space-x-2">
+                            <a href="{{ route('login') }}" class="text-news-ink hover:text-news-accent px-2 py-2 text-sm font-bold">Login</a>
+                            <a href="{{ route('register') }}" class="bg-news-ink text-white hover:bg-news-accent px-2.5 lg:px-3 py-1.5 text-sm font-bold">Daftar</a>
                         </div>
-                        <!-- Guest Links - Mobile (Icon only) -->
-                        <div class="md:hidden flex items-center space-x-2">
-                            <a href="{{ route('login') }}" class="text-gray-700 hover:text-blue-600 p-2.5 rounded-md hover:bg-gray-100 transition-all duration-200 hover:scale-110" title="Login">
-                                <i class="fas fa-arrow-right-to-bracket text-lg"></i>
-                            </a>
-                            <a href="{{ route('register') }}" class="bg-blue-600 text-white hover:bg-blue-700 p-2.5 rounded-md transition-all duration-200 hover:scale-110 shadow-md hover:shadow-lg" title="Daftar">
-                                <i class="fas fa-user-circle-plus text-lg"></i>
-                            </a>
+                        <div class="md:hidden flex items-center space-x-0.5">
+                            <a href="{{ route('login') }}" class="text-news-ink p-2 touch-target" title="Login"><i class="fas fa-arrow-right-to-bracket"></i></a>
+                            <a href="{{ route('register') }}" class="bg-news-ink text-white p-2 touch-target" title="Daftar"><i class="fas fa-user-plus"></i></a>
                         </div>
                     @endauth
 
-                    <!-- Mobile menu button -->
-                    <div class="md:hidden">
-                        <button @click="mobileMenuOpen = !mobileMenuOpen" class="text-gray-700 hover:text-blue-600 p-2 rounded-md hover:bg-gray-100 transition-colors">
-                            <i class="fas fa-bars text-lg transition-transform duration-300" :class="{'rotate-90': mobileMenuOpen}"></i>
+                    <div class="lg:hidden">
+                        <button @click="mobileMenuOpen = !mobileMenuOpen; searchOpen = false" class="text-news-ink p-2 touch-target" aria-label="Menu" :aria-expanded="mobileMenuOpen.toString()">
+                            <i class="fas fa-bars text-lg" x-show="!mobileMenuOpen"></i>
+                            <i class="fas fa-times text-lg" x-show="mobileMenuOpen" x-cloak></i>
                         </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Mobile Navigation -->
-        <div x-show="mobileMenuOpen" x-transition class="md:hidden bg-white border-t border-gray-200">
-            <div class="px-2 pt-2 pb-3 space-y-1">
-                <!-- Mobile Search -->
-                <div class="px-3 py-2">
-                    <form action="{{ route('search.index') }}" method="GET" class="flex items-center">
-                        <input type="text" 
-                               name="q" 
-                               placeholder="Cari berita..." 
-                               value="{{ request('q') }}"
-                               class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <button type="submit" 
-                                class="px-4 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700 transition-colors">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </form>
-                </div>
-                
-                <!-- Navigation Links -->
-                {{-- <a href="{{ route('home') }}" @click="mobileMenuOpen = false" class="block px-3 py-2 text-gray-700 hover:text-blue-600 rounded-md text-base font-medium {{ request()->routeIs('home') ? 'text-blue-600 bg-blue-50' : '' }}">
-                    Beranda
-                </a>
-                <a href="{{ route('articles.index') }}" @click="mobileMenuOpen = false" class="block px-3 py-2 text-gray-700 hover:text-blue-600 rounded-md text-base font-medium {{ request()->routeIs('articles.*') ? 'text-blue-600 bg-blue-50' : '' }}">
-                    Berita
-                </a>
-                <a href="{{ route('articles.artikel') }}" @click="mobileMenuOpen = false" class="block px-3 py-2 text-gray-700 hover:text-blue-600 rounded-md text-base font-medium {{ request()->routeIs('articles.artikel*') ? 'text-blue-600 bg-blue-50' : '' }}">
-                    Artikel
-                </a>
-                <a href="{{ route('about') }}" @click="mobileMenuOpen = false" class="block px-3 py-2 text-gray-700 hover:text-blue-600 rounded-md text-base font-medium {{ request()->routeIs('about') ? 'text-blue-600 bg-blue-50' : '' }}">
-                    Tentang
-                </a> --}}
-                
-                @auth
-                    <hr class="my-2">
-                    @if(auth()->user()->role !== 'user')
-                        <a href="{{ route('dashboard') }}" @click="mobileMenuOpen = false" class="block px-3 py-2 text-gray-700 hover:text-blue-600 rounded-md text-base font-medium">
-                            Dashboard
-                        </a>
-                    @endif
-                    <a href="{{ route('profile.edit') }}" @click="mobileMenuOpen = false" class="block px-3 py-2 text-gray-700 hover:text-blue-600 rounded-md text-base font-medium">
-                        Profil
+        {{-- Mobile search bar --}}
+        <div x-show="searchOpen" x-transition class="md:hidden bg-white border-t border-news-line px-3 py-3">
+            <form action="{{ route('search.index') }}" method="GET" class="flex gap-2">
+                <input type="text" name="q" placeholder="Cari berita..." value="{{ request('q') }}"
+                       class="flex-1 min-w-0 px-3 py-2.5 border border-news-line text-sm focus:outline-none focus:ring-1 focus:ring-news-ink"
+                       autofocus>
+                <button type="submit" class="px-4 py-2.5 bg-news-ink text-white touch-target shrink-0"><i class="fas fa-search"></i></button>
+            </form>
+        </div>
+
+        {{-- Mobile / tablet menu (< lg) --}}
+        <div x-show="mobileMenuOpen" x-transition class="lg:hidden bg-white border-t border-news-line max-h-[calc(100vh-3.5rem)] overflow-y-auto">
+            <div class="px-2 pt-2 pb-4 space-y-1 safe-bottom">
+                @foreach($navCategories ?? [] as $navCategory)
+                    <a href="{{ route('categories.show', $navCategory) }}" @click="mobileMenuOpen = false"
+                       class="block px-3 py-3 text-sm font-bold uppercase touch-target {{ optional(request()->route('category'))->id === $navCategory->id ? 'text-news-accent bg-news-paper' : 'text-news-ink' }}">
+                        {{ $navCategory->name }}
                     </a>
+                @endforeach
+                @if(($navMoreCategories ?? collect())->isNotEmpty())
+                    <p class="px-3 pt-3 pb-1 text-xs font-bold uppercase tracking-wide text-news-muted">Lainnya</p>
+                    @foreach($navMoreCategories as $moreCategory)
+                        <a href="{{ route('categories.show', $moreCategory) }}" @click="mobileMenuOpen = false"
+                           class="block px-3 py-3 text-sm font-bold uppercase touch-target {{ optional(request()->route('category'))->id === $moreCategory->id ? 'text-news-accent bg-news-paper' : 'text-news-ink' }}">
+                            {{ $moreCategory->name }}
+                        </a>
+                    @endforeach
+                @endif
+                @auth
+                    <hr class="my-2 border-news-line">
+                    @if(auth()->user()->role !== 'user')
+                        <a href="{{ route('dashboard') }}" @click="mobileMenuOpen = false" class="block px-3 py-3 text-sm font-semibold text-news-ink touch-target">Dashboard</a>
+                    @endif
+                    <a href="{{ route('profile.edit') }}" @click="mobileMenuOpen = false" class="block px-3 py-3 text-sm font-semibold text-news-ink touch-target">Profil</a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" @click="mobileMenuOpen = false" class="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600 rounded-md text-base font-medium">
-                            Logout
-                        </button>
+                        <button type="submit" @click="mobileMenuOpen = false" class="block w-full text-left px-3 py-3 text-sm font-semibold text-news-ink touch-target">Logout</button>
                     </form>
                 @else
-                    <hr class="my-2">
-                    <a href="{{ route('login') }}" @click="mobileMenuOpen = false" class="block px-3 py-2 text-gray-700 hover:text-blue-600 rounded-md text-base font-medium">
-                        Login
-                    </a>
-                    <a href="{{ route('register') }}" @click="mobileMenuOpen = false" class="block px-3 py-2 text-gray-700 hover:text-blue-600 rounded-md text-base font-medium">
-                        Daftar
-                    </a>
+                    <hr class="my-2 border-news-line">
+                    <a href="{{ route('login') }}" @click="mobileMenuOpen = false" class="block px-3 py-3 text-sm font-semibold text-news-ink touch-target">Login</a>
+                    <a href="{{ route('register') }}" @click="mobileMenuOpen = false" class="block px-3 py-3 text-sm font-semibold text-news-ink touch-target">Daftar</a>
                 @endauth
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main>
+    <main class="min-w-0 w-full">
         @yield('content')
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <footer class="bg-news-ink text-white mt-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
             <div class="text-center">
-                <!-- Logo & Site Name -->
                 <div class="flex justify-center items-center space-x-3 mb-4">
-                    <img src="{{ \App\Helpers\SettingsHelper::siteLogo() }}" alt="{{ \App\Helpers\SettingsHelper::siteName() }}" class="h-10 w-auto object-contain">
-                    <h3 class="text-lg font-bold">{{ \App\Helpers\SettingsHelper::siteName() }}</h3>
+                    <img src="{{ \App\Helpers\SettingsHelper::siteLogo() }}" alt="{{ \App\Helpers\SettingsHelper::siteName() }}" class="w-10 h-10 object-contain object-center brightness-0 invert" width="40" height="40">
+                    <h3 class="font-display text-lg font-bold">{{ \App\Helpers\SettingsHelper::siteName() }}</h3>
                 </div>
-                
-                <!-- Quick Links -->
-                <div class="flex justify-center space-x-6 mb-6 flex-wrap gap-2">
-                    <a href="{{ route('home') }}" class="text-gray-300 hover:text-white transition-colors text-sm">Beranda</a>
-                    <a href="{{ route('articles.index') }}" class="text-gray-300 hover:text-white transition-colors text-sm">Berita</a>
-                    {{-- <a href="{{ route('about') }}" class="text-gray-300 hover:text-white transition-colors text-sm">Tentang Kami</a> --}}
+                <div class="flex justify-center flex-wrap gap-x-5 gap-y-2 mb-6">
+                    <a href="{{ route('home') }}" class="text-white/70 hover:text-white text-sm">Beranda</a>
+                    <a href="{{ route('articles.index') }}" class="text-white/70 hover:text-white text-sm">Semua Berita</a>
+                    @foreach(($navCategories ?? collect())->take(5) as $navCategory)
+                        <a href="{{ route('categories.show', $navCategory) }}" class="text-white/70 hover:text-white text-sm">{{ $navCategory->name }}</a>
+                    @endforeach
                 </div>
-                
-                <!-- Legal Links -->
                 <div class="flex justify-center space-x-4 mb-6">
-                    <a href="{{ route('terms') }}" class="text-gray-400 hover:text-white transition-colors text-xs">Syarat dan Ketentuan</a>
-                    <span class="text-gray-500">|</span>
-                    <a href="{{ route('privacy') }}" class="text-gray-400 hover:text-white transition-colors text-xs">Kebijakan Privasi</a>
+                    <a href="{{ route('terms') }}" class="text-white/50 hover:text-white text-xs">Syarat dan Ketentuan</a>
+                    <span class="text-white/30">|</span>
+                    <a href="{{ route('privacy') }}" class="text-white/50 hover:text-white text-xs">Kebijakan Privasi</a>
                 </div>
-
-                <!-- Social Media & Copyright -->
                 <div class="flex justify-center space-x-4 mb-4">
-                    <a href="#" class="text-gray-300 hover:text-white transition-colors">
-                        <i class="fab fa-facebook text-lg"></i>
-                    </a>
-                    <a href="#" class="text-gray-300 hover:text-white transition-colors">
-                        <i class="fab fa-instagram text-lg"></i>
-                    </a>
-                    <a href="#" class="text-gray-300 hover:text-white transition-colors">
-                        <i class="fab fa-youtube text-lg"></i>
-                    </a>
+                    @if(\App\Helpers\SettingsHelper::facebookUrl())
+                        <a href="{{ \App\Helpers\SettingsHelper::facebookUrl() }}" target="_blank" rel="noopener noreferrer" class="text-white/70 hover:text-white" aria-label="Facebook"><i class="fab fa-facebook text-lg"></i></a>
+                    @endif
+                    @if(\App\Helpers\SettingsHelper::instagramUrl())
+                        <a href="{{ \App\Helpers\SettingsHelper::instagramUrl() }}" target="_blank" rel="noopener noreferrer" class="text-white/70 hover:text-white" aria-label="Instagram"><i class="fab fa-instagram text-lg"></i></a>
+                    @endif
+                    @if(\App\Helpers\SettingsHelper::youtubeUrl())
+                        <a href="{{ \App\Helpers\SettingsHelper::youtubeUrl() }}" target="_blank" rel="noopener noreferrer" class="text-white/70 hover:text-white" aria-label="YouTube"><i class="fab fa-youtube text-lg"></i></a>
+                    @endif
+                    @if(\App\Helpers\SettingsHelper::twitterUrl())
+                        <a href="{{ \App\Helpers\SettingsHelper::twitterUrl() }}" target="_blank" rel="noopener noreferrer" class="text-white/70 hover:text-white" aria-label="Twitter"><i class="fab fa-x-twitter text-lg"></i></a>
+                    @endif
                 </div>
-                
-                <p class="text-gray-300 text-sm">
-                    &copy; {{ date('Y') }} Pesisir Barat Hub. Semua hak dilindungi.
-                </p>
+                <p class="text-white/50 text-sm">&copy; {{ date('Y') }} {{ \App\Helpers\SettingsHelper::siteName() }}. Semua hak dilindungi.</p>
             </div>
         </div>
     </footer>
 
-    <!-- Event Popup Modal -->
-    @if(isset($eventPopup) && $eventPopup)
-    <div id="eventPopup" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 hidden z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 overflow-hidden transform transition-all duration-300 scale-95 opacity-0 max-h-[90vh] overflow-y-auto" id="popupContent">
-            <!-- Header dengan gradient -->
-            <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-4 sm:px-6 py-4 text-white">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-3 flex-1 min-w-0">
-                        <div class="bg-white bg-opacity-20 p-2 rounded-full bell-pulse flex-shrink-0">
-                            <i class="fas fa-bell text-lg sm:text-xl"></i>
-                        </div>
-                        <div class="min-w-0 flex-1">
-                            <h2 class="text-base sm:text-lg font-bold truncate">{{ $eventPopup->title }}</h2>
-                            <p class="text-blue-100 text-xs sm:text-sm">Pemberitahuan Penting</p>
-                        </div>
+    @if(!empty($eventPopup))
+    <div id="eventPopup" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-labelledby="eventPopupTitle">
+        <div id="popupContent" class="w-full max-w-lg max-h-[90vh] overflow-y-auto border border-news-line bg-white shadow-xl opacity-0 scale-95 transition-all duration-300">
+            <div class="bg-news-ink px-4 sm:px-6 py-4 text-white">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-bold uppercase tracking-[0.15em] text-white/60 mb-1">Pemberitahuan</p>
+                        <h2 id="eventPopupTitle" class="font-display text-lg font-bold leading-snug">{{ $eventPopup->title }}</h2>
                     </div>
-                    <button id="closePopup" class="text-white hover:text-blue-200 transition-colors p-1 flex-shrink-0 ml-2">
-                        <i class="fas fa-times text-lg sm:text-xl"></i>
+                    <button type="button" id="closePopup" class="shrink-0 p-1 text-white/70 hover:text-white transition-colors" aria-label="Tutup">
+                        <i class="fas fa-times text-lg"></i>
                     </button>
                 </div>
             </div>
-            
-            <!-- Content -->
-            <div class="px-4 sm:px-6 py-6">
-                <div class="mb-6">
-                    <p class="text-gray-700 leading-relaxed text-sm sm:text-base">{{ $eventPopup->message }}</p>
-                </div>
-                
-                <!-- Action Buttons -->
-                <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
-                    <button id="closePopupBtn" class="popup-button flex-1 bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center space-x-2">
-                        <i class="fas fa-check"></i>
-                        <span>Mengerti</span>
+
+            <div class="px-4 sm:px-6 py-5">
+                <p class="text-sm sm:text-base text-news-ink/80 leading-relaxed whitespace-pre-line">{{ $eventPopup->message }}</p>
+                <div class="mt-6 flex flex-col sm:flex-row gap-3">
+                    <button type="button" id="closePopupBtn" class="flex-1 bg-news-accent text-white px-4 py-2.5 text-sm font-semibold hover:bg-red-800 transition-colors">
+                        Mengerti
                     </button>
-                    <button id="closePopupBtn2" class="popup-button px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium flex items-center justify-center">
-                        <i class="fas fa-times mr-2"></i>
-                        <span class="sm:hidden">Tutup</span>
+                    <button type="button" id="closePopupBtn2" class="px-4 py-2.5 border border-news-line text-sm font-medium text-news-ink hover:bg-news-paper transition-colors">
+                        Tutup
                     </button>
                 </div>
             </div>
-            
-            <!-- Footer dengan info tanggal -->
-            <div class="bg-gray-50 px-4 sm:px-6 py-3 border-t">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 text-xs sm:text-sm text-gray-500">
-                    <div class="flex items-center space-x-2">
-                        <i class="fas fa-calendar-alt"></i>
-                        <span>{{ $eventPopup->start_date->format('d M Y') }} - {{ $eventPopup->end_date->format('d M Y') }}</span>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <i class="fas fa-clock"></i>
-                        <span>Berlaku {{ $eventPopup->start_date->diffInDays($eventPopup->end_date) + 1 }} hari</span>
-                    </div>
+
+            <div class="border-t border-news-line bg-news-paper px-4 sm:px-6 py-3">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-news-muted">
+                    <span class="inline-flex items-center gap-1.5">
+                        <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                        {{ $eventPopup->start_date->format('d M Y') }} – {{ $eventPopup->end_date->format('d M Y') }}
+                    </span>
+                    <span class="inline-flex items-center gap-1.5">
+                        <i class="fas fa-clock" aria-hidden="true"></i>
+                        Berlaku {{ $eventPopup->start_date->diffInDays($eventPopup->end_date) + 1 }} hari
+                    </span>
                 </div>
             </div>
         </div>
     </div>
-    @endif
 
-    <!-- Alpine.js -->
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    
-    <!-- Event Popup JavaScript -->
-    @if(isset($eventPopup) && $eventPopup)
     <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const popup = document.getElementById("eventPopup");
-        const popupContent = document.getElementById("popupContent");
-        const closeBtn = document.getElementById("closePopup");
-        const closeBtn2 = document.getElementById("closePopupBtn");
-        const closeBtn3 = document.getElementById("closePopupBtn2");
-        const popupId = {{ $eventPopup->id }};
-        const storageKey = "eventPopup_" + popupId;
+    document.addEventListener('DOMContentLoaded', function () {
+        const popup = document.getElementById('eventPopup');
+        const popupContent = document.getElementById('popupContent');
+        if (!popup || !popupContent) return;
 
-        // Function to show popup with animation
+        const storageKey = 'eventPopup_{{ $eventPopup->id }}';
+        const closeButtons = [
+            document.getElementById('closePopup'),
+            document.getElementById('closePopupBtn'),
+            document.getElementById('closePopupBtn2'),
+        ];
+
         function showPopup() {
-            popup.classList.remove("hidden");
-            // Trigger animation after a small delay
-            setTimeout(() => {
-                popupContent.style.transform = "scale(1)";
-                popupContent.style.opacity = "1";
-            }, 10);
-        }
-
-        // Function to hide popup with animation
-        function hidePopup() {
-            popupContent.style.transform = "scale(0.95)";
-            popupContent.style.opacity = "0";
-            setTimeout(() => {
-                popup.classList.add("hidden");
-            }, 300);
-        }
-
-        // Check if popup has been shown before
-        if (popup && !localStorage.getItem(storageKey)) {
-            // Show popup after a short delay for better UX
-            setTimeout(showPopup, 1500);
-            
-            // Mark as shown in localStorage
-            localStorage.setItem(storageKey, "shown");
-        }
-
-        // Close popup functionality for all close buttons
-        [closeBtn, closeBtn2, closeBtn3].forEach(btn => {
-            if (btn) {
-                btn.addEventListener("click", hidePopup);
-            }
-        });
-
-        // Close popup when clicking outside
-        if (popup) {
-            popup.addEventListener("click", function(e) {
-                if (e.target === popup) {
-                    hidePopup();
-                }
+            popup.classList.remove('hidden');
+            popup.classList.add('flex');
+            requestAnimationFrame(function () {
+                popupContent.classList.remove('opacity-0', 'scale-95');
+                popupContent.classList.add('opacity-100', 'scale-100');
             });
         }
 
-        // Close popup with Escape key
-        document.addEventListener("keydown", function(e) {
-            if (e.key === "Escape" && popup && !popup.classList.contains("hidden")) {
+        function hidePopup() {
+            popupContent.classList.remove('opacity-100', 'scale-100');
+            popupContent.classList.add('opacity-0', 'scale-95');
+            setTimeout(function () {
+                popup.classList.add('hidden');
+                popup.classList.remove('flex');
+                try { localStorage.setItem(storageKey, 'dismissed'); } catch (e) {}
+            }, 280);
+        }
+
+        try {
+            if (!localStorage.getItem(storageKey)) {
+                setTimeout(showPopup, 1200);
+            }
+        } catch (e) {
+            setTimeout(showPopup, 1200);
+        }
+
+        closeButtons.forEach(function (btn) {
+            if (btn) btn.addEventListener('click', hidePopup);
+        });
+
+        popup.addEventListener('click', function (e) {
+            if (e.target === popup) hidePopup();
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !popup.classList.contains('hidden')) {
                 hidePopup();
             }
         });
-
-        // Add some interactive effects
-        if (popupContent) {
-            // Add hover effect to buttons
-            const buttons = popupContent.querySelectorAll('button');
-            buttons.forEach(button => {
-                button.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-1px)';
-                });
-                button.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0)';
-                });
-            });
-        }
     });
     </script>
     @endif
-    
-    <!-- Structured Data -->
-    @yield('structured-data')
 
-    <!-- Google Analytics -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    @yield('structured-data')
+    @stack('scripts')
+
     @if(\App\Helpers\SettingsHelper::googleAnalytics())
     <script async src="https://www.googletagmanager.com/gtag/js?id={{ \App\Helpers\SettingsHelper::googleAnalytics() }}"></script>
     <script>
@@ -705,7 +401,6 @@
     </script>
     @endif
 
-    <!-- Facebook Pixel -->
     @if(\App\Helpers\SettingsHelper::facebookPixel())
     <script>
         !function(f,b,e,v,n,t,s)
@@ -719,9 +414,6 @@
         fbq('init', '{{ \App\Helpers\SettingsHelper::facebookPixel() }}');
         fbq('track', 'PageView');
     </script>
-    <noscript><img height="1" width="1" style="display:none"
-        src="https://www.facebook.com/tr?id={{ \App\Helpers\SettingsHelper::facebookPixel() }}&ev=PageView&noscript=1"
-    /></noscript>
     @endif
 </body>
 </html>

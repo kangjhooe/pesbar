@@ -59,7 +59,15 @@ class AdminArticleController extends Controller
             $query->where('title', 'like', '%' . $request->search . '%');
         }
 
-        $articles = $query->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
+        $articles = \App\Helpers\AdminTableHelper::applySort($query, $request, [
+            'title' => 'title',
+            'status' => 'status',
+            'created_at' => 'created_at',
+            'published_at' => 'published_at',
+            'is_featured' => 'is_featured',
+            'is_breaking' => 'is_breaking',
+            'views' => 'views',
+        ], 'created_at', 'desc')->paginate(15)->withQueryString();
         $categories = Category::where('is_active', true)->get();
 
         return view('admin.articles.index', compact('articles', 'categories', 'tab'));
@@ -88,7 +96,6 @@ class AdminArticleController extends Controller
             'category_id' => 'required|exists:categories,id',
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'status' => 'required|in:draft,pending_review,published,rejected,archived',
-            'type' => 'required|in:berita,artikel',
             'is_featured' => 'boolean',
             'is_breaking' => 'boolean',
             'tags' => 'array',
@@ -100,6 +107,7 @@ class AdminArticleController extends Controller
         ]);
 
         $data = $request->all();
+        unset($data['type'], $data['views'], $data['tags']);
         $data['author_id'] = Auth::id();
         
         // Handle slug - use custom slug if provided, otherwise generate from title
@@ -181,7 +189,6 @@ class AdminArticleController extends Controller
             'category_id' => 'required|exists:categories,id',
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'status' => 'required|in:draft,pending_review,published,rejected,archived',
-            'type' => 'required|in:berita,artikel',
             'is_featured' => 'boolean',
             'is_breaking' => 'boolean',
             'tags' => 'array',
@@ -193,6 +200,7 @@ class AdminArticleController extends Controller
         ]);
 
         $data = $request->all();
+        unset($data['type'], $data['author_id'], $data['views'], $data['tags']);
         
         // Handle slug - use custom slug if provided and changed, otherwise keep existing or generate from title
         if ($request->slug && $request->slug !== $article->slug) {
@@ -256,6 +264,8 @@ class AdminArticleController extends Controller
      */
     public function destroy(Article $article)
     {
+        $this->authorize('delete', $article);
+
         DB::beginTransaction();
         try {
             $articleTitle = $article->title;
@@ -333,6 +343,8 @@ class AdminArticleController extends Controller
      */
     public function archive(Article $article)
     {
+        $this->authorize('update', $article);
+
         $article->update(['status' => 'archived']);
 
         // Clear article cache to reflect changes immediately
@@ -355,6 +367,8 @@ class AdminArticleController extends Controller
      */
     public function toggleFeatured(Article $article)
     {
+        $this->authorize('update', $article);
+
         $article->update(['is_featured' => !$article->is_featured]);
         
         // Clear article cache to reflect changes immediately
@@ -379,6 +393,8 @@ class AdminArticleController extends Controller
      */
     public function toggleBreaking(Article $article)
     {
+        $this->authorize('update', $article);
+
         $article->update(['is_breaking' => !$article->is_breaking]);
         
         // Clear article cache to reflect changes immediately
@@ -412,6 +428,11 @@ class AdminArticleController extends Controller
         try {
             $articleIds = $request->articles;
             $articles = Article::whereIn('id', $articleIds)->get();
+
+            foreach ($articles as $article) {
+                $ability = $request->action === 'delete' ? 'delete' : 'update';
+                $this->authorize($ability, $article);
+            }
 
             if ($articles->isEmpty()) {
                 $errorMessage = 'Tidak ada artikel yang ditemukan.';

@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'Kesalahan Server - Pesisir Barat Hub')
+@section('title', 'Kesalahan Server - ' . \App\Helpers\SettingsHelper::siteName())
 @section('description', 'Terjadi kesalahan pada server, silakan coba lagi nanti')
 
 @section('content')

@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Article;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class ArticlePolicy
 {
@@ -17,11 +16,21 @@ class ArticlePolicy
     }
 
     /**
-     * Determine whether the user can view the model.
+     * Dashboard/management view — not public read.
+     * Admin/editor: all articles. Penulis: own articles only.
+     * Other authenticated users: published articles only.
      */
     public function view(User $user, Article $article): bool
     {
-        return true; // Public articles can be viewed by anyone
+        if ($user->isAdmin() || $user->isEditor()) {
+            return true;
+        }
+
+        if ($user->isPenulis()) {
+            return $user->id === $article->author_id;
+        }
+
+        return $article->status === 'published' && $article->published_at !== null;
     }
 
     /**
@@ -37,16 +46,14 @@ class ArticlePolicy
      */
     public function update(User $user, Article $article): bool
     {
-        // Admin dan Editor bisa update semua artikel
         if ($user->isAdmin() || $user->isEditor()) {
             return true;
         }
-        
-        // Penulis hanya bisa update artikel miliknya
+
         if ($user->isPenulis()) {
             return $user->id === $article->author_id;
         }
-        
+
         return false;
     }
 
@@ -55,16 +62,14 @@ class ArticlePolicy
      */
     public function delete(User $user, Article $article): bool
     {
-        // Admin dan editor bisa delete semua artikel
         if ($user->isAdmin() || $user->isEditor()) {
             return true;
         }
-        
-        // Penulis hanya bisa delete artikel miliknya
+
         if ($user->isPenulis()) {
             return $user->id === $article->author_id;
         }
-        
+
         return false;
     }
 

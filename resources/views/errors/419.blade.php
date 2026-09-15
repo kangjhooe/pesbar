@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'Token CSRF Tidak Valid - Pesisir Barat Hub')
+@section('title', 'Token CSRF Tidak Valid - ' . \App\Helpers\SettingsHelper::siteName())
 @section('description', 'Token CSRF tidak valid, silakan refresh halaman dan coba lagi')
 
 @section('content')

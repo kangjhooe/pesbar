@@ -13,7 +13,7 @@
             <p class="text-sm text-gray-600">Total {{ $articles->total() }} artikel</p>
         </div>
         <div class="flex gap-2">
-            <a href="{{ route('admin.articles.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center">
+            <a href="{{ route('admin.articles.create') }}" class="bg-news-accent text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors flex items-center">
                 <i class="fas fa-plus mr-2"></i>
                 Tambah Artikel
             </a>
@@ -97,7 +97,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex items-center space-x-2">
-                                <a href="{{ route('articles.show', $article) }}" 
+                                <a href="{{ $article->publicUrl() }}" 
                                    class="text-blue-600 hover:text-blue-900" 
                                    title="Lihat">
                                     <i class="fas fa-eye"></i>

@@ -198,10 +198,6 @@
                     </div>
                     <div class="p-6 space-y-4">
                         <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-600">Tipe</span>
-                            <span class="text-sm font-medium capitalize">{{ $article->type }}</span>
-                        </div>
-                        <div class="flex justify-between items-center">
                             <span class="text-sm text-gray-600">Views</span>
                             <span class="text-sm font-medium">{{ number_format($article->views) }}</span>
                         </div>

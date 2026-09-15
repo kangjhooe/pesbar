@@ -67,11 +67,11 @@
                             </div>
                         </td>
                         <td class="px-6 py-4">
-                            <div class="text-sm text-gray-900">
-                                {{ Str::limit($comment->article->title, 40) }}
+                            <div class="text-sm text-gray-900 line-clamp-2" title="{{ $comment->article->title }}">
+                                {{ $comment->article->title }}
                             </div>
                             <div class="text-xs text-gray-500">
-                                <a href="{{ route('articles.show', $comment->article) }}" 
+                                <a href="{{ $comment->article->publicUrl() }}" 
                                    class="text-primary-600 hover:text-primary-800">
                                     Lihat artikel
                                 </a>

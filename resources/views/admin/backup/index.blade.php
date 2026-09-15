@@ -13,7 +13,7 @@
             <form action="{{ route('admin.backup.create') }}" method="POST" class="inline">
                 @csrf
                 <button type="submit" 
-                        class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+                        class="bg-news-accent text-white px-6 py-2 rounded-lg hover:bg-red-800 transition-colors flex items-center"
                         onclick="return confirm('Apakah Anda yakin ingin membuat backup database?')">
                     <i class="fas fa-database mr-2"></i>
                     Buat Backup Database
@@ -109,15 +109,15 @@
                 <p class="text-sm text-gray-600 mb-4">Konfigurasi backup otomatis</p>
                 <div class="space-y-3">
                     <label class="flex items-center">
-                        <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-news-accent">
                         <span class="ml-2 text-sm text-gray-700">Aktifkan backup harian</span>
                     </label>
                     <label class="flex items-center">
-                        <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-news-accent">
                         <span class="ml-2 text-sm text-gray-700">Aktifkan backup mingguan</span>
                     </label>
                     <label class="flex items-center">
-                        <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-news-accent">
                         <span class="ml-2 text-sm text-gray-700">Aktifkan backup bulanan</span>
                     </label>
                 </div>
@@ -129,7 +129,7 @@
                 <div class="space-y-3">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Backup Harian</label>
-                        <select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">
                             <option value="7">7 hari</option>
                             <option value="14">14 hari</option>
                             <option value="30" selected>30 hari</option>
@@ -137,7 +137,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Backup Mingguan</label>
-                        <select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">
                             <option value="4">4 minggu</option>
                             <option value="8">8 minggu</option>
                             <option value="12" selected>12 minggu</option>
@@ -145,7 +145,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Backup Bulanan</label>
-                        <select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">
                             <option value="6">6 bulan</option>
                             <option value="12" selected>12 bulan</option>
                             <option value="24">24 bulan</option>
@@ -156,7 +156,7 @@
         </div>
         
         <div class="mt-6 flex justify-end">
-            <button class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+            <button class="bg-news-accent text-white px-6 py-2 rounded-lg hover:bg-red-800 transition-colors">
                 Simpan Pengaturan
             </button>
         </div>
@@ -171,7 +171,7 @@
                     <i class="fas fa-info-circle text-blue-600 text-xl mr-3"></i>
                     <div>
                         <h4 class="text-sm font-medium text-blue-900">Lokasi Backup</h4>
-                        <p class="text-sm text-blue-700">storage/app/backups/</p>
+                        <p class="text-sm text-news-accent">storage/app/backups/</p>
                     </div>
                 </div>
             </div>

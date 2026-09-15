@@ -38,7 +38,7 @@ class ArticlePublished extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         $siteName = SettingsHelper::siteName();
-        $articleUrl = route('articles.show', $this->article);
+        $articleUrl = $this->article->publicUrl();
         
         return (new MailMessage)
             ->subject('Artikel Anda Telah Dipublikasikan: ' . $this->article->title)

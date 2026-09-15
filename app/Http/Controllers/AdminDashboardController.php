@@ -3,34 +3,41 @@
 namespace App\Http\Controllers;
 
 use App\Models\Article;
+use App\Models\Comment;
+use App\Models\ReadingHistory;
 use App\Models\User;
 use App\Helpers\ActivityLogHelper;
+use App\Helpers\AdminTableHelper;
+use App\Helpers\CacheHelper;
 use App\Services\BackupService;
 use App\Services\AnalyticsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class AdminDashboardController extends Controller
 {
     public function index()
     {
-        // Statistik dasar
+        $pendingCommentsCount = Comment::where('is_approved', false)->count();
+        $pendingArticlesCount = Article::where('status', 'pending_review')->count();
+
         $stats = [
             'total_users' => User::count(),
             'total_penulis' => User::where('role', 'penulis')->count(),
             'total_articles' => Article::count(),
-            'pending_articles' => Article::where('status', 'pending_review')->count(),
+            'pending_articles' => $pendingArticlesCount,
             'published_articles' => Article::where('status', 'published')->count(),
             'draft_articles' => Article::where('status', 'draft')->count(),
             'rejected_articles' => Article::where('status', 'rejected')->count(),
-            'total_views' => Article::sum('views'),
+            'total_views' => (int) Article::sum('views'),
             'total_categories' => \App\Models\Category::count(),
-            'total_comments' => \App\Models\Comment::count(),
-            'pending_comments' => \App\Models\Comment::where('is_approved', false)->count(),
+            'total_comments' => Comment::count(),
+            'pending_comments' => $pendingCommentsCount,
             'newsletter_subscribers' => \App\Models\NewsletterSubscriber::count(),
             'articles_today' => Article::whereDate('created_at', today())->count(),
-            'views_today' => Article::whereDate('created_at', today())->sum('views'),
-            'comments_today' => \App\Models\Comment::whereDate('created_at', today())->count(),
+            'reads_today' => ReadingHistory::whereDate('read_at', today())->count(),
+            'comments_today' => Comment::whereDate('created_at', today())->count(),
             'pending_verification_requests' => User::where('role', 'penulis')
                 ->where('verification_request_status', 'pending')
                 ->count(),
@@ -39,7 +46,6 @@ class AdminDashboardController extends Controller
                 ->count(),
         ];
 
-        // Statistik bulanan
         $monthlyStats = [
             'articles_this_month' => Article::whereMonth('created_at', now()->month)
                 ->whereYear('created_at', now()->year)
@@ -47,102 +53,104 @@ class AdminDashboardController extends Controller
             'users_this_month' => User::whereMonth('created_at', now()->month)
                 ->whereYear('created_at', now()->year)
                 ->count(),
-            'views_this_month' => Article::whereMonth('created_at', now()->month)
-                ->whereYear('created_at', now()->year)
-                ->sum('views'),
         ];
 
-        // Data untuk chart (7 hari terakhir)
         $chartData = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i);
             $chartData[] = [
                 'date' => $date->format('d/m'),
                 'articles' => Article::whereDate('created_at', $date)->count(),
-                'users' => User::whereDate('created_at', $date)->count(),
-                'views' => Article::whereDate('created_at', $date)->sum('views'),
+                'comments' => Comment::whereDate('created_at', $date)->count(),
             ];
         }
 
-        // Artikel terbaru
         $recent_articles = Article::with(['author', 'category'])
             ->orderBy('created_at', 'desc')
-            ->limit(5)
+            ->limit(8)
             ->get();
 
-        // Artikel populer (berdasarkan view count)
-        $popular_articles = Article::where('status', 'published')
-            ->orderBy('views', 'desc')
-            ->limit(5)
-            ->get();
-
-        // Kategori dengan artikel terbanyak
-        $category_stats = \App\Models\Category::withCount('articles')
-            ->orderBy('articles_count', 'desc')
-            ->limit(5)
-            ->get();
-
-        // Komentar terbaru
-        $recent_comments = \App\Models\Comment::with('article')
+        $recent_comments = Comment::with('article')
             ->latest()
             ->limit(5)
             ->get();
 
-        // Aktivitas terbaru
         $recent_activity = collect();
-        
-        // Tambahkan artikel terbaru ke aktivitas
-        $recent_articles->each(function ($article) use ($recent_activity) {
+
+        $recent_articles->take(5)->each(function ($article) use ($recent_activity) {
             $recent_activity->push([
                 'type' => 'article',
-                'action' => $article->status === 'published' ? 'diterbitkan' : 'dibuat',
+                'action' => $article->status === 'published' ? 'menerbitkan artikel' : 'membuat artikel',
                 'title' => $article->title,
                 'user' => $article->author->name ?? 'Sistem',
                 'time' => $article->created_at,
-                'icon' => 'fas fa-newspaper',
-                'color' => $article->status === 'published' ? 'green' : 'yellow'
+                'color' => $article->status === 'published' ? 'green' : ($article->status === 'pending_review' ? 'yellow' : 'gray'),
             ]);
         });
 
-        // Tambahkan komentar terbaru ke aktivitas
         $recent_comments->each(function ($comment) use ($recent_activity) {
             $recent_activity->push([
                 'type' => 'comment',
                 'action' => 'berkomentar',
-                'title' => 'Komentar pada: ' . $comment->article->title,
-                'user' => $comment->name,
+                'title' => $comment->article->title ?? 'Artikel',
+                'user' => $comment->name ?? 'Anonim',
                 'time' => $comment->created_at,
-                'icon' => 'fas fa-comment',
-                'color' => 'blue'
+                'color' => 'blue',
             ]);
         });
 
-        // Urutkan aktivitas berdasarkan waktu
-        $recent_activity = $recent_activity->sortByDesc('time')->take(10);
-
-
-        // Pass pending comments count to sidebar
-        $pendingCommentsCount = \App\Models\Comment::where('is_approved', false)->count();
-        $pendingArticlesCount = Article::where('status', 'pending_review')->count();
+        $recent_activity = $recent_activity->sortByDesc('time')->take(10)->values();
 
         return view('admin.dashboard', compact(
-            'stats', 
-            'monthlyStats', 
-            'chartData', 
-            'recent_articles', 
-            'popular_articles', 
-            'category_stats', 
-            'recent_comments', 
-            'recent_activity', 
+            'stats',
+            'monthlyStats',
+            'chartData',
+            'recent_articles',
+            'recent_activity',
             'pendingCommentsCount',
             'pendingArticlesCount'
         ));
     }
 
-    public function users()
+    public function users(Request $request)
     {
-        $users = User::with('profile')->paginate(15);
+        $query = User::with('profile');
+        $query = AdminTableHelper::applySort($query, $request, [
+            'name' => 'name',
+            'role' => 'role',
+            'verified' => 'verified',
+            'created_at' => 'created_at',
+        ], 'created_at', 'desc');
+
+        $users = $query->paginate(15)->withQueryString();
         return view('admin.users.index', compact('users'));
+    }
+
+    public function bulkUsers(Request $request)
+    {
+        $request->validate([
+            'action' => 'required|in:verify,unverify,upgrade',
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:users,id',
+        ]);
+
+        $users = User::whereIn('id', $request->ids)->get();
+        $count = 0;
+
+        foreach ($users as $user) {
+            if ($request->action === 'verify' && !$user->verified) {
+                $user->update(['verified' => true]);
+                $count++;
+            } elseif ($request->action === 'unverify' && $user->verified) {
+                $user->update(['verified' => false]);
+                $count++;
+            } elseif ($request->action === 'upgrade' && $user->role === 'user') {
+                $user->update(['role' => 'penulis']);
+                $count++;
+            }
+        }
+
+        return redirect()->back()->with('success', "{$count} pengguna berhasil diproses.");
     }
 
     public function upgradeUser(User $user)
@@ -162,15 +170,61 @@ class AdminDashboardController extends Controller
         }
     }
 
-    public function verificationRequests()
+    public function verificationRequests(Request $request)
     {
-        $requests = User::where('role', 'penulis')
+        $query = User::where('role', 'penulis')
             ->where('verification_request_status', 'pending')
             ->with('profile')
-            ->orderBy('verification_requested_at', 'desc')
-            ->paginate(15);
+            ->withCount('articles');
+
+        $query = AdminTableHelper::applySort($query, $request, [
+            'name' => 'name',
+            'verification_type' => 'verification_type',
+            'articles_count' => 'articles_count',
+            'verification_requested_at' => 'verification_requested_at',
+        ], 'verification_requested_at', 'desc');
+
+        $requests = $query->paginate(15)->withQueryString();
 
         return view('admin.verification-requests', compact('requests'));
+    }
+
+    public function bulkVerificationRequests(Request $request)
+    {
+        $request->validate([
+            'action' => 'required|in:approve,reject',
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:users,id',
+        ]);
+
+        $users = User::whereIn('id', $request->ids)
+            ->where('role', 'penulis')
+            ->where('verification_request_status', 'pending')
+            ->get();
+
+        $count = 0;
+        foreach ($users as $user) {
+            if ($request->action === 'approve') {
+                $user->update([
+                    'verified' => true,
+                    'verification_request_status' => 'approved',
+                ]);
+                $user->articles()
+                    ->where('status', 'pending_review')
+                    ->update([
+                        'status' => 'published',
+                        'published_at' => now(),
+                    ]);
+            } else {
+                $user->update([
+                    'verification_request_status' => 'rejected',
+                ]);
+            }
+            $count++;
+        }
+
+        $label = $request->action === 'approve' ? 'disetujui' : 'ditolak';
+        return redirect()->back()->with('success', "{$count} permintaan verifikasi berhasil {$label}.");
     }
 
     public function approveVerification(User $user)
@@ -521,7 +575,10 @@ class AdminDashboardController extends Controller
             $query->whereDate('created_at', '<=', $request->date_to);
         }
         
-        $articles = $query->latest()->paginate(15);
+        $articles = AdminTableHelper::applySort($query, $request, [
+            'title' => 'title',
+            'created_at' => 'created_at',
+        ], 'created_at', 'desc')->paginate(15)->withQueryString();
         
         // Pass data for sidebar
         $pendingArticlesCount = Article::where('status', 'pending_review')->count();
@@ -531,9 +588,16 @@ class AdminDashboardController extends Controller
     }
 
     // Categories Management
-    public function categories()
+    public function categories(Request $request)
     {
-        $categories = \App\Models\Category::withCount('articles')->paginate(15);
+        $query = \App\Models\Category::withCount('articles');
+        $query = AdminTableHelper::applySort($query, $request, [
+            'name' => 'name',
+            'articles_count' => 'articles_count',
+            'created_at' => 'created_at',
+        ], 'name', 'asc');
+
+        $categories = $query->paginate(15)->withQueryString();
         return view('admin.categories.index', compact('categories'));
     }
 
@@ -574,21 +638,152 @@ class AdminDashboardController extends Controller
 
     public function destroyCategory(\App\Models\Category $category)
     {
-        if ($category->articles()->count() > 0) {
-            return redirect()->back()->with('error', 'Tidak dapat menghapus kategori yang memiliki artikel!');
+        $result = $this->forceDeleteCategory($category);
+
+        if (!$result['success']) {
+            return redirect()->back()->with('error', $result['message']);
         }
-        
-        $category->delete();
-        return redirect()->back()->with('success', 'Kategori berhasil dihapus!');
+
+        return redirect()->back()->with('success', $result['message']);
+    }
+
+    public function bulkCategories(Request $request)
+    {
+        $request->validate([
+            'action' => 'required|in:delete',
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:categories,id',
+        ]);
+
+        $categories = \App\Models\Category::whereIn('id', $request->ids)->get();
+        $deleted = 0;
+        $movedArticles = 0;
+        $errors = [];
+
+        foreach ($categories as $category) {
+            $result = $this->forceDeleteCategory($category, false);
+            if ($result['success']) {
+                $deleted++;
+                $movedArticles += $result['moved'] ?? 0;
+            } else {
+                $errors[] = $result['message'];
+            }
+        }
+
+        if ($movedArticles > 0) {
+            CacheHelper::clearArticleCache();
+        }
+
+        if ($deleted === 0) {
+            return redirect()->back()->with('error', $errors[0] ?? 'Tidak ada kategori yang dihapus.');
+        }
+
+        $message = "{$deleted} kategori berhasil dihapus.";
+        if ($movedArticles > 0) {
+            $message .= " {$movedArticles} artikel dialihkan ke kategori lain.";
+        }
+
+        return redirect()->back()->with('success', $message);
+    }
+
+    /**
+     * Force-delete a category and reassign its articles to another category.
+     */
+    protected function forceDeleteCategory(\App\Models\Category $category, bool $clearCache = true): array
+    {
+        $fallbackCategory = \App\Models\Category::where('id', '!=', $category->id)
+            ->orderBy('name')
+            ->first();
+
+        $articleCount = $category->articles()->count();
+
+        if ($articleCount > 0 && !$fallbackCategory) {
+            return [
+                'success' => false,
+                'message' => 'Tidak dapat menghapus kategori terakhir yang masih memiliki artikel!',
+                'moved' => 0,
+            ];
+        }
+
+        DB::transaction(function () use ($category, $fallbackCategory, $articleCount) {
+            if ($articleCount > 0) {
+                $category->articles()->update([
+                    'category_id' => $fallbackCategory->id,
+                ]);
+            }
+
+            $category->delete();
+        });
+
+        if ($clearCache && $articleCount > 0) {
+            CacheHelper::clearArticleCache();
+        }
+
+        $message = $articleCount > 0
+            ? "Kategori berhasil dihapus! {$articleCount} artikel dialihkan ke kategori \"{$fallbackCategory->name}\"."
+            : 'Kategori berhasil dihapus!';
+
+        return [
+            'success' => true,
+            'message' => $message,
+            'moved' => $articleCount,
+        ];
     }
 
     // Comments Management
-    public function comments()
+    public function comments(Request $request)
     {
-        $comments = \App\Models\Comment::with(['article'])
-            ->latest()
-            ->paginate(15);
+        $query = \App\Models\Comment::with(['article']);
+
+        if ($request->filled('status')) {
+            if ($request->status === 'approved') {
+                $query->where('is_approved', true);
+            } elseif ($request->status === 'pending') {
+                $query->where('is_approved', false);
+            }
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('content', 'like', "%{$search}%")
+                    ->orWhere('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $query = AdminTableHelper::applySort($query, $request, [
+            'name' => 'name',
+            'is_approved' => 'is_approved',
+            'created_at' => 'created_at',
+        ], 'created_at', 'desc');
+
+        $comments = $query->paginate(15)->withQueryString();
         return view('admin.comments.index', compact('comments'));
+    }
+
+    public function bulkComments(Request $request)
+    {
+        $request->validate([
+            'action' => 'required|in:approve,reject,delete',
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:comments,id',
+        ]);
+
+        $query = \App\Models\Comment::whereIn('id', $request->ids);
+
+        if ($request->action === 'approve') {
+            $count = $query->update(['is_approved' => true]);
+            return redirect()->back()->with('success', "{$count} komentar berhasil disetujui.");
+        }
+
+        if ($request->action === 'reject') {
+            $count = $query->update(['is_approved' => false]);
+            return redirect()->back()->with('success', "{$count} komentar berhasil ditolak.");
+        }
+
+        $count = $query->delete();
+        return redirect()->back()->with('success', "{$count} komentar berhasil dihapus.");
     }
 
     public function approveComment(\App\Models\Comment $comment)
@@ -610,10 +805,53 @@ class AdminDashboardController extends Controller
     }
 
     // Penulis Management
-    public function penulis()
+    public function penulis(Request $request)
     {
-        $penulis = User::where('role', 'penulis')->with('profile')->paginate(15);
+        $query = User::where('role', 'penulis')
+            ->with('profile')
+            ->withCount('articles')
+            ->withSum('articles', 'views');
+
+        $query = AdminTableHelper::applySort($query, $request, [
+            'name' => 'name',
+            'verified' => 'verified',
+            'articles_count' => 'articles_count',
+            'created_at' => 'created_at',
+        ], 'created_at', 'desc');
+
+        $penulis = $query->paginate(15)->withQueryString();
         return view('admin.penulis.index', compact('penulis'));
+    }
+
+    public function bulkPenulis(Request $request)
+    {
+        $request->validate([
+            'action' => 'required|in:verify,unverify,demote',
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:users,id',
+        ]);
+
+        $users = User::whereIn('id', $request->ids)->where('role', 'penulis')->get();
+        $count = 0;
+
+        foreach ($users as $user) {
+            if ($request->action === 'verify') {
+                $user->update(['verified' => true]);
+                $count++;
+            } elseif ($request->action === 'unverify') {
+                $user->update(['verified' => false]);
+                $count++;
+            } elseif ($request->action === 'demote') {
+                $user->update([
+                    'role' => 'user',
+                    'verified' => false,
+                    'verification_request_status' => null,
+                ]);
+                $count++;
+            }
+        }
+
+        return redirect()->back()->with('success', "{$count} penulis berhasil diproses.");
     }
 
     public function promoteToPenulis(User $user)
@@ -656,10 +894,41 @@ class AdminDashboardController extends Controller
     }
 
     // Newsletter Management
-    public function newsletter()
+    public function newsletter(Request $request)
     {
-        $subscribers = \App\Models\NewsletterSubscriber::latest()->paginate(15);
+        $query = \App\Models\NewsletterSubscriber::query();
+        $query = AdminTableHelper::applySort($query, $request, [
+            'email' => 'email',
+            'is_active' => 'is_active',
+            'created_at' => 'created_at',
+        ], 'created_at', 'desc');
+
+        $subscribers = $query->paginate(15)->withQueryString();
         return view('admin.newsletter.index', compact('subscribers'));
+    }
+
+    public function bulkNewsletter(Request $request)
+    {
+        $request->validate([
+            'action' => 'required|in:activate,deactivate,delete',
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:newsletter_subscribers,id',
+        ]);
+
+        $query = \App\Models\NewsletterSubscriber::whereIn('id', $request->ids);
+
+        if ($request->action === 'activate') {
+            $count = $query->update(['is_active' => true]);
+            return redirect()->back()->with('success', "{$count} subscriber diaktifkan.");
+        }
+
+        if ($request->action === 'deactivate') {
+            $count = $query->update(['is_active' => false]);
+            return redirect()->back()->with('success', "{$count} subscriber dinonaktifkan.");
+        }
+
+        $count = $query->delete();
+        return redirect()->back()->with('success', "{$count} subscriber dihapus.");
     }
 
     public function sendNewsletter(Request $request)

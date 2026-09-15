@@ -118,7 +118,7 @@
                         <span class="text-sm font-bold text-white">{{ $index + 1 }}</span>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <h4 class="text-sm font-semibold text-gray-900 truncate">
+                        <h4 class="text-sm font-semibold text-gray-900 line-clamp-2" title="{{ $article->title }}">
                             {{ $article->title }}
                         </h4>
                         <p class="text-xs text-gray-500 mt-1">

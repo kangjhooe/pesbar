@@ -113,7 +113,7 @@ class SeoHelper
             'dateModified' => $article->updated_at->toISOString(),
             'mainEntityOfPage' => [
                 '@type' => 'WebPage',
-                '@id' => route('articles.show', $article)
+                '@id' => $article->publicUrl()
             ]
         ];
     }

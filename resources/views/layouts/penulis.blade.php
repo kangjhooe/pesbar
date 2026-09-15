@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Dashboard Penulis - Pesisir Barat Hub')</title>
+    <title>@yield('title', 'Dashboard Penulis - ' . \App\Helpers\SettingsHelper::siteName())</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ \App\Helpers\SettingsHelper::siteFavicon() }}">
@@ -220,7 +220,7 @@
         </aside>
 
         <!-- Main Content -->
-        <div class="flex-1 flex flex-col lg:ml-64">
+        <div class="flex-1 flex flex-col lg:ml-64 min-w-0 dashboard-main">
             <!-- Top Bar -->
             <header class="bg-white shadow-sm border-b border-gray-200 safe-top">
                 <div class="flex items-center justify-between px-4 lg:px-6 py-4">
@@ -251,7 +251,7 @@
             </header>
 
             <!-- Page Content -->
-            <main class="flex-1 p-4 lg:p-6 safe-bottom overflow-y-auto">
+            <main class="flex-1 p-3 sm:p-4 lg:p-6 safe-bottom overflow-y-auto overflow-x-hidden min-w-0">
                 @if(session('success'))
                     <div class="notification-toast notification-success mb-6 animate-slide-down">
                         <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 rounded-lg shadow-lg p-4">
@@ -337,7 +337,7 @@
             toggleSidebar();
         });
         
-        // Handle window resize
+        // Handle window resize — open on desktop, force-close on smaller screens
         window.addEventListener('resize', function() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('mobile-overlay');
@@ -345,7 +345,11 @@
             if (window.innerWidth >= 1024) {
                 sidebar.classList.remove('-translate-x-full');
                 overlay.classList.add('hidden');
-                document.body.style.overflow = ''; // Restore scrolling
+                document.body.style.overflow = '';
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+                document.body.style.overflow = '';
             }
         });
         

@@ -43,7 +43,7 @@
 
                     <!-- Title -->
                     <h2 class="text-lg font-bold text-gray-900 leading-tight mb-3 line-clamp-2">
-                        <a href="{{ route('articles.show', $item->article) }}" 
+                        <a href="{{ $item->article->publicUrl() }}" 
                            class="hover:text-primary-600 transition-colors">
                             {{ $item->article->title }}
                         </a>
@@ -68,7 +68,7 @@
                                 <span>{{ number_format($item->article->views) }}</span>
                             </span>
                         </div>
-                        <a href="{{ route('articles.show', $item->article) }}" 
+                        <a href="{{ $item->article->publicUrl() }}" 
                            class="text-primary-600 hover:text-primary-700 font-semibold flex items-center space-x-1 group">
                             <span>Baca Lagi</span>
                             <i class="fas fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>

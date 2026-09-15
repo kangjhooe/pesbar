@@ -35,7 +35,7 @@
                            name="name" 
                            value="{{ old('name', $category->name) }}"
                            required
-                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('name') border-red-500 @enderror"
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('name') border-red-500 @enderror"
                            placeholder="Masukkan nama kategori">
                     @error('name')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -50,7 +50,7 @@
                     <textarea id="description" 
                               name="description" 
                               rows="4"
-                              class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('description') border-red-500 @enderror"
+                              class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('description') border-red-500 @enderror"
                               placeholder="Masukkan deskripsi kategori (opsional)">{{ old('description', $category->description) }}</textarea>
                     @error('description')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -72,7 +72,7 @@
                             <input type="text" 
                                    id="color-text" 
                                    value="{{ old('color', $category->color ?? '#3b82f6') }}"
-                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent"
                                    placeholder="#3b82f6"
                                    readonly>
                         </div>
@@ -116,13 +116,13 @@
                 </a>
                 <div class="flex items-center space-x-3">
                     <button type="button" 
-                            onclick="if(confirm('Apakah Anda yakin ingin menghapus kategori ini?')) { document.getElementById('delete-form').submit(); }"
+                            onclick="if(confirm('Hapus kategori ini? Artikel terkait akan dialihkan ke kategori lain.')) { document.getElementById('delete-form').submit(); }"
                             class="px-4 py-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
                         <i class="fas fa-trash mr-2"></i>
                         Hapus
                     </button>
                     <button type="submit" 
-                            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            class="px-6 py-2 bg-news-accent text-white rounded-lg hover:bg-red-800 transition-colors">
                         <i class="fas fa-save mr-2"></i>
                         Simpan Perubahan
                     </button>

@@ -23,7 +23,6 @@ class AdvancedSearchService
         $author = $params['author'] ?? null;
         $dateFrom = $params['date_from'] ?? null;
         $dateTo = $params['date_to'] ?? null;
-        $type = $params['type'] ?? null;
         $sortBy = $params['sort_by'] ?? 'relevance';
         $perPage = $params['per_page'] ?? 12;
 
@@ -62,10 +61,6 @@ class AdvancedSearchService
             }
         }
 
-        if ($type) {
-            $articles->where('type', $type);
-        }
-
         // Apply sorting
         $articles = $this->applySorting($articles, $sortBy);
 
@@ -85,7 +80,6 @@ class AdvancedSearchService
                 'author' => $author,
                 'date_from' => $dateFrom,
                 'date_to' => $dateTo,
-                'type' => $type,
                 'sort_by' => $sortBy,
             ],
             'stats' => [
@@ -190,7 +184,7 @@ class AdvancedSearchService
             foreach ($articles as $article) {
                 $suggestions[] = [
                     'text' => $article->title,
-                    'url' => route('articles.show', $article),
+                    'url' => $article->publicUrl(),
                     'type' => 'article',
                 ];
             }

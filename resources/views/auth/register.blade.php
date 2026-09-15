@@ -1,101 +1,70 @@
 <x-guest-layout>
-    <!-- Header -->
     <div class="mb-6 text-center">
-        <h2 class="text-2xl font-bold text-gray-900 mb-1">Daftar Akun Baru</h2>
-        <p class="text-sm text-gray-600">Bergabunglah dengan komunitas Pesisir Barat</p>
+        <h2 class="font-display text-2xl sm:text-3xl font-bold text-news-ink mb-1">Daftar</h2>
+        <p class="text-sm text-news-muted">Bergabunglah dengan komunitas Pesisir Barat</p>
     </div>
 
-    <!-- Google OAuth Button -->
-    <div class="mb-4">
-        <a href="{{ route('auth.google') }}" class="w-full flex justify-center items-center px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
-            <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-            </svg>
-            Daftar dengan Google
-        </a>
-    </div>
-
-
-
+    {{-- Google OAuth disembunyikan sementara; tampilkan lagi setelah GOOGLE_* di .env siap --}}
     <form method="POST" action="{{ route('register') }}" class="space-y-4">
         @csrf
 
-        <!-- Name -->
         <div>
-            <x-input-label for="name" :value="__('Nama Lengkap')" />
-            <x-text-input id="name" class="block mt-1 w-full px-3 py-2" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" placeholder="Masukkan nama lengkap Anda" />
+            <x-input-label for="name" :value="__('Nama Lengkap')" class="text-sm font-semibold text-news-ink" />
+            <x-text-input id="name" class="block mt-1.5 w-full px-3 py-2.5 border-news-line rounded-sm shadow-none placeholder:text-news-muted/70 focus:border-news-accent focus:ring-news-accent" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" placeholder="Masukkan nama lengkap Anda" />
             <x-input-error :messages="$errors->get('name')" class="mt-1" />
         </div>
 
-        <!-- Username -->
         <div>
-            <x-input-label for="username" :value="__('Username')" />
-            <x-text-input id="username" class="block mt-1 w-full px-3 py-2" type="text" name="username" :value="old('username')" required autocomplete="username" placeholder="contoh: johndoe" pattern="[a-zA-Z0-9_-]+" minlength="3" maxlength="30" />
-            <p class="mt-1 text-xs text-gray-500">Hanya huruf, angka, dash (-), dan underscore (_). Minimal 3 karakter.</p>
+            <x-input-label for="username" :value="__('Username')" class="text-sm font-semibold text-news-ink" />
+            <x-text-input id="username" class="block mt-1.5 w-full px-3 py-2.5 border-news-line rounded-sm shadow-none placeholder:text-news-muted/70 focus:border-news-accent focus:ring-news-accent" type="text" name="username" :value="old('username')" required autocomplete="username" placeholder="contoh: johndoe" pattern="[a-zA-Z0-9_-]+" minlength="3" maxlength="30" />
+            <p class="mt-1 text-xs text-news-muted">Hanya huruf, angka, dash (-), dan underscore (_). Minimal 3 karakter.</p>
             <x-input-error :messages="$errors->get('username')" class="mt-1" />
         </div>
 
-        <!-- Email Address -->
         <div>
-            <x-input-label for="email" :value="__('Alamat Email')" />
-            <x-text-input id="email" class="block mt-1 w-full px-3 py-2" type="email" name="email" :value="old('email')" required autocomplete="username" placeholder="contoh@email.com" />
+            <x-input-label for="email" :value="__('Alamat Email')" class="text-sm font-semibold text-news-ink" />
+            <x-text-input id="email" class="block mt-1.5 w-full px-3 py-2.5 border-news-line rounded-sm shadow-none placeholder:text-news-muted/70 focus:border-news-accent focus:ring-news-accent" type="email" name="email" :value="old('email')" required autocomplete="username" placeholder="contoh@email.com" />
             <x-input-error :messages="$errors->get('email')" class="mt-1" />
         </div>
 
-        <!-- Password -->
         <div>
-            <x-input-label for="password" :value="__('Kata Sandi')" />
-            <x-text-input id="password" class="block mt-1 w-full px-3 py-2"
+            <x-input-label for="password" :value="__('Kata Sandi')" class="text-sm font-semibold text-news-ink" />
+            <x-text-input id="password" class="block mt-1.5 w-full px-3 py-2.5 border-news-line rounded-sm shadow-none placeholder:text-news-muted/70 focus:border-news-accent focus:ring-news-accent"
                             type="password"
                             name="password"
-                            required autocomplete="new-password" 
+                            required autocomplete="new-password"
                             placeholder="Minimal 8 karakter" />
             <x-input-error :messages="$errors->get('password')" class="mt-1" />
         </div>
 
-        <!-- Confirm Password -->
         <div>
-            <x-input-label for="password_confirmation" :value="__('Konfirmasi Kata Sandi')" />
-            <x-text-input id="password_confirmation" class="block mt-1 w-full px-3 py-2"
+            <x-input-label for="password_confirmation" :value="__('Konfirmasi Kata Sandi')" class="text-sm font-semibold text-news-ink" />
+            <x-text-input id="password_confirmation" class="block mt-1.5 w-full px-3 py-2.5 border-news-line rounded-sm shadow-none placeholder:text-news-muted/70 focus:border-news-accent focus:ring-news-accent"
                             type="password"
-                            name="password_confirmation" required autocomplete="new-password" 
+                            name="password_confirmation" required autocomplete="new-password"
                             placeholder="Ulangi kata sandi Anda" />
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-1" />
         </div>
 
-        <!-- Terms and Conditions -->
-        <div class="flex items-start">
-            <div class="flex items-center h-5">
-                <input id="terms" name="terms" type="checkbox" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded" required>
-            </div>
-            <div class="ml-3 text-sm">
-                <label for="terms" class="font-medium text-gray-700">
-                    Saya menyetujui 
-                    <a href="{{ route('terms') }}" target="_blank" class="text-blue-600 hover:text-blue-500 underline">Syarat dan Ketentuan</a>
-                    dan 
-                    <a href="{{ route('privacy') }}" target="_blank" class="text-blue-600 hover:text-blue-500 underline">Kebijakan Privasi</a>
-                </label>
-            </div>
+        <div class="flex items-start gap-3">
+            <input id="terms" name="terms" type="checkbox" class="mt-0.5 rounded-sm border-news-line text-news-accent shadow-none focus:ring-news-accent" required>
+            <label for="terms" class="text-sm text-news-muted">
+                Saya menyetujui
+                <a href="{{ route('terms') }}" target="_blank" class="font-semibold text-news-accent hover:text-news-ink underline-offset-2 hover:underline">Syarat dan Ketentuan</a>
+                dan
+                <a href="{{ route('privacy') }}" target="_blank" class="font-semibold text-news-accent hover:text-news-ink underline-offset-2 hover:underline">Kebijakan Privasi</a>
+            </label>
         </div>
 
-        <!-- Submit Button -->
-        <div>
-            <x-primary-button class="w-full justify-center py-2.5 text-sm font-medium">
-                {{ __('Daftar Sekarang') }}
-            </x-primary-button>
-        </div>
+        <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-3 bg-news-ink text-white text-sm font-bold hover:bg-news-accent focus:outline-none focus:ring-2 focus:ring-news-accent focus:ring-offset-2 transition-colors">
+            {{ __('Daftar Sekarang') }}
+        </button>
 
-        <!-- Login Link -->
-        <div class="text-center">
-            <p class="text-sm text-gray-600">
-                Sudah punya akun? 
-                <a class="font-medium text-blue-600 hover:text-blue-500 focus:outline-none focus:underline transition ease-in-out duration-150" href="{{ route('login') }}">
-                    Masuk di sini
-                </a>
-            </p>
-        </div>
+        <p class="text-center text-sm text-news-muted">
+            Sudah punya akun?
+            <a class="font-semibold text-news-accent hover:text-news-ink transition-colors" href="{{ route('login') }}">
+                Masuk di sini
+            </a>
+        </p>
     </form>
 </x-guest-layout>

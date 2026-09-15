@@ -12,7 +12,7 @@
         <div class="flex flex-wrap gap-4">
             <form action="{{ route('admin.reports.export') }}" method="GET" class="inline">
                 <input type="hidden" name="type" value="articles">
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center">
+                <button type="submit" class="bg-news-accent text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors flex items-center">
                     <i class="fas fa-file-excel mr-2"></i>
                     Export Artikel
                 </button>

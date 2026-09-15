@@ -71,7 +71,7 @@ class TestEventPopup extends Command
             $this->line("Period: {$activePopup->start_date->format('d-m-Y')} to {$activePopup->end_date->format('d-m-Y')}");
             $this->line("Days remaining: " . max(0, Carbon::now()->diffInDays($activePopup->end_date, false)) . " days");
             $this->line('');
-            $this->info('✅ This popup will be displayed to visitors on the homepage');
+            $this->info('✅ This popup will be displayed to visitors on all public pages');
         } else {
             $this->warn('❌ No active popup found');
             $this->line('To create an active popup:');

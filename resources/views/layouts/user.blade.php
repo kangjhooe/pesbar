@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Dashboard User - Pesisir Barat Hub')</title>
+    <title>@yield('title', 'Dashboard User - ' . \App\Helpers\SettingsHelper::siteName())</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ \App\Helpers\SettingsHelper::siteFavicon() }}">
@@ -191,8 +191,18 @@
         </div>
     </nav>
 
+    <!-- Quick nav (mobile) -->
+    <div class="bg-white border-b border-gray-200 sm:hidden overflow-x-auto nav-scroll">
+        <div class="flex gap-1 px-3 py-2 min-w-max">
+            <a href="{{ route('user.dashboard') }}" class="px-3 py-2 text-xs font-semibold rounded-lg whitespace-nowrap {{ request()->routeIs('user.dashboard') ? 'bg-primary-50 text-primary-700' : 'text-gray-600' }}">Dashboard</a>
+            <a href="{{ route('user.bookmarks') }}" class="px-3 py-2 text-xs font-semibold rounded-lg whitespace-nowrap {{ request()->routeIs('user.bookmarks') ? 'bg-primary-50 text-primary-700' : 'text-gray-600' }}">Bookmark</a>
+            <a href="{{ route('user.reading-history') }}" class="px-3 py-2 text-xs font-semibold rounded-lg whitespace-nowrap {{ request()->routeIs('user.reading-history') ? 'bg-primary-50 text-primary-700' : 'text-gray-600' }}">Riwayat</a>
+            <a href="{{ route('user.following') }}" class="px-3 py-2 text-xs font-semibold rounded-lg whitespace-nowrap {{ request()->routeIs('user.following') ? 'bg-primary-50 text-primary-700' : 'text-gray-600' }}">Following</a>
+        </div>
+    </div>
+
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 min-w-0">
         @if(session('success'))
             <div class="notification-toast notification-success mb-6 animate-slide-down">
                 <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 rounded-lg shadow-lg p-4">

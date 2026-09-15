@@ -75,8 +75,8 @@
     </div>
 
     <div class="footer">
-        <p>Dicetak dari Pesisir Barat Hub</p>
-        <p>{{ url('/articles/' . $article->slug) }}</p>
+        <p>Dicetak dari {{ \App\Helpers\SettingsHelper::siteName() }}</p>
+        <p>{{ $article->publicUrl() }}</p>
         <p>Dicetak pada: {{ now()->format('d F Y, H:i') }}</p>
     </div>
 </body>

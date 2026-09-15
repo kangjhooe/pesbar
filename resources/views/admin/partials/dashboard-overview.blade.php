@@ -202,7 +202,7 @@
             </div>
             <div class="ml-4">
                 <p class="font-semibold text-blue-900">Tambah Artikel</p>
-                <p class="text-sm text-blue-700">Buat artikel baru</p>
+                <p class="text-sm text-news-accent">Buat artikel baru</p>
             </div>
         </a>
         <a href="#" class="group flex items-center p-5 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl hover:from-green-100 hover:to-green-200 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg border border-green-100">

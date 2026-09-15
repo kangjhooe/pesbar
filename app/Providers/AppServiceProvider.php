@@ -2,12 +2,15 @@
 
 namespace App\Providers;
 
+use App\Helpers\CacheHelper;
 use App\Models\Article;
 use App\Models\Category;
 use App\Models\Comment;
+use App\Models\EventPopup;
 use App\Observers\ArticleObserver;
 use App\Observers\CategoryObserver;
 use App\Observers\CommentObserver;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -40,5 +43,15 @@ class AppServiceProvider extends ServiceProvider
         Article::observe(ArticleObserver::class);
         Category::observe(CategoryObserver::class);
         Comment::observe(CommentObserver::class);
+
+        // Share nav categories + active event popup on all public pages
+        View::composer('layouts.public', function ($view) {
+            $allCategories = CacheHelper::getActiveCategories();
+            $view->with([
+                'navCategories' => $allCategories->take(9)->values(),
+                'navMoreCategories' => $allCategories->slice(9)->values(),
+                'eventPopup' => EventPopup::active()->first(),
+            ]);
+        });
     }
 }

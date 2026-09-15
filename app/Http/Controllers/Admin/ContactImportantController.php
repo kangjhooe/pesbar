@@ -12,9 +12,18 @@ class ContactImportantController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $contacts = ContactImportant::ordered()->paginate(10);
+        $query = ContactImportant::query();
+        $query = \App\Helpers\AdminTableHelper::applySort($query, $request, [
+            'name' => 'name',
+            'type' => 'type',
+            'is_active' => 'is_active',
+            'sort_order' => 'sort_order',
+            'created_at' => 'created_at',
+        ], 'sort_order', 'asc');
+
+        $contacts = $query->paginate(10)->withQueryString();
         return view('admin.contact-importants.index', compact('contacts'));
     }
 

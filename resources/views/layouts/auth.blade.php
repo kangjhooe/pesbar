@@ -5,84 +5,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Login - ' . \App\Helpers\SettingsHelper::siteName())</title>
-    
-    <!-- Favicon -->
+
     <link rel="icon" type="image/x-icon" href="{{ \App\Helpers\SettingsHelper::siteFavicon() }}">
-    
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
-                            200: '#bfdbfe',
-                            300: '#93c5fd',
-                            400: '#60a5fa',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8',
-                            800: '#1e40af',
-                            900: '#1e3a8a',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=ibm-plex-sans:400,500,600,700|source-serif-4:600,700&display=swap" rel="stylesheet" />
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-gradient-to-br from-primary-50 to-primary-100 min-h-screen">
-    <!-- Background Pattern -->
-    <div class="absolute inset-0 bg-white/20 backdrop-blur-sm"></div>
-    
-    <!-- Main Content -->
-    <div class="relative min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-md w-full space-y-8">
-            <!-- Header -->
+<body class="font-sans text-news-ink antialiased bg-news-paper">
+    <div class="relative min-h-screen flex items-center justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+        <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+            <div class="absolute -top-24 -right-16 h-72 w-72 rounded-full bg-primary-100/70 blur-3xl"></div>
+            <div class="absolute -bottom-28 -left-20 h-80 w-80 rounded-full bg-primary-50/80 blur-3xl"></div>
+            <div class="absolute inset-x-0 top-0 h-1 bg-news-accent"></div>
+        </div>
+
+        <div class="relative max-w-md w-full space-y-6 sm:space-y-8">
             <div class="text-center">
-                <div class="flex justify-center mb-6">
-                    <img src="{{ \App\Helpers\SettingsHelper::siteLogo() }}" alt="{{ \App\Helpers\SettingsHelper::siteName() }}" class="w-16 h-16 max-w-full object-contain">
+                <div class="flex justify-center mb-4 sm:mb-6">
+                    <img src="{{ \App\Helpers\SettingsHelper::siteLogo() }}" alt="{{ \App\Helpers\SettingsHelper::siteName() }}" class="w-14 h-14 sm:w-16 sm:h-16 max-w-full object-contain">
                 </div>
-                <h2 class="text-3xl font-bold text-gray-900 mb-2">
+                <h2 class="font-display text-2xl sm:text-3xl font-bold text-news-ink mb-2">
                     @yield('page-title', \App\Helpers\SettingsHelper::siteName())
                 </h2>
-                <p class="text-gray-600">
+                <p class="text-news-muted text-sm sm:text-base px-2">
                     @yield('page-subtitle', \App\Helpers\SettingsHelper::siteDescription())
                 </p>
             </div>
 
-            <!-- Content Card -->
-            <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+            <div class="bg-white border border-news-line shadow-sm p-5 sm:p-8">
                 @yield('content')
             </div>
 
-            <!-- Footer -->
             <div class="text-center">
-                <p class="text-sm text-gray-600">
-                    &copy; {{ date('Y') }} Pesisir Barat Hub
+                <p class="text-sm text-news-muted">
+                    &copy; {{ date('Y') }} {{ \App\Helpers\SettingsHelper::siteName() }}
                 </p>
             </div>
         </div>
     </div>
 
-    <!-- JavaScript -->
     <script>
-        // Auto-hide alerts after 5 seconds
         document.addEventListener('DOMContentLoaded', function() {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(function(alert) {
+            document.querySelectorAll('.alert').forEach(function(alert) {
                 setTimeout(function() {
                     alert.style.transition = 'opacity 0.5s ease-out';
                     alert.style.opacity = '0';
-                    setTimeout(function() {
-                        alert.remove();
-                    }, 500);
+                    setTimeout(function() { alert.remove(); }, 500);
                 }, 5000);
             });
         });

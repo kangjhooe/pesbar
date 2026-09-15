@@ -108,7 +108,7 @@
                         {{ $index + 1 }}
                     </div>
                     <div class="flex-1 min-w-0">
-                        <h4 class="text-sm font-medium text-gray-900 truncate">{{ $article->title }}</h4>
+                        <h4 class="text-sm font-medium text-gray-900 line-clamp-2" title="{{ $article->title }}">{{ $article->title }}</h4>
                         <p class="text-sm text-gray-500">{{ $article->category->name ?? 'Tidak ada kategori' }}</p>
                     </div>
                     <div class="flex-shrink-0 text-right">

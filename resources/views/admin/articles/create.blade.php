@@ -19,7 +19,7 @@
                         Judul Artikel <span class="text-red-500">*</span>
                     </label>
                     <input type="text" id="title" name="title" value="{{ old('title') }}" 
-                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('title') border-red-500 @enderror"
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('title') border-red-500 @enderror"
                            placeholder="Masukkan judul artikel" required>
                     @error('title')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -31,10 +31,10 @@
                         Kategori <span class="text-red-500">*</span>
                     </label>
                     <select id="category_id" name="category_id" 
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('category_id') border-red-500 @enderror" required>
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('category_id') border-red-500 @enderror" required>
                         <option value="">Pilih Kategori</option>
                         @forelse($categories as $category)
-                            <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                            <option value="{{ $category->id }}" data-slug="{{ $category->slug }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
                                 {{ $category->name }}
                             </option>
                         @empty
@@ -47,26 +47,11 @@
                 </div>
 
                 <div>
-                    <label for="type" class="block text-sm font-medium text-gray-700 mb-2">
-                        Tipe <span class="text-red-500">*</span>
-                    </label>
-                    <select id="type" name="type" 
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('type') border-red-500 @enderror" required>
-                        <option value="">Pilih Tipe</option>
-                        <option value="berita" {{ old('type') == 'berita' ? 'selected' : '' }}>Berita</option>
-                        <option value="artikel" {{ old('type') == 'artikel' ? 'selected' : '' }}>Artikel</option>
-                    </select>
-                    @error('type')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div>
                     <label for="status" class="block text-sm font-medium text-gray-700 mb-2">
                         Status <span class="text-red-500">*</span>
                     </label>
                     <select id="status" name="status" 
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('status') border-red-500 @enderror" required>
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('status') border-red-500 @enderror" required>
                         <option value="draft" {{ old('status') == 'draft' ? 'selected' : '' }}>Draft</option>
                         <option value="published" {{ old('status') == 'published' ? 'selected' : '' }}>Dipublikasi</option>
                     </select>
@@ -80,7 +65,7 @@
                         Tanggal Publikasi
                     </label>
                     <input type="datetime-local" id="published_at" name="published_at" value="{{ old('published_at') }}" 
-                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('published_at') border-red-500 @enderror">
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('published_at') border-red-500 @enderror">
                     @error('published_at')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -92,7 +77,7 @@
                     Ringkasan <span class="text-red-500">*</span>
                 </label>
                 <textarea id="excerpt" name="excerpt" rows="3" 
-                          class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('excerpt') border-red-500 @enderror"
+                          class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('excerpt') border-red-500 @enderror"
                           placeholder="Ringkasan singkat artikel" required>{{ old('excerpt') }}</textarea>
                 @error('excerpt')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -110,7 +95,7 @@
                         Upload Gambar
                     </label>
                     <input type="file" id="featured_image" name="featured_image" accept="image/*"
-                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('featured_image') border-red-500 @enderror"
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('featured_image') border-red-500 @enderror"
                            onchange="previewImage(this)">
                     @error('featured_image')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -148,7 +133,7 @@
                     @foreach($tags as $tag)
                     <label class="flex items-center">
                         <input type="checkbox" name="tags[]" value="{{ $tag->id }}" 
-                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                               class="rounded border-gray-300 text-blue-600 focus:ring-news-accent"
                                {{ in_array($tag->id, old('tags', [])) ? 'checked' : '' }}>
                         <span class="ml-2 text-sm text-gray-700">{{ $tag->name }}</span>
                     </label>
@@ -176,13 +161,13 @@
                         id="slug" 
                         name="slug" 
                         value="{{ old('slug') }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('slug') border-red-500 @enderror"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('slug') border-red-500 @enderror"
                         placeholder="Akan otomatis dibuat dari judul jika kosong"
                     >
                     @error('slug')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
-                    <p class="mt-1 text-sm text-gray-500">URL artikel: {{ url('/articles/') }}/<span id="slug-preview">slug-akan-muncul-di-sini</span></p>
+                    <p class="mt-1 text-sm text-gray-500">URL artikel: {{ url('/') }}/<span id="category-slug-preview">kategori</span>/<span id="slug-preview">slug-akan-muncul-di-sini</span></p>
                 </div>
 
                 <div>
@@ -194,7 +179,7 @@
                         name="meta_description" 
                         rows="3" 
                         maxlength="500"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('meta_description') border-red-500 @enderror"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('meta_description') border-red-500 @enderror"
                         placeholder="Deskripsi singkat untuk SEO (maksimal 500 karakter)"
                     >{{ old('meta_description') }}</textarea>
                     <p class="mt-1 text-sm text-gray-500"><span id="meta-desc-count">0</span>/500 karakter</p>
@@ -212,7 +197,7 @@
                         id="meta_keywords" 
                         name="meta_keywords" 
                         value="{{ old('meta_keywords') }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('meta_keywords') border-red-500 @enderror"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('meta_keywords') border-red-500 @enderror"
                         placeholder="Kata kunci dipisahkan koma, contoh: berita, pesisir barat, lampung"
                     >
                     @error('meta_keywords')
@@ -230,14 +215,14 @@
             <div class="space-y-4">
                 <label class="flex items-center">
                     <input type="checkbox" name="is_featured" value="1" 
-                           class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                           class="rounded border-gray-300 text-blue-600 focus:ring-news-accent"
                            {{ old('is_featured') ? 'checked' : '' }}>
                     <span class="ml-2 text-sm text-gray-700">Tandai sebagai Featured</span>
                 </label>
                 
                 <label class="flex items-center">
                     <input type="checkbox" name="is_breaking" value="1" 
-                           class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                           class="rounded border-gray-300 text-blue-600 focus:ring-news-accent"
                            {{ old('is_breaking') ? 'checked' : '' }}>
                     <span class="ml-2 text-sm text-gray-700">Tandai sebagai Breaking News</span>
                 </label>
@@ -251,7 +236,7 @@
                 Batal
             </a>
             <button type="submit" 
-                    class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    class="bg-news-accent text-white px-6 py-2 rounded-lg hover:bg-red-800 transition-colors">
                 Simpan Artikel
             </button>
         </div>
@@ -332,6 +317,19 @@ function previewImage(input) {
     const titleInput = document.getElementById('title');
     const slugInput = document.getElementById('slug');
     const slugPreview = document.getElementById('slug-preview');
+    const categorySelect = document.getElementById('category_id');
+    const categorySlugPreview = document.getElementById('category-slug-preview');
+
+    function updateCategorySlugPreview() {
+        if (!categorySelect || !categorySlugPreview) return;
+        const selected = categorySelect.options[categorySelect.selectedIndex];
+        categorySlugPreview.textContent = (selected && selected.dataset.slug) ? selected.dataset.slug : 'kategori';
+    }
+
+    if (categorySelect) {
+        categorySelect.addEventListener('change', updateCategorySlugPreview);
+        updateCategorySlugPreview();
+    }
     
     if (titleInput && slugInput && slugPreview) {
         titleInput.addEventListener('input', function() {

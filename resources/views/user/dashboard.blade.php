@@ -326,9 +326,9 @@
                 <tr class="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200">
                     <td class="px-6 py-4">
                         <div class="text-sm font-semibold text-gray-900 mb-1">
-                            <a href="{{ route('articles.show', $comment->article) }}" class="text-blue-600 hover:text-blue-800 hover:underline flex items-center group">
-                                <i class="fas fa-newspaper mr-2 text-blue-400 group-hover:text-blue-600"></i>
-                                {{ Str::limit($comment->article->title, 50) }}
+                            <a href="{{ $comment->article->publicUrl() }}" class="text-blue-600 hover:text-blue-800 hover:underline flex items-start gap-2 group" title="{{ $comment->article->title }}">
+                                <i class="fas fa-newspaper mt-0.5 text-blue-400 group-hover:text-blue-600 shrink-0"></i>
+                                <span class="line-clamp-2 min-w-0">{{ $comment->article->title }}</span>
                             </a>
                         </div>
                         @if($comment->article->category)
@@ -451,10 +451,10 @@
     <div class="space-y-3">
         @foreach($recentArticles as $article)
         <div class="group flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-300 transform hover:scale-[1.02]">
-            <div class="flex-1">
-                <a href="{{ route('articles.show', $article) }}" class="text-sm font-semibold text-gray-900 hover:text-blue-600 transition-colors flex items-center">
-                    <i class="fas fa-newspaper mr-2 text-blue-400 group-hover:text-blue-600"></i>
-                    {{ Str::limit($article->title, 60) }}
+            <div class="flex-1 min-w-0">
+                <a href="{{ $article->publicUrl() }}" class="text-sm font-semibold text-gray-900 hover:text-blue-600 transition-colors flex items-start gap-2" title="{{ $article->title }}">
+                    <i class="fas fa-newspaper mt-0.5 text-blue-400 group-hover:text-blue-600 shrink-0"></i>
+                    <span class="line-clamp-2">{{ $article->title }}</span>
                 </a>
                 <div class="flex items-center space-x-3 mt-2">
                     @if($article->category)
@@ -472,7 +472,7 @@
                 </div>
             </div>
             <div class="flex items-center ml-4">
-                <a href="{{ route('articles.show', $article) }}" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-medium rounded-lg shadow-md hover:shadow-lg transform transition hover:scale-105 flex items-center">
+                <a href="{{ $article->publicUrl() }}" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-medium rounded-lg shadow-md hover:shadow-lg transform transition hover:scale-105 flex items-center">
                     Baca
                     <i class="fas fa-arrow-right ml-2"></i>
                 </a>

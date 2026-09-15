@@ -16,6 +16,7 @@ class PenulisUserSeeder extends Seeder
         $penulisUsers = [
             [
                 'name' => 'Ahmad Fauzi',
+                'username' => 'ahmad-fauzi',
                 'email' => 'ahmad.fauzi@pesisirbarat.id',
                 'password' => bcrypt('password'),
                 'role' => 'penulis',
@@ -24,6 +25,7 @@ class PenulisUserSeeder extends Seeder
             ],
             [
                 'name' => 'Siti Nurhaliza',
+                'username' => 'siti-nurhaliza',
                 'email' => 'siti.nurhaliza@pesisirbarat.id',
                 'password' => bcrypt('password'),
                 'role' => 'penulis',
@@ -32,6 +34,7 @@ class PenulisUserSeeder extends Seeder
             ],
             [
                 'name' => 'Budi Santoso',
+                'username' => 'budi-santoso',
                 'email' => 'budi.santoso@pesisirbarat.id',
                 'password' => bcrypt('password'),
                 'role' => 'penulis',
@@ -40,6 +43,7 @@ class PenulisUserSeeder extends Seeder
             ],
             [
                 'name' => 'Maya Sari',
+                'username' => 'maya-sari',
                 'email' => 'maya.sari@pesisirbarat.id',
                 'password' => bcrypt('password'),
                 'role' => 'penulis',
@@ -48,6 +52,7 @@ class PenulisUserSeeder extends Seeder
             ],
             [
                 'name' => 'Rizki Pratama',
+                'username' => 'rizki-pratama',
                 'email' => 'rizki.pratama@pesisirbarat.id',
                 'password' => bcrypt('password'),
                 'role' => 'penulis',

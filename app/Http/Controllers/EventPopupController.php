@@ -11,10 +11,43 @@ class EventPopupController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $eventPopups = EventPopup::orderBy('created_at', 'desc')->paginate(10);
+        $query = EventPopup::query();
+        $query = \App\Helpers\AdminTableHelper::applySort($query, $request, [
+            'title' => 'title',
+            'start_date' => 'start_date',
+            'end_date' => 'end_date',
+            'status' => 'status',
+            'created_at' => 'created_at',
+        ], 'created_at', 'desc');
+
+        $eventPopups = $query->paginate(10)->withQueryString();
         return view('admin.event-popups.index', compact('eventPopups'));
+    }
+
+    public function bulkAction(Request $request)
+    {
+        $request->validate([
+            'action' => 'required|in:activate,deactivate,delete',
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:event_popups,id',
+        ]);
+
+        $query = EventPopup::whereIn('id', $request->ids);
+
+        if ($request->action === 'activate') {
+            $count = $query->update(['status' => true]);
+            return redirect()->back()->with('success', "{$count} popup diaktifkan.");
+        }
+
+        if ($request->action === 'deactivate') {
+            $count = $query->update(['status' => false]);
+            return redirect()->back()->with('success', "{$count} popup dinonaktifkan.");
+        }
+
+        $count = $query->delete();
+        return redirect()->back()->with('success', "{$count} popup dihapus.");
     }
 
     /**

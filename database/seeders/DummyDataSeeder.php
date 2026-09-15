@@ -85,7 +85,6 @@ class DummyDataSeeder extends Seeder
                 'category_id' => $categories->random()->id,
                 'author_id' => $adminUser->id,
                 'status' => 'published',
-                'type' => 'berita',
                 'is_featured' => $index < 5, // First 5 are featured
                 'is_breaking' => $index < 2, // First 2 are breaking
                 'views' => rand(50, 1000),
@@ -129,7 +128,6 @@ class DummyDataSeeder extends Seeder
                 'category_id' => $categories->random()->id,
                 'author_id' => $adminUser->id,
                 'status' => 'published',
-                'type' => 'artikel',
                 'is_featured' => $index < 3, // First 3 are featured
                 'is_breaking' => false,
                 'views' => rand(100, 800),

@@ -32,7 +32,7 @@ class NewComment extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         $siteName = SettingsHelper::siteName();
-        $commentUrl = route('articles.show', $this->article) . '#comments';
+        $commentUrl = $this->article->publicUrl() . '#comments';
         
         return (new MailMessage)
             ->subject('Komentar Baru pada Artikel: ' . $this->article->title)

@@ -53,7 +53,6 @@ Menurut laporan dari Dinas Pekerjaan Umum dan Penataan Ruang (PUPR) Kabupaten Pe
 Proyek ini juga meliputi pembangunan jembatan kecil dan gorong-gorong untuk mengatasi masalah banjir yang sering terjadi di musim hujan. Dengan adanya infrastruktur yang memadai, diharapkan dapat mendorong pertumbuhan sektor pariwisata dan pertanian di wilayah tersebut.
 
 Masyarakat setempat menyambut baik pembangunan jalan ini karena akan mempermudah akses transportasi dan mengurangi waktu tempuh antar kecamatan. Selain itu, pembangunan ini juga akan menciptakan lapangan kerja bagi warga lokal selama masa konstruksi.',
-                'type' => 'berita',
                 'category_id' => $categories->where('name', 'Politik')->first()->id ?? $categories->first()->id,
             ],
             [
@@ -68,7 +67,6 @@ Festival yang mengusung tema "Melestarikan Budaya, Memajukan Pariwisata" ini dih
 Selain pertunjukan seni, festival juga akan menampilkan berbagai kuliner khas seperti ikan bakar, sate ikan, dan berbagai olahan seafood yang menjadi ciri khas daerah pesisir. Pengunjung juga dapat menikmati pameran kerajinan tangan dan produk unggulan lokal.
 
 Acara ini juga akan diisi dengan berbagai lomba tradisional seperti lomba perahu layar, lomba memancing, dan lomba kuliner tradisional. Festival diharapkan dapat menarik minat wisatawan dari berbagai daerah untuk berkunjung ke Pesisir Barat.',
-                'type' => 'berita',
                 'category_id' => $categories->where('name', 'Budaya')->first()->id ?? $categories->first()->id,
             ],
             [
@@ -83,7 +81,6 @@ Beasiswa ini akan diberikan kepada 50 siswa berprestasi yang telah lulus SMA/SMK
 Syarat untuk mengikuti program beasiswa ini antara lain memiliki IPK minimal 3.0, aktif dalam kegiatan kemahasiswaan, dan berkomitmen untuk kembali berkontribusi di Pesisir Barat setelah lulus. Seleksi akan dilakukan melalui tes tertulis, wawancara, dan penilaian prestasi akademik.
 
 Program ini juga dilengkapi dengan mentoring dan pembinaan khusus untuk memastikan penerima beasiswa dapat menyelesaikan pendidikan dengan baik. Pemerintah daerah juga akan memfasilitasi magang dan pelatihan kerja untuk mempersiapkan mereka memasuki dunia kerja.',
-                'type' => 'artikel',
                 'category_id' => $categories->where('name', 'Pendidikan')->first()->id ?? $categories->first()->id,
             ],
             [
@@ -100,7 +97,6 @@ Modernisasi alat tangkap meliputi penggunaan GPS, fish finder, dan jaring yang l
 Program ini juga dilengkapi dengan pembentukan cold storage dan unit pengolahan ikan untuk meningkatkan nilai tambah produk. Hasilnya, harga jual ikan tuna di pasar lokal dan ekspor mengalami peningkatan yang signifikan.
 
 Pemerintah daerah juga memfasilitasi akses permodalan melalui koperasi nelayan dan program kredit usaha rakyat (KUR) untuk mendukung pengembangan usaha perikanan. Dengan dukungan ini, nelayan dapat mengembangkan usaha mereka secara berkelanjutan.',
-                'type' => 'berita',
                 'category_id' => $categories->where('name', 'Ekonomi')->first()->id ?? $categories->first()->id,
             ],
             [
@@ -117,7 +113,6 @@ Program ini juga dilengkapi dengan pelatihan kader kesehatan desa dan program po
 Pembangunan puskesmas ini menggunakan dana dari APBD dan dukungan dari pemerintah pusat melalui program desa tertinggal. Setiap puskesmas dibangun dengan standar bangunan tahan gempa dan ramah lingkungan.
 
 Dengan adanya puskesmas di desa terpencil, diharapkan dapat mengurangi angka kematian ibu dan bayi, meningkatkan cakupan imunisasi, dan memberikan layanan kesehatan dasar yang lebih baik bagi masyarakat. Program ini juga akan dilengkapi dengan sistem rujukan yang terintegrasi dengan rumah sakit kabupaten.',
-                'type' => 'artikel',
                 'category_id' => $categories->where('name', 'Kesehatan')->first()->id ?? $categories->first()->id,
             ],
             [
@@ -132,7 +127,6 @@ Program pengenalan teknologi pertanian ini dilakukan oleh Dinas Pertanian bekerj
 Selain itu, petani juga diperkenalkan dengan sistem hidroponik dan aquaponik untuk budidaya sayuran dan ikan. Sistem ini memungkinkan budidaya di lahan terbatas dan menghasilkan produk yang lebih berkualitas. Program ini juga dilengkapi dengan pelatihan pemasaran online untuk membantu petani menjual produk mereka secara langsung ke konsumen.
 
 Dengan adanya inovasi teknologi ini, diharapkan sektor pertanian di Pesisir Barat dapat berkembang lebih pesat dan memberikan kontribusi yang lebih besar terhadap perekonomian daerah.',
-                'type' => 'artikel',
                 'category_id' => $categories->where('name', 'Teknologi')->first()->id ?? $categories->first()->id,
             ],
             [
@@ -149,7 +143,6 @@ Program ini juga meliputi pelatihan keamanan maritim bagi nelayan dan masyarakat
 Teknologi monitoring yang digunakan meliputi radar pantai, kamera CCTV, dan sistem komunikasi terintegrasi. Semua data dari sistem monitoring ini akan dikirim ke pusat komando keamanan maritim untuk dianalisis dan diambil tindakan yang diperlukan.
 
 Dengan adanya peningkatan keamanan maritim ini, diharapkan nelayan dapat beraktivitas dengan aman dan perairan Pesisir Barat dapat terjaga dari berbagai ancaman keamanan.',
-                'type' => 'berita',
                 'category_id' => $categories->where('name', 'Keamanan')->first()->id ?? $categories->first()->id,
             ],
             [
@@ -166,7 +159,6 @@ Masyarakat lokal dilatih untuk menjadi pemandu wisata, operator kapal wisata, da
 Untuk mendukung program ini, pemerintah juga melakukan rehabilitasi terumbu karang dan penanaman mangrove di area yang telah rusak. Masyarakat lokal dilibatkan dalam kegiatan konservasi ini dan diberikan insentif ekonomi untuk menjaga kelestarian lingkungan.
 
 Program wisata bahari berkelanjutan ini diharapkan dapat menarik wisatawan yang peduli lingkungan dan memberikan dampak positif bagi perekonomian masyarakat lokal tanpa merusak ekosistem laut.',
-                'type' => 'artikel',
                 'category_id' => $categories->where('name', 'Pariwisata')->first()->id ?? $categories->first()->id,
             ],
             [
@@ -183,7 +175,6 @@ Aplikasi ini dilengkapi dengan sistem keamanan yang ketat untuk melindungi data 
 Program digitalisasi ini juga meliputi pelatihan bagi petugas pemerintah untuk mengoperasikan sistem digital dan melayani masyarakat secara online. Selain itu, juga dibentuk tim customer service yang siap membantu masyarakat yang mengalami kesulitan menggunakan aplikasi.
 
 Dengan adanya aplikasi digital ini, diharapkan dapat mengurangi antrian di kantor pemerintah dan memberikan kemudahan akses layanan publik bagi masyarakat Pesisir Barat.',
-                'type' => 'berita',
                 'category_id' => $categories->where('name', 'Teknologi')->first()->id ?? $categories->first()->id,
             ],
             [
@@ -200,7 +191,6 @@ Program ini juga memberikan akses permodalan melalui koperasi perempuan dan prog
 Pelatihan yang diberikan meliputi teknik pengolahan yang higienis, pengemasan yang menarik, dan strategi pemasaran online. Perempuan juga dilatih untuk menggunakan teknologi digital dalam mengembangkan usaha mereka dan menjangkau pasar yang lebih luas.
 
 Dengan adanya program pemberdayaan ini, diharapkan dapat meningkatkan kontribusi perempuan dalam perekonomian daerah dan memberikan kesempatan yang sama untuk berpartisipasi dalam pembangunan Pesisir Barat.',
-                'type' => 'artikel',
                 'category_id' => $categories->where('name', 'Sosial')->first()->id ?? $categories->first()->id,
             ]
         ];
@@ -223,7 +213,6 @@ Dengan adanya program pemberdayaan ini, diharapkan dapat meningkatkan kontribusi
                 'category_id' => $articleData['category_id'],
                 'author_id' => $author->id,
                 'status' => 'pending_review',
-                'type' => $articleData['type'],
                 'is_featured' => false,
                 'is_breaking' => false,
                 'views' => 0,

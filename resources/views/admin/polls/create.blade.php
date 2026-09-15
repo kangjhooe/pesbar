@@ -194,7 +194,7 @@
                         <div class="flex items-center">
                             <input type="checkbox" name="is_active" id="is_active" value="1" 
                                    {{ old('is_active', true) ? 'checked' : '' }} 
-                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                   class="h-4 w-4 text-blue-600 focus:ring-news-accent border-gray-300 rounded">
                             <label for="is_active" class="ml-2 block text-sm text-gray-900">
                                 Polling Aktif
                             </label>
@@ -203,7 +203,7 @@
                         <div class="flex items-center">
                             <input type="checkbox" name="allow_anonymous" id="allow_anonymous" value="1" 
                                    {{ old('allow_anonymous', false) ? 'checked' : '' }} 
-                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                   class="h-4 w-4 text-blue-600 focus:ring-news-accent border-gray-300 rounded">
                             <label for="allow_anonymous" class="ml-2 block text-sm text-gray-900">
                                 Izinkan Voting Anonim
                             </label>
@@ -212,7 +212,7 @@
                         <div class="flex items-center">
                             <input type="checkbox" name="show_results" id="show_results" value="1" 
                                    {{ old('show_results', true) ? 'checked' : '' }} 
-                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                   class="h-4 w-4 text-blue-600 focus:ring-news-accent border-gray-300 rounded">
                             <label for="show_results" class="ml-2 block text-sm text-gray-900">
                                 Tampilkan Hasil Polling
                             </label>
@@ -221,7 +221,7 @@
                         <div class="flex items-center">
                             <input type="checkbox" name="show_vote_count" id="show_vote_count" value="1" 
                                    {{ old('show_vote_count', true) ? 'checked' : '' }} 
-                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                   class="h-4 w-4 text-blue-600 focus:ring-news-accent border-gray-300 rounded">
                             <label for="show_vote_count" class="ml-2 block text-sm text-gray-900">
                                 Tampilkan Jumlah Suara
                             </label>

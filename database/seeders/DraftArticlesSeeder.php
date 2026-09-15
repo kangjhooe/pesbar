@@ -49,7 +49,6 @@ class DraftArticlesSeeder extends Seeder
 Strategi pengembangan ekonomi kreatif meliputi pelatihan kewirausahaan, akses permodalan, dan pengembangan produk yang inovatif. UMKM dilatih untuk mengembangkan produk yang memiliki nilai tambah tinggi dan dapat bersaing di pasar global. Program ini juga meliputi pelatihan digital marketing dan e-commerce untuk memperluas jangkauan pasar.
 
 "Ekonomi kreatif memiliki potensi besar untuk meningkatkan perekonomian daerah dan menciptakan lapangan kerja baru," ujar Kepala Dinas Koperasi dan UKM Pesisir Barat.',
-                'type' => 'artikel',
                 'category_id' => $categories->where('name', 'Ekonomi')->first()->id ?? $categories->first()->id,
             ],
             [
@@ -60,7 +59,6 @@ Strategi pengembangan ekonomi kreatif meliputi pelatihan kewirausahaan, akses pe
 Rehabilitasi hutan mangrove dilakukan dengan melibatkan masyarakat lokal, kelompok tani, dan organisasi lingkungan. Masyarakat dilatih untuk melakukan penanaman mangrove yang benar dan merawat tanaman hingga tumbuh dengan baik. Program ini juga meliputi pembentukan kelompok pengawas mangrove yang bertugas untuk menjaga kelestarian hutan mangrove.
 
 "Hutan mangrove memiliki peran penting dalam mitigasi perubahan iklim dan melindungi ekosistem pesisir dari abrasi," kata Kepala Dinas Lingkungan Hidup Pesisir Barat.',
-                'type' => 'berita',
                 'category_id' => $categories->where('name', 'Lingkungan')->first()->id ?? $categories->first()->id,
             ],
             [
@@ -71,7 +69,6 @@ Rehabilitasi hutan mangrove dilakukan dengan melibatkan masyarakat lokal, kelomp
 Konsep smart city di Pesisir Barat meliputi pengembangan sistem transportasi cerdas, manajemen sampah yang terintegrasi, dan sistem monitoring keamanan yang real-time. Sistem transportasi cerdas akan menggunakan teknologi GPS dan aplikasi mobile untuk memberikan informasi real-time tentang kondisi lalu lintas dan jadwal transportasi publik.
 
 "Smart city adalah masa depan pembangunan perkotaan yang berkelanjutan dan efisien," ujar Sekretaris Daerah Pesisir Barat.',
-                'type' => 'artikel',
                 'category_id' => $categories->where('name', 'Teknologi')->first()->id ?? $categories->first()->id,
             ]
         ];
@@ -94,7 +91,6 @@ Konsep smart city di Pesisir Barat meliputi pengembangan sistem transportasi cer
                 'category_id' => $articleData['category_id'],
                 'author_id' => $author->id,
                 'status' => 'draft',
-                'type' => $articleData['type'],
                 'is_featured' => false,
                 'is_breaking' => false,
                 'views' => 0,

@@ -44,6 +44,18 @@ class CommentController extends Controller
             
             // User sudah pasti login karena ada middleware auth
             $user = auth()->user();
+
+            if ($request->filled('parent_id')) {
+                $parent = Comment::find($request->parent_id);
+                if (!$parent || (int) $parent->article_id !== (int) $request->article_id) {
+                    if ($request->expectsJson()) {
+                        return response()->json(['error' => 'Balasan tidak valid untuk artikel ini.'], 422);
+                    }
+                    return back()
+                        ->withInput()
+                        ->with('error', 'Balasan tidak valid untuk artikel ini.');
+                }
+            }
             
             $comment = Comment::create([
                 'article_id' => $request->article_id,

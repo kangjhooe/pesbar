@@ -1,137 +1,116 @@
 @extends('layouts.admin-simple')
 
 @section('title', 'Edit Kontak Penting')
+@section('page-title', 'Edit Kontak Penting')
+@section('page-subtitle', 'Perbarui kontak untuk widget sidebar publik')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Edit Kontak Penting</h3>
-                    <div class="card-tools">
-                        <a href="{{ route('admin.contact-importants.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left"></i> Kembali
-                        </a>
-                    </div>
-                </div>
-                
-                <form action="{{ route('admin.contact-importants.update', $contactImportant) }}" method="POST">
-                    @csrf
-                    @method('PUT')
-                    <div class="card-body">
-                        @if($errors->any())
-                            <div class="alert alert-danger">
-                                <ul class="mb-0">
-                                    @foreach($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        @endif
+<div class="max-w-4xl space-y-4">
+    @include('admin.partials.widget-placement-note', [
+        'items' => [
+            'Sidebar beranda (widget Kontak Penting)',
+            'Sidebar halaman artikel (versi ringkas)',
+        ],
+    ])
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="name">Nama Instansi/Lembaga <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control @error('name') is-invalid @enderror" 
-                                           id="name" name="name" value="{{ old('name', $contactImportant->name) }}" 
-                                           placeholder="Contoh: Polres Pesisir Barat" required>
-                                    @error('name')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="type">Jenis Kontak <span class="text-danger">*</span></label>
-                                    <select class="form-control @error('type') is-invalid @enderror" 
-                                            id="type" name="type" required>
-                                        <option value="">Pilih Jenis Kontak</option>
-                                        @foreach($types as $key => $label)
-                                            <option value="{{ $key }}" 
-                                                    {{ old('type', $contactImportant->type) == $key ? 'selected' : '' }}>
-                                                {{ $label }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('type')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="phone">Nomor Telepon</label>
-                                    <input type="text" class="form-control @error('phone') is-invalid @enderror" 
-                                           id="phone" name="phone" value="{{ old('phone', $contactImportant->phone) }}" 
-                                           placeholder="Contoh: 0721-123456">
-                                    @error('phone')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="sort_order">Urutan Tampil</label>
-                                    <input type="number" class="form-control @error('sort_order') is-invalid @enderror" 
-                                           id="sort_order" name="sort_order" value="{{ old('sort_order', $contactImportant->sort_order) }}" 
-                                           min="0" placeholder="0">
-                                    <small class="form-text text-muted">Angka yang lebih kecil akan ditampilkan lebih dulu</small>
-                                    @error('sort_order')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="address">Alamat</label>
-                            <textarea class="form-control @error('address') is-invalid @enderror" 
-                                      id="address" name="address" rows="2" 
-                                      placeholder="Alamat lengkap instansi/lembaga">{{ old('address', $contactImportant->address) }}</textarea>
-                            @error('address')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="form-group">
-                            <label for="description">Deskripsi</label>
-                            <textarea class="form-control @error('description') is-invalid @enderror" 
-                                      id="description" name="description" rows="3" 
-                                      placeholder="Deskripsi tambahan atau informasi penting">{{ old('description', $contactImportant->description) }}</textarea>
-                            @error('description')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="form-group">
-                            <div class="form-check">
-                                <input type="checkbox" class="form-check-input" id="is_active" name="is_active" 
-                                       value="1" {{ old('is_active', $contactImportant->is_active) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="is_active">
-                                    Aktif (kontak akan ditampilkan di widget)
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="card-footer">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Perbarui
-                        </button>
-                        <a href="{{ route('admin.contact-importants.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Batal
-                        </a>
-                    </div>
-                </form>
-            </div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-900">Edit Kontak</h3>
+            <a href="{{ route('admin.contact-importants.index') }}" class="btn-secondary">
+                <i class="fas fa-arrow-left mr-2"></i>Kembali
+            </a>
         </div>
+
+        <form action="{{ route('admin.contact-importants.update', $contactImportant) }}" method="POST" class="p-6 space-y-6">
+            @csrf
+            @method('PUT')
+
+            @if($errors->any())
+                <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    <ul class="list-disc list-inside space-y-1">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Nama Instansi/Lembaga <span class="text-news-accent">*</span></label>
+                    <input type="text" id="name" name="name" value="{{ old('name', $contactImportant->name) }}" required
+                           class="form-input @error('name') border-red-500 @enderror"
+                           placeholder="Contoh: Polres Pesisir Barat">
+                    @error('name')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div>
+                    <label for="type" class="block text-sm font-medium text-gray-700 mb-1">Jenis Kontak <span class="text-news-accent">*</span></label>
+                    <select id="type" name="type" required class="form-input @error('type') border-red-500 @enderror">
+                        <option value="">Pilih Jenis Kontak</option>
+                        @foreach($types as $key => $label)
+                            <option value="{{ $key }}" {{ old('type', $contactImportant->type) == $key ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    @error('type')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div>
+                    <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Nomor Telepon</label>
+                    <input type="text" id="phone" name="phone" value="{{ old('phone', $contactImportant->phone) }}"
+                           class="form-input @error('phone') border-red-500 @enderror"
+                           placeholder="Contoh: 0721-123456">
+                    @error('phone')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div>
+                    <label for="sort_order" class="block text-sm font-medium text-gray-700 mb-1">Urutan Tampil</label>
+                    <input type="number" id="sort_order" name="sort_order" value="{{ old('sort_order', $contactImportant->sort_order) }}" min="0"
+                           class="form-input @error('sort_order') border-red-500 @enderror" placeholder="0">
+                    <p class="mt-1 text-xs text-gray-500">Angka lebih kecil ditampilkan lebih dulu</p>
+                    @error('sort_order')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+
+            <div>
+                <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
+                <textarea id="address" name="address" rows="2" class="form-input @error('address') border-red-500 @enderror"
+                          placeholder="Alamat lengkap instansi/lembaga">{{ old('address', $contactImportant->address) }}</textarea>
+                @error('address')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div>
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+                <textarea id="description" name="description" rows="3" class="form-input @error('description') border-red-500 @enderror"
+                          placeholder="Deskripsi tambahan atau informasi penting">{{ old('description', $contactImportant->description) }}</textarea>
+                @error('description')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+                <input type="checkbox" id="is_active" name="is_active" value="1"
+                       class="rounded border-gray-300 text-news-accent focus:ring-news-accent"
+                       {{ old('is_active', $contactImportant->is_active) ? 'checked' : '' }}>
+                Aktif (tampil di widget publik)
+            </label>
+
+            <div class="flex flex-wrap gap-3 pt-2 border-t border-gray-100">
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save mr-2"></i>Perbarui
+                </button>
+                <a href="{{ route('admin.contact-importants.index') }}" class="btn-secondary">
+                    <i class="fas fa-times mr-2"></i>Batal
+                </a>
+            </div>
+        </form>
     </div>
 </div>
 @endsection

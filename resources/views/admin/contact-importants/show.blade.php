@@ -1,132 +1,119 @@
 @extends('layouts.admin-simple')
 
 @section('title', 'Detail Kontak Penting')
+@section('page-title', 'Detail Kontak Penting')
+@section('page-subtitle', 'Lihat detail kontak penting')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Detail Kontak Penting</h3>
-                    <div class="card-tools">
-                        <a href="{{ route('admin.contact-importants.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left"></i> Kembali
+<div class="max-w-5xl space-y-4">
+    @include('admin.partials.widget-placement-note', [
+        'items' => [
+            'Sidebar beranda (widget Kontak Penting)',
+            'Sidebar halaman artikel (versi ringkas)',
+        ],
+    ])
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-3">
+            <h3 class="text-lg font-semibold text-gray-900">{{ $contactImportant->name }}</h3>
+            <a href="{{ route('admin.contact-importants.index') }}" class="btn-secondary">
+                <i class="fas fa-arrow-left mr-2"></i>Kembali
+            </a>
+        </div>
+
+        <div class="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2">
+                <dl class="divide-y divide-gray-100">
+                    <div class="py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
+                        <dt class="text-sm font-medium text-gray-500">Nama</dt>
+                        <dd class="sm:col-span-2 text-sm text-gray-900">{{ $contactImportant->name }}</dd>
+                    </div>
+                    <div class="py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
+                        <dt class="text-sm font-medium text-gray-500">Jenis</dt>
+                        <dd class="sm:col-span-2">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-50 text-news-accent">
+                                {{ ucwords(str_replace('_', ' ', $contactImportant->type)) }}
+                            </span>
+                        </dd>
+                    </div>
+                    <div class="py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
+                        <dt class="text-sm font-medium text-gray-500">Telepon</dt>
+                        <dd class="sm:col-span-2 text-sm text-gray-900">
+                            @if($contactImportant->phone)
+                                <a href="tel:{{ $contactImportant->phone }}" class="text-news-accent hover:underline">
+                                    <i class="fas fa-phone mr-1"></i>{{ $contactImportant->formatted_phone }}
+                                </a>
+                            @else
+                                <span class="text-gray-400">-</span>
+                            @endif
+                        </dd>
+                    </div>
+                    <div class="py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
+                        <dt class="text-sm font-medium text-gray-500">Alamat</dt>
+                        <dd class="sm:col-span-2 text-sm text-gray-900">{{ $contactImportant->address ?: '-' }}</dd>
+                    </div>
+                    <div class="py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
+                        <dt class="text-sm font-medium text-gray-500">Deskripsi</dt>
+                        <dd class="sm:col-span-2 text-sm text-gray-900">{{ $contactImportant->description ?: '-' }}</dd>
+                    </div>
+                    <div class="py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
+                        <dt class="text-sm font-medium text-gray-500">Status</dt>
+                        <dd class="sm:col-span-2">
+                            @if($contactImportant->is_active)
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Aktif</span>
+                            @else
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-700">Tidak Aktif</span>
+                            @endif
+                        </dd>
+                    </div>
+                    <div class="py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
+                        <dt class="text-sm font-medium text-gray-500">Urutan</dt>
+                        <dd class="sm:col-span-2 text-sm text-gray-900">{{ $contactImportant->sort_order }}</dd>
+                    </div>
+                    <div class="py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
+                        <dt class="text-sm font-medium text-gray-500">Dibuat</dt>
+                        <dd class="sm:col-span-2 text-sm text-gray-900">{{ $contactImportant->created_at->format('d-m-Y H:i') }}</dd>
+                    </div>
+                    <div class="py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
+                        <dt class="text-sm font-medium text-gray-500">Diperbarui</dt>
+                        <dd class="sm:col-span-2 text-sm text-gray-900">{{ $contactImportant->updated_at->format('d-m-Y H:i') }}</dd>
+                    </div>
+                </dl>
+            </div>
+
+            <div class="space-y-4">
+                <div class="rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-3">
+                    <h4 class="text-sm font-semibold text-gray-900">Aksi</h4>
+                    <a href="{{ route('admin.contact-importants.edit', $contactImportant) }}"
+                       class="w-full btn-secondary justify-center">
+                        <i class="fas fa-edit mr-2"></i>Edit Kontak
+                    </a>
+                    <form action="{{ route('admin.contact-importants.toggle-status', $contactImportant) }}" method="POST">
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" class="w-full btn-secondary justify-center">
+                            <i class="fas {{ $contactImportant->is_active ? 'fa-eye-slash' : 'fa-eye' }} mr-2"></i>
+                            {{ $contactImportant->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                        </button>
+                    </form>
+                    <form action="{{ route('admin.contact-importants.destroy', $contactImportant) }}" method="POST"
+                          onsubmit="return confirm('Apakah Anda yakin ingin menghapus kontak ini?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="w-full inline-flex items-center justify-center rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
+                            <i class="fas fa-trash mr-2"></i>Hapus Kontak
+                        </button>
+                    </form>
+                </div>
+
+                @if($contactImportant->phone)
+                    <div class="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                        <h4 class="text-sm font-semibold text-gray-900 mb-3">Test Telepon</h4>
+                        <a href="tel:{{ $contactImportant->phone }}" class="w-full btn-primary justify-center">
+                            <i class="fas fa-phone mr-2"></i>Hubungi Sekarang
                         </a>
                     </div>
-                </div>
-                
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-8">
-                            <table class="table table-borderless">
-                                <tr>
-                                    <td width="30%"><strong>Nama Instansi/Lembaga</strong></td>
-                                    <td>{{ $contactImportant->name }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Jenis Kontak</strong></td>
-                                    <td>
-                                        <span class="badge bg-info">
-                                            {{ ucwords(str_replace('_', ' ', $contactImportant->type)) }}
-                                        </span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Nomor Telepon</strong></td>
-                                    <td>
-                                        @if($contactImportant->phone)
-                                            <a href="tel:{{ $contactImportant->phone }}" class="text-decoration-none">
-                                                <i class="fas fa-phone"></i> {{ $contactImportant->formatted_phone }}
-                                            </a>
-                                        @else
-                                            <span class="text-muted">-</span>
-                                        @endif
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Alamat</strong></td>
-                                    <td>{{ $contactImportant->address ?: '-' }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Deskripsi</strong></td>
-                                    <td>{{ $contactImportant->description ?: '-' }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Status</strong></td>
-                                    <td>
-                                        @if($contactImportant->is_active)
-                                            <span class="badge bg-success">Aktif</span>
-                                        @else
-                                            <span class="badge bg-secondary">Tidak Aktif</span>
-                                        @endif
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Urutan Tampil</strong></td>
-                                    <td>{{ $contactImportant->sort_order }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Dibuat</strong></td>
-                                    <td>{{ $contactImportant->created_at->format('d-m-Y H:i') }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Diperbarui</strong></td>
-                                    <td>{{ $contactImportant->updated_at->format('d-m-Y H:i') }}</td>
-                                </tr>
-                            </table>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <div class="card bg-light">
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0">Aksi</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="d-grid gap-2">
-                                        <a href="{{ route('admin.contact-importants.edit', $contactImportant) }}" 
-                                           class="btn btn-warning">
-                                            <i class="fas fa-edit"></i> Edit Kontak
-                                        </a>
-                                        
-                                        <form action="{{ route('admin.contact-importants.toggle-status', $contactImportant) }}" 
-                                              method="POST">
-                                            @csrf
-                                            @method('PATCH')
-                                            <button type="submit" class="btn {{ $contactImportant->is_active ? 'btn-secondary' : 'btn-success' }} w-100">
-                                                <i class="fas {{ $contactImportant->is_active ? 'fa-eye-slash' : 'fa-eye' }}"></i> 
-                                                {{ $contactImportant->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
-                                            </button>
-                                        </form>
-                                        
-                                        <form action="{{ route('admin.contact-importants.destroy', $contactImportant) }}" 
-                                              method="POST"
-                                              onsubmit="return confirm('Apakah Anda yakin ingin menghapus kontak ini?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-danger w-100">
-                                                <i class="fas fa-trash"></i> Hapus Kontak
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            @if($contactImportant->phone)
-                                <div class="card bg-light mt-3">
-                                    <div class="card-header">
-                                        <h5 class="card-title mb-0">Test Telepon</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <a href="tel:{{ $contactImportant->phone }}" class="btn btn-success w-100">
-                                            <i class="fas fa-phone"></i> Hubungi Sekarang
-                                        </a>
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
+                @endif
             </div>
         </div>
     </div>

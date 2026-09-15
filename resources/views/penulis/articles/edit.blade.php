@@ -53,31 +53,12 @@
                     >
                         <option value="">Pilih Kategori</option>
                         @foreach($categories as $category)
-                            <option value="{{ $category->id }}" {{ old('category_id', $article->category_id) == $category->id ? 'selected' : '' }}>
+                            <option value="{{ $category->id }}" data-slug="{{ $category->slug }}" {{ old('category_id', $article->category_id) == $category->id ? 'selected' : '' }}>
                                 {{ $category->name }}
                             </option>
                         @endforeach
                     </select>
                     @error('category_id')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div>
-                    <label for="type" class="block text-sm font-medium text-gray-700 mb-2">
-                        Tipe <span class="text-red-500">*</span>
-                    </label>
-                    <select 
-                        id="type" 
-                        name="type" 
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('type') border-red-500 @enderror"
-                        required
-                    >
-                        <option value="">Pilih Tipe</option>
-                        <option value="berita" {{ old('type', $article->type) == 'berita' ? 'selected' : '' }}>Berita</option>
-                        <option value="artikel" {{ old('type', $article->type) == 'artikel' ? 'selected' : '' }}>Artikel</option>
-                    </select>
-                    @error('type')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
@@ -189,7 +170,7 @@
                     @error('slug')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
-                    <p class="mt-1 text-sm text-gray-500">URL artikel: {{ url('/articles/') }}/<span id="slug-preview">{{ $article->slug }}</span></p>
+                    <p class="mt-1 text-sm text-gray-500">URL artikel: {{ url('/') }}/<span id="category-slug-preview">{{ $article->category->slug ?? 'kategori' }}</span>/<span id="slug-preview">{{ $article->slug }}</span></p>
                 </div>
 
                 <div class="mb-4">
@@ -354,6 +335,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // Slug update
     const slugInput = document.getElementById('slug');
     const slugPreview = document.getElementById('slug-preview');
+    const categorySelect = document.getElementById('category_id');
+    const categorySlugPreview = document.getElementById('category-slug-preview');
+
+    function updateCategorySlugPreview() {
+        if (!categorySelect || !categorySlugPreview) return;
+        const selected = categorySelect.options[categorySelect.selectedIndex];
+        categorySlugPreview.textContent = (selected && selected.dataset.slug) ? selected.dataset.slug : 'kategori';
+    }
+
+    if (categorySelect) {
+        categorySelect.addEventListener('change', updateCategorySlugPreview);
+        updateCategorySlugPreview();
+    }
     
     slugInput.addEventListener('input', function() {
         slugPreview.textContent = this.value || '{{ $article->slug }}';

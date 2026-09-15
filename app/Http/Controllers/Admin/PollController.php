@@ -13,11 +13,19 @@ class PollController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $polls = Poll::with(['options'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
+        $query = Poll::with(['options']);
+        $query = \App\Helpers\AdminTableHelper::applySort($query, $request, [
+            'title' => 'title',
+            'poll_type' => 'poll_type',
+            'start_date' => 'start_date',
+            'end_date' => 'end_date',
+            'is_active' => 'is_active',
+            'created_at' => 'created_at',
+        ], 'created_at', 'desc');
+
+        $polls = $query->paginate(15)->withQueryString();
 
         $stats = [
             'total' => Poll::count(),

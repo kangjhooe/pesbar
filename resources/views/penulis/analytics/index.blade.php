@@ -129,7 +129,7 @@
                         @forelse($topArticles as $article)
                         <tr class="hover:bg-gray-50">
                             <td class="px-4 py-3">
-                                <div class="text-sm font-medium text-gray-900">{{ Str::limit($article['title'], 40) }}</div>
+                                <div class="text-sm font-medium text-gray-900 line-clamp-2" title="{{ $article['title'] }}">{{ $article['title'] }}</div>
                                 <div class="text-xs text-gray-500 mt-1">{{ $article['category'] }}</div>
                             </td>
                             <td class="px-4 py-3 text-sm text-gray-900">{{ number_format($article['views']) }}</td>

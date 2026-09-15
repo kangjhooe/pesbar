@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'Method Tidak Diizinkan - Pesisir Barat Hub')
+@section('title', 'Method Tidak Diizinkan - ' . \App\Helpers\SettingsHelper::siteName())
 @section('description', 'Method HTTP tidak diizinkan untuk URL ini')
 
 @section('content')

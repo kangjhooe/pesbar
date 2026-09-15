@@ -42,16 +42,6 @@ class Category extends Model
         return $this->hasMany(Article::class)->where('status', 'published');
     }
 
-    public function publishedBeritaArticles(): HasMany
-    {
-        return $this->hasMany(Article::class)->where('status', 'published')->where('type', 'berita');
-    }
-
-    public function publishedArtikelArticles(): HasMany
-    {
-        return $this->hasMany(Article::class)->where('status', 'published')->where('type', 'artikel');
-    }
-
     public function getRouteKeyName()
     {
         return 'slug';

@@ -64,9 +64,8 @@ class UserDashboardController extends Controller
     public function updateComment(Request $request, Comment $comment)
     {
         $user = Auth::user();
-        
-        // Verify comment belongs to user
-        if ($comment->user_id !== $user->id && $comment->email !== $user->email) {
+
+        if (!$this->ownsComment($comment, $user)) {
             abort(403, 'Anda tidak memiliki izin untuk mengedit komentar ini.');
         }
 
@@ -86,9 +85,8 @@ class UserDashboardController extends Controller
     public function destroyComment(Comment $comment)
     {
         $user = Auth::user();
-        
-        // Verify comment belongs to user
-        if ($comment->user_id !== $user->id && $comment->email !== $user->email) {
+
+        if (!$this->ownsComment($comment, $user)) {
             abort(403, 'Anda tidak memiliki izin untuk menghapus komentar ini.');
         }
 
@@ -96,6 +94,19 @@ class UserDashboardController extends Controller
 
         return redirect()->route('user.dashboard')
             ->with('success', 'Komentar berhasil dihapus.');
+    }
+
+    /**
+     * Prefer user_id; only fall back to email for legacy guest comments (null user_id).
+     */
+    private function ownsComment(Comment $comment, $user): bool
+    {
+        if ($comment->user_id !== null) {
+            return (int) $comment->user_id === (int) $user->id;
+        }
+
+        return $comment->email !== null
+            && strcasecmp((string) $comment->email, (string) $user->email) === 0;
     }
 }
 

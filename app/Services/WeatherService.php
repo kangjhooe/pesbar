@@ -3,20 +3,22 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use App\Helpers\CacheHelper;
+use Illuminate\Support\Facades\Cache;
 
 class WeatherService
 {
-    private const CACHE_KEY = 'weather_pesisir_barat';
+    private const CACHE_KEY = 'weather_bmkg_pasar_krui_v2';
+    private const LAST_GOOD_KEY = 'weather_bmkg_pasar_krui_last_good';
     private const CACHE_DURATION = 1800; // 30 menit
-    
-    // Koordinat Pesisir Barat, Lampung
-    private const LATITUDE = -5.1167;
-    private const LONGITUDE = 103.9500;
-    
+
+    /** Kode adm4 BMKG: Pasar Krui, Kec. Pesisir Tengah, Kab. Pesisir Barat */
+    private const ADM4 = '18.13.01.1005';
+    private const API_URL = 'https://api.bmkg.go.id/publik/prakiraan-cuaca';
+
     /**
-     * Get weather data for Pesisir Barat
+     * Get weather data for Pesisir Barat (sumber: BMKG saja).
      */
     public function getWeatherData()
     {
@@ -28,217 +30,235 @@ class WeatherService
             }
         );
     }
-    
+
     /**
-     * Fetch weather data from BMKG API
+     * Fetch from BMKG Open Data API (JSON per kelurahan/desa).
+     * @see https://data.bmkg.go.id/prakiraan-cuaca/
      */
     private function fetchWeatherFromBMKG()
     {
         try {
-            // BMKG API untuk cuaca wilayah Lampung
-            $response = Http::timeout(10)->get('https://data.bmkg.go.id/DataMKG/MEWS/DigitalForecast/DigitalForecast-Lampung.xml');
-            
-            if ($response->successful()) {
-                return $this->parseBMKGResponse($response->body());
+            $response = Http::timeout(12)
+                ->acceptJson()
+                ->get(self::API_URL, ['adm4' => self::ADM4]);
+
+            if (!$response->successful()) {
+                Log::warning('BMKG weather HTTP ' . $response->status());
+                return $this->lastGoodOrUnavailable('HTTP ' . $response->status());
             }
-            
-            // Fallback ke data statis jika API gagal
-            return $this->getFallbackWeatherData();
-            
+
+            $payload = $response->json();
+            $parsed = $this->parseBMKGJson($payload);
+
+            if ($parsed === null) {
+                return $this->lastGoodOrUnavailable('Parse gagal');
+            }
+
+            Cache::put(self::LAST_GOOD_KEY, $parsed, now()->addDays(2));
+
+            return $parsed;
         } catch (\Exception $e) {
-            \Log::error('Weather API Error: ' . $e->getMessage());
-            return $this->getFallbackWeatherData();
+            Log::error('BMKG Weather API Error: ' . $e->getMessage());
+            return $this->lastGoodOrUnavailable($e->getMessage());
         }
     }
-    
-    /**
-     * Parse BMKG XML response
-     */
-    private function parseBMKGResponse($xmlData)
+
+    private function parseBMKGJson(?array $payload): ?array
     {
-        try {
-            $xml = simplexml_load_string($xmlData);
-            
-            if ($xml === false) {
-                return $this->getFallbackWeatherData();
-            }
-            
-            // Cari data untuk Pesisir Barat (area ID: 1801)
-            $area = $xml->xpath("//area[@id='1801']")[0] ?? null;
-            
-            if ($area) {
-                $parameter = $area->parameter;
-                
-                // Ambil data cuaca hari ini
-                $temperature = $this->extractParameterValue($parameter, 't', 0); // Suhu
-                $humidity = $this->extractParameterValue($parameter, 'hu', 0); // Kelembaban
-                $weather = $this->extractParameterValue($parameter, 'weather', 0); // Kondisi cuaca
-                
-                // Ambil data prakiraan cuaca untuk 3 hari ke depan
-                $forecast = $this->getWeatherForecast($parameter);
-                
-                return [
-                    'temperature' => $temperature ?: 28,
-                    'humidity' => $humidity ?: 75,
-                    'condition' => $this->mapWeatherCondition($weather),
-                    'icon' => $this->getWeatherIcon($weather),
-                    'location' => 'Pesisir Barat',
-                    'source' => 'BMKG',
-                    'updated_at' => now()->format('H:i'),
-                    'forecast' => $forecast
-                ];
-            }
-            
-            return $this->getFallbackWeatherData();
-            
-        } catch (\Exception $e) {
-            \Log::error('BMKG Parse Error: ' . $e->getMessage());
-            return $this->getFallbackWeatherData();
+        $entry = $payload['data'][0] ?? null;
+        if (!$entry || empty($entry['cuaca']) || !is_array($entry['cuaca'])) {
+            return null;
         }
+
+        $lokasi = $entry['lokasi'] ?? [];
+        $days = $entry['cuaca'];
+
+        $current = $this->pickCurrentSlot($days);
+        if (!$current) {
+            return null;
+        }
+
+        $weatherCode = (string) ($current['weather'] ?? '');
+        $condition = $current['weather_desc'] ?? $this->mapWeatherCondition($weatherCode);
+
+        return [
+            'temperature' => (int) round((float) ($current['t'] ?? 0)),
+            'humidity' => (int) ($current['hu'] ?? 0),
+            'wind_speed' => isset($current['ws']) ? round((float) $current['ws'], 1) : null,
+            'wind_direction' => $this->mapWindDirection($current['wd'] ?? null),
+            'condition' => $condition,
+            'icon' => $this->getWeatherIcon($weatherCode, $condition),
+            'location' => trim(($lokasi['desa'] ?? 'Pasar Krui') . ', Pesisir Barat'),
+            'source' => 'BMKG',
+            'updated_at' => now()->format('H:i'),
+            'available' => true,
+            'forecast' => $this->buildDailyForecast($days),
+        ];
     }
-    
+
     /**
-     * Extract parameter value from BMKG XML
+     * Pilih slot prakiraan terdekat dengan waktu sekarang.
      */
-    private function extractParameterValue($parameter, $type, $index = 0)
+    private function pickCurrentSlot(array $days): ?array
     {
-        // Cari parameter dengan ID yang sesuai dalam parent parameter
-        $param = null;
-        foreach ($parameter->children() as $child) {
-            if ((string)$child['id'] === $type) {
-                $param = $child;
-                break;
+        $now = now();
+        $best = null;
+        $bestDiff = PHP_INT_MAX;
+
+        foreach ($days as $daySlots) {
+            if (!is_array($daySlots)) {
+                continue;
+            }
+            foreach ($daySlots as $slot) {
+                $local = $slot['local_datetime'] ?? null;
+                if (!$local) {
+                    continue;
+                }
+                try {
+                    $slotTime = \Carbon\Carbon::parse($local);
+                } catch (\Exception $e) {
+                    continue;
+                }
+                $diff = abs($slotTime->diffInSeconds($now));
+                if ($diff < $bestDiff) {
+                    $bestDiff = $diff;
+                    $best = $slot;
+                }
             }
         }
-        
-        if ($param && isset($param->timerange[$index])) {
-            $value = $param->timerange[$index]->value;
-            return (string) $value;
+
+        // Fallback: slot pertama hari ini
+        if (!$best && !empty($days[0][0])) {
+            $best = $days[0][0];
         }
-        
-        return null;
+
+        return $best;
     }
-    
-    /**
-     * Get weather forecast for next 3 days
-     */
-    private function getWeatherForecast($parameter)
+
+    private function buildDailyForecast(array $days): array
     {
         $forecast = [];
         $today = now()->startOfDay();
-        
-        // Ambil data untuk 3 hari ke depan
-        for ($day = 1; $day <= 3; $day++) {
-            $targetDate = $today->copy()->addDays($day);
-            
-            // Cari timerange yang sesuai dengan tanggal target (biasanya interval 6 jam)
-            // Ambil data untuk siang hari (index sekitar 2-3 untuk hari berikutnya)
-            $timerangeIndex = ($day * 4) + 2; // Estimasi index untuk siang hari
-            
-            $temp = $this->extractParameterValue($parameter, 't', $timerangeIndex);
-            $weather = $this->extractParameterValue($parameter, 'weather', $timerangeIndex);
-            
-            // Jika tidak ada data, coba ambil dari index sebelumnya atau berikutnya
-            if (!$temp || !$weather) {
-                for ($offset = -2; $offset <= 2; $offset++) {
-                    $testIndex = $timerangeIndex + $offset;
-                    if ($testIndex >= 0) {
-                        $testTemp = $this->extractParameterValue($parameter, 't', $testIndex);
-                        $testWeather = $this->extractParameterValue($parameter, 'weather', $testIndex);
-                        if ($testTemp && $testWeather) {
-                            $temp = $testTemp;
-                            $weather = $testWeather;
-                            break;
+
+        foreach ($days as $index => $daySlots) {
+            if (!is_array($daySlots) || empty($daySlots)) {
+                continue;
+            }
+
+            $temps = [];
+            $midday = null;
+            $middayScore = PHP_INT_MAX;
+
+            foreach ($daySlots as $slot) {
+                if (isset($slot['t'])) {
+                    $temps[] = (float) $slot['t'];
+                }
+                $local = $slot['local_datetime'] ?? null;
+                if ($local) {
+                    try {
+                        $hour = \Carbon\Carbon::parse($local)->hour;
+                        $score = abs($hour - 12);
+                        if ($score < $middayScore) {
+                            $middayScore = $score;
+                            $midday = $slot;
                         }
+                    } catch (\Exception $e) {
+                        // skip
                     }
                 }
             }
-            
-            // Ambil suhu min dan max untuk hari tersebut
-            $tempMin = $this->getMinTemperatureForDay($parameter, $day);
-            $tempMax = $this->getMaxTemperatureForDay($parameter, $day);
-            
+
+            $ref = $midday ?: $daySlots[0];
+            $date = null;
+            if (!empty($ref['local_datetime'])) {
+                try {
+                    $date = \Carbon\Carbon::parse($ref['local_datetime'])->startOfDay();
+                } catch (\Exception $e) {
+                    $date = $today->copy()->addDays($index);
+                }
+            } else {
+                $date = $today->copy()->addDays($index);
+            }
+
+            // Lewati hari yang sudah lewat
+            if ($date->lt($today)) {
+                continue;
+            }
+
+            $weatherCode = (string) ($ref['weather'] ?? '');
+            $condition = $ref['weather_desc'] ?? $this->mapWeatherCondition($weatherCode);
+
             $forecast[] = [
-                'day' => $this->getDayName($targetDate),
-                'date' => $targetDate->format('d/m'),
-                'temperature' => $temp ?: ($tempMax ?: 28),
-                'temp_min' => $tempMin ?: ($temp ?: 26),
-                'temp_max' => $tempMax ?: ($temp ?: 30),
-                'condition' => $this->mapWeatherCondition($weather),
-                'icon' => $this->getWeatherIcon($weather)
+                'day' => $this->getDayName($date),
+                'date' => $date->format('d/m'),
+                'temperature' => (int) round((float) ($ref['t'] ?? ($temps[0] ?? 28))),
+                'temp_min' => !empty($temps) ? (int) round(min($temps)) : null,
+                'temp_max' => !empty($temps) ? (int) round(max($temps)) : null,
+                'condition' => $condition,
+                'icon' => $this->getWeatherIcon($weatherCode, $condition),
             ];
+
+            if (count($forecast) >= 3) {
+                break;
+            }
         }
-        
+
         return $forecast;
     }
-    
-    /**
-     * Get minimum temperature for a specific day
-     */
-    private function getMinTemperatureForDay($parameter, $dayOffset)
+
+    private function lastGoodOrUnavailable(string $reason): array
     {
-        $startIndex = $dayOffset * 4;
-        $endIndex = ($dayOffset + 1) * 4;
-        $minTemp = null;
-        
-        for ($i = $startIndex; $i < $endIndex && $i < 20; $i++) {
-            $temp = $this->extractParameterValue($parameter, 't', $i);
-            if ($temp) {
-                $temp = (int) $temp;
-                if ($minTemp === null || $temp < $minTemp) {
-                    $minTemp = $temp;
-                }
-            }
+        $last = Cache::get(self::LAST_GOOD_KEY);
+        if (is_array($last) && !empty($last['available'])) {
+            $last['updated_at'] = ($last['updated_at'] ?? '') . ' (cache)';
+            return $last;
         }
-        
-        return $minTemp;
-    }
-    
-    /**
-     * Get maximum temperature for a specific day
-     */
-    private function getMaxTemperatureForDay($parameter, $dayOffset)
-    {
-        $startIndex = $dayOffset * 4;
-        $endIndex = ($dayOffset + 1) * 4;
-        $maxTemp = null;
-        
-        for ($i = $startIndex; $i < $endIndex && $i < 20; $i++) {
-            $temp = $this->extractParameterValue($parameter, 't', $i);
-            if ($temp) {
-                $temp = (int) $temp;
-                if ($maxTemp === null || $temp > $maxTemp) {
-                    $maxTemp = $temp;
-                }
-            }
-        }
-        
-        return $maxTemp;
-    }
-    
-    /**
-     * Get day name in Indonesian
-     */
-    private function getDayName($date)
-    {
-        $days = [
-            'Minggu', 'Senin', 'Selasa', 'Rabu', 
-            'Kamis', 'Jumat', 'Sabtu'
+
+        Log::warning('BMKG weather unavailable: ' . $reason);
+
+        return [
+            'temperature' => null,
+            'humidity' => null,
+            'wind_speed' => null,
+            'wind_direction' => null,
+            'condition' => 'Data BMKG tidak tersedia',
+            'icon' => 'fas fa-cloud',
+            'location' => 'Pesisir Barat',
+            'source' => 'BMKG',
+            'updated_at' => now()->format('H:i'),
+            'available' => false,
+            'forecast' => [],
         ];
-        
-        return $days[$date->dayOfWeek] ?? $date->format('l');
     }
-    
-    /**
-     * Map BMKG weather condition to readable text
-     */
-    private function mapWeatherCondition($weatherCode)
+
+    private function mapWindDirection(?string $wd): ?string
+    {
+        $map = [
+            'N' => 'Utara',
+            'NE' => 'Timur Laut',
+            'E' => 'Timur',
+            'SE' => 'Tenggara',
+            'S' => 'Selatan',
+            'SW' => 'Barat Daya',
+            'W' => 'Barat',
+            'NW' => 'Barat Laut',
+            'VARIABLE' => 'Berubah-ubah',
+        ];
+
+        if (!$wd) {
+            return null;
+        }
+
+        return $map[strtoupper($wd)] ?? $wd;
+    }
+
+    private function mapWeatherCondition(string $weatherCode): string
     {
         $conditions = [
             '0' => 'Cerah',
             '1' => 'Cerah Berawan',
-            '2' => 'Berawan',
-            '3' => 'Berawan Tebal',
+            '2' => 'Cerah Berawan',
+            '3' => 'Berawan',
             '4' => 'Berawan Tebal',
             '5' => 'Udara Kabur',
             '10' => 'Asap',
@@ -248,21 +268,18 @@ class WeatherService
             '63' => 'Hujan Lebat',
             '80' => 'Hujan Lokal',
             '95' => 'Hujan Petir',
-            '97' => 'Hujan Petir'
+            '97' => 'Hujan Petir',
         ];
-        
+
         return $conditions[$weatherCode] ?? 'Cerah';
     }
-    
-    /**
-     * Get weather icon based on condition
-     */
-    private function getWeatherIcon($weatherCode)
+
+    private function getWeatherIcon(string $weatherCode, ?string $condition = null): string
     {
         $icons = [
             '0' => 'fas fa-sun',
             '1' => 'fas fa-cloud-sun',
-            '2' => 'fas fa-cloud',
+            '2' => 'fas fa-cloud-sun',
             '3' => 'fas fa-cloud',
             '4' => 'fas fa-cloud',
             '5' => 'fas fa-smog',
@@ -273,67 +290,31 @@ class WeatherService
             '63' => 'fas fa-cloud-showers-heavy',
             '80' => 'fas fa-cloud-rain',
             '95' => 'fas fa-bolt',
-            '97' => 'fas fa-bolt'
+            '97' => 'fas fa-bolt',
         ];
-        
-        return $icons[$weatherCode] ?? 'fas fa-sun';
-    }
-    
-    /**
-     * Fallback weather data when API fails
-     */
-    private function getFallbackWeatherData()
-    {
-        // Data cuaca umum untuk Pesisir Barat
-        $conditions = ['Cerah', 'Berawan', 'Hujan Ringan'];
-        $condition = $conditions[array_rand($conditions)];
-        
-        // Generate forecast data fallback
-        $forecast = [];
-        $today = now()->startOfDay();
-        $forecastConditions = ['Cerah', 'Berawan', 'Hujan Ringan', 'Cerah Berawan'];
-        
-        for ($day = 1; $day <= 3; $day++) {
-            $targetDate = $today->copy()->addDays($day);
-            $forecastCondition = $forecastConditions[array_rand($forecastConditions)];
-            
-            $forecast[] = [
-                'day' => $this->getDayName($targetDate),
-                'date' => $targetDate->format('d/m'),
-                'temperature' => rand(26, 30),
-                'temp_min' => rand(24, 26),
-                'temp_max' => rand(28, 32),
-                'condition' => $forecastCondition,
-                'icon' => $this->getFallbackIcon($forecastCondition)
-            ];
+
+        if (isset($icons[$weatherCode])) {
+            return $icons[$weatherCode];
         }
-        
-        return [
-            'temperature' => rand(26, 32),
-            'humidity' => rand(70, 85),
-            'condition' => $condition,
-            'icon' => $this->getFallbackIcon($condition),
-            'location' => 'Pesisir Barat',
-            'source' => 'Estimasi',
-            'updated_at' => now()->format('H:i'),
-            'forecast' => $forecast
-        ];
-    }
-    
-    /**
-     * Get fallback icon
-     */
-    private function getFallbackIcon($condition)
-    {
-        $icons = [
+
+        $byName = [
             'Cerah' => 'fas fa-sun',
+            'Sunny' => 'fas fa-sun',
             'Cerah Berawan' => 'fas fa-cloud-sun',
             'Berawan' => 'fas fa-cloud',
             'Hujan Ringan' => 'fas fa-cloud-rain',
             'Hujan Sedang' => 'fas fa-cloud-rain',
-            'Hujan Lebat' => 'fas fa-cloud-showers-heavy'
+            'Hujan Lebat' => 'fas fa-cloud-showers-heavy',
+            'Hujan Petir' => 'fas fa-bolt',
         ];
-        
-        return $icons[$condition] ?? 'fas fa-sun';
+
+        return $byName[$condition ?? ''] ?? 'fas fa-cloud-sun';
+    }
+
+    private function getDayName($date): string
+    {
+        $days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+
+        return $days[$date->dayOfWeek] ?? $date->format('l');
     }
 }

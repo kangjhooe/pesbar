@@ -1,438 +1,334 @@
 @extends('layouts.admin-simple')
 
 @section('title', 'Dashboard Admin')
+@section('page-title', 'Dashboard')
+@section('page-subtitle', 'Halo, ' . Auth::user()->name . ' · ' . now()->translatedFormat('l, d F Y'))
 
 @section('content')
-<div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-    <div class="container mx-auto px-4 py-8">
-        <!-- Modern Header with Gradient -->
-        <div class="mb-8 relative overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 opacity-10 rounded-2xl"></div>
-            <div class="relative bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/20">
-                <div class="flex items-center justify-between flex-wrap gap-4">
-                    <div>
-                        <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-                            Dashboard Admin
-                        </h1>
-                        <p class="text-gray-600 text-lg">Selamat datang! Kelola sistem portal berita dengan mudah</p>
-                        <div class="flex items-center mt-4 space-x-4 flex-wrap">
-                            <div class="flex items-center text-sm text-gray-500">
-                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
-                                </svg>
-                                {{ now()->format('d F Y, H:i') }}
-                            </div>
-                            <div class="flex items-center text-sm text-gray-500">
-                                <div class="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
-                                Sistem Online
-                            </div>
-                        </div>
-                    </div>
-                    <div class="hidden md:block">
-                        <div class="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
-                            <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
+<div class="space-y-6">
+    {{-- Action queue --}}
+    <section>
+        <div class="flex items-end justify-between mb-3">
+            <div>
+                <h3 class="text-sm font-semibold text-gray-900">Perlu tindakan</h3>
+                <p class="text-xs text-gray-500 mt-0.5">Antrian yang menunggu review Anda</p>
             </div>
         </div>
-
-        @if(session('success'))
-            <div class="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-green-800 px-6 py-4 rounded-xl shadow-sm">
-                <div class="flex items-center">
-                    <svg class="w-5 h-5 mr-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                    </svg>
-                    {{ session('success') }}
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <a href="{{ route('admin.articles.pending') }}"
+               class="group flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-4 hover:border-amber-300 hover:bg-amber-50/40 transition-colors">
+                <div>
+                    <p class="text-xs font-medium text-gray-500">Artikel review</p>
+                    <p class="mt-1 text-2xl font-semibold tabular-nums text-gray-900">{{ $stats['pending_articles'] }}</p>
                 </div>
-            </div>
-        @endif
-
-        <!-- Main Stats Cards - Row 1 -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <!-- Total Users Card -->
-            <div class="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-white/20 overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div class="relative p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                            </svg>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-2xl font-bold text-gray-900">{{ $stats['total_users'] }}</div>
-                            <div class="text-xs text-green-600 font-medium">+{{ $monthlyStats['users_this_month'] ?? 0 }} bulan ini</div>
-                        </div>
-                    </div>
-                    <div class="text-sm font-medium text-gray-600">Total Users</div>
-                    <div class="mt-2 w-full bg-gray-200 rounded-full h-1.5">
-                        <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-1.5 rounded-full" style="width: {{ min(($stats['total_users'] / 100) * 100, 100) }}%"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Total Penulis Card -->
-            <div class="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-white/20 overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div class="relative p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                            </svg>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-2xl font-bold text-gray-900">{{ $stats['total_penulis'] }}</div>
-                            <div class="text-xs text-gray-500">Penulis Aktif</div>
-                        </div>
-                    </div>
-                    <div class="text-sm font-medium text-gray-600">Total Penulis</div>
-                    <div class="mt-2 w-full bg-gray-200 rounded-full h-1.5">
-                        <div class="bg-gradient-to-r from-green-500 to-green-600 h-1.5 rounded-full" style="width: {{ min(($stats['total_penulis'] / 50) * 100, 100) }}%"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Total Artikel Card -->
-            <a href="{{ route('admin.articles.index') }}" class="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-white/20 overflow-hidden block">
-                <div class="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div class="relative p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-2xl font-bold text-gray-900">{{ $stats['total_articles'] }}</div>
-                            <div class="text-xs text-green-600 font-medium">+{{ $monthlyStats['articles_this_month'] ?? 0 }} bulan ini</div>
-                        </div>
-                    </div>
-                    <div class="text-sm font-medium text-gray-600">Total Artikel</div>
-                    <div class="mt-2 w-full bg-gray-200 rounded-full h-1.5">
-                        <div class="bg-gradient-to-r from-purple-500 to-purple-600 h-1.5 rounded-full" style="width: {{ min(($stats['total_articles'] / 200) * 100, 100) }}%"></div>
-                    </div>
-                </div>
+                <span class="inline-flex items-center text-xs font-medium text-amber-700 opacity-0 group-hover:opacity-100 transition-opacity">
+                    Review <i class="fas fa-arrow-right ml-1.5 text-[10px]"></i>
+                </span>
             </a>
 
-            <!-- Menunggu Review Card -->
-            <a href="{{ route('admin.articles.pending') }}" class="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-white/20 overflow-hidden block">
-                <div class="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div class="relative p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="p-3 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-2xl font-bold text-gray-900">{{ $stats['pending_articles'] }}</div>
-                            <div class="text-xs text-yellow-600 font-medium">Perlu Review</div>
-                        </div>
-                    </div>
-                    <div class="text-sm font-medium text-gray-600">Menunggu Review</div>
-                    <div class="mt-2 w-full bg-gray-200 rounded-full h-1.5">
-                        <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 h-1.5 rounded-full" style="width: {{ min(($stats['pending_articles'] / 20) * 100, 100) }}%"></div>
-                    </div>
+            <a href="{{ route('admin.comments.index') }}"
+               class="group flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-4 hover:border-rose-300 hover:bg-rose-50/40 transition-colors">
+                <div>
+                    <p class="text-xs font-medium text-gray-500">Komentar pending</p>
+                    <p class="mt-1 text-2xl font-semibold tabular-nums text-gray-900">{{ $stats['pending_comments'] }}</p>
                 </div>
-            </a>
-        </div>
-
-        <!-- Secondary Stats Cards - Row 2 -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <!-- Permintaan Verifikasi Card -->
-            <a href="{{ route('admin.verification-requests') }}" class="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-white/20 overflow-hidden block">
-                <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div class="relative p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="p-3 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl shadow-lg">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-2xl font-bold text-gray-900">{{ $stats['pending_verification_requests'] }}</div>
-                            <div class="text-xs text-cyan-600 font-medium">Perlu Tinjauan</div>
-                        </div>
-                    </div>
-                    <div class="text-sm font-medium text-gray-600">Permintaan Verifikasi</div>
-                    <div class="mt-2 w-full bg-gray-200 rounded-full h-1.5">
-                        <div class="bg-gradient-to-r from-cyan-500 to-cyan-600 h-1.5 rounded-full" style="width: {{ min(($stats['pending_verification_requests'] / 10) * 100, 100) }}%"></div>
-                    </div>
-                </div>
+                <span class="inline-flex items-center text-xs font-medium text-rose-700 opacity-0 group-hover:opacity-100 transition-opacity">
+                    Moderasi <i class="fas fa-arrow-right ml-1.5 text-[10px]"></i>
+                </span>
             </a>
 
-            <!-- Total Views Card -->
-            <div class="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-white/20 overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div class="relative p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="p-3 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-lg">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                            </svg>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-2xl font-bold text-gray-900">{{ number_format($stats['total_views']) }}</div>
-                            <div class="text-xs text-green-600 font-medium">+{{ number_format($monthlyStats['views_this_month'] ?? 0) }} bulan ini</div>
-                        </div>
-                    </div>
-                    <div class="text-sm font-medium text-gray-600">Total Views</div>
-                    <div class="mt-2 w-full bg-gray-200 rounded-full h-1.5">
-                        <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 h-1.5 rounded-full" style="width: {{ min(($stats['total_views'] / 10000) * 100, 100) }}%"></div>
-                    </div>
+            <a href="{{ route('admin.verification-requests') }}"
+               class="group flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-4 hover:border-sky-300 hover:bg-sky-50/40 transition-colors">
+                <div>
+                    <p class="text-xs font-medium text-gray-500">Verifikasi penulis</p>
+                    <p class="mt-1 text-2xl font-semibold tabular-nums text-gray-900">{{ $stats['pending_verification_requests'] }}</p>
+                </div>
+                <span class="inline-flex items-center text-xs font-medium text-sky-700 opacity-0 group-hover:opacity-100 transition-opacity">
+                    Tinjau <i class="fas fa-arrow-right ml-1.5 text-[10px]"></i>
+                </span>
+            </a>
+        </div>
+    </section>
+
+    {{-- Today + quick actions --}}
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="lg:col-span-2 rounded-xl border border-gray-200 bg-white p-5">
+            <h3 class="text-sm font-semibold text-gray-900 mb-4">Hari ini</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div>
+                    <p class="text-xs text-gray-500">Artikel baru</p>
+                    <p class="mt-1 text-xl font-semibold tabular-nums text-gray-900">{{ $stats['articles_today'] }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">Komentar baru</p>
+                    <p class="mt-1 text-xl font-semibold tabular-nums text-gray-900">{{ $stats['comments_today'] }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">Pembacaan user</p>
+                    <p class="mt-1 text-xl font-semibold tabular-nums text-gray-900">{{ number_format($stats['reads_today']) }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">Total views</p>
+                    <p class="mt-1 text-xl font-semibold tabular-nums text-gray-900">{{ number_format($stats['total_views']) }}</p>
                 </div>
             </div>
-
-            <!-- Kategori Card -->
-            <div class="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-white/20 overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-br from-pink-500/5 to-rose-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div class="relative p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="p-3 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl shadow-lg">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
-                            </svg>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-2xl font-bold text-gray-900">{{ $stats['total_categories'] }}</div>
-                            <div class="text-xs text-gray-500">Kategori Aktif</div>
-                        </div>
-                    </div>
-                    <div class="text-sm font-medium text-gray-600">Kategori</div>
-                    <div class="mt-2 w-full bg-gray-200 rounded-full h-1.5">
-                        <div class="bg-gradient-to-r from-pink-500 to-pink-600 h-1.5 rounded-full" style="width: {{ min(($stats['total_categories'] / 10) * 100, 100) }}%"></div>
-                    </div>
+            <div class="mt-5 pt-4 border-t border-gray-100 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                <div>
+                    <p class="text-xs text-gray-500">Users</p>
+                    <p class="font-medium text-gray-800 tabular-nums">{{ number_format($stats['total_users']) }} <span class="text-xs font-normal text-emerald-600">+{{ $monthlyStats['users_this_month'] ?? 0 }}</span></p>
                 </div>
-            </div>
-
-            <!-- Komentar Card -->
-            <div class="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-white/20 overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-amber-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div class="relative p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                            </svg>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-2xl font-bold text-gray-900">{{ $stats['total_comments'] }}</div>
-                            <div class="text-xs text-orange-600 font-medium">{{ $stats['pending_comments'] }} menunggu approval</div>
-                        </div>
-                    </div>
-                    <div class="text-sm font-medium text-gray-600">Komentar</div>
-                    <div class="mt-2 w-full bg-gray-200 rounded-full h-1.5">
-                        <div class="bg-gradient-to-r from-orange-500 to-orange-600 h-1.5 rounded-full" style="width: {{ min(($stats['total_comments'] / 500) * 100, 100) }}%"></div>
-                    </div>
+                <div>
+                    <p class="text-xs text-gray-500">Penulis</p>
+                    <p class="font-medium text-gray-800 tabular-nums">{{ number_format($stats['total_penulis']) }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">Artikel</p>
+                    <p class="font-medium text-gray-800 tabular-nums">{{ number_format($stats['total_articles']) }} <span class="text-xs font-normal text-emerald-600">+{{ $monthlyStats['articles_this_month'] ?? 0 }}</span></p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">Subscriber</p>
+                    <p class="font-medium text-gray-800 tabular-nums">{{ number_format($stats['newsletter_subscribers']) }}</p>
                 </div>
             </div>
         </div>
 
-        <!-- Newsletter Card - Full Width -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div class="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-white/20 overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div class="relative p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="p-3 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl shadow-lg">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                            </svg>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-2xl font-bold text-gray-900">{{ $stats['newsletter_subscribers'] }}</div>
-                            <div class="text-xs text-gray-500">Subscriber</div>
-                        </div>
-                    </div>
-                    <div class="text-sm font-medium text-gray-600">Newsletter</div>
-                    <div class="mt-2 w-full bg-gray-200 rounded-full h-1.5">
-                        <div class="bg-gradient-to-r from-teal-500 to-teal-600 h-1.5 rounded-full" style="width: {{ min(($stats['newsletter_subscribers'] / 100) * 100, 100) }}%"></div>
-                    </div>
-                </div>
+        <div class="rounded-xl border border-gray-200 bg-white p-5">
+            <h3 class="text-sm font-semibold text-gray-900 mb-4">Aksi cepat</h3>
+            <div class="space-y-2">
+                <a href="{{ route('admin.articles.create') }}"
+                   class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
+                        <i class="fas fa-plus text-xs"></i>
+                    </span>
+                    Buat artikel
+                </a>
+                <a href="{{ route('admin.articles.pending') }}"
+                   class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-700">
+                        <i class="fas fa-clock text-xs"></i>
+                    </span>
+                    Review artikel
+                </a>
+                <a href="{{ route('admin.comments.index') }}"
+                   class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-700">
+                        <i class="fas fa-comments text-xs"></i>
+                    </span>
+                    Moderasi komentar
+                </a>
+                <a href="{{ route('admin.verification-requests') }}"
+                   class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-50 text-sky-700">
+                        <i class="fas fa-user-check text-xs"></i>
+                    </span>
+                    Verifikasi penulis
+                </a>
+            </div>
+        </div>
+    </section>
+
+    {{-- Chart + activity --}}
+    <section class="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        <div class="lg:col-span-3 rounded-xl border border-gray-200 bg-white p-5">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-semibold text-gray-900">Aktivitas 7 hari</h3>
+                <a href="{{ route('admin.analytics.index') }}" class="text-xs font-medium text-blue-600 hover:text-news-accent">Analitik</a>
+            </div>
+            <div class="h-56">
+                <canvas id="adminActivityChart"></canvas>
             </div>
         </div>
 
-        <!-- Analytics Chart Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <!-- Quick Stats Widget -->
-            <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-lg font-semibold text-gray-900">Statistik Cepat</h3>
-                    <div class="p-2 bg-blue-100 rounded-lg">
-                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                        </svg>
-                    </div>
-                </div>
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
-                        <div class="flex items-center">
-                            <div class="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-                            <span class="text-sm font-medium text-gray-700">Artikel Terbit Hari Ini</span>
+        <div class="lg:col-span-2 rounded-xl border border-gray-200 bg-white p-5">
+            <h3 class="text-sm font-semibold text-gray-900 mb-4">Aktivitas terbaru</h3>
+            <div class="space-y-1 max-h-56 overflow-y-auto">
+                @forelse($recent_activity->take(8) as $activity)
+                    @php
+                        $dot = match($activity['color'] ?? 'gray') {
+                            'green' => 'bg-emerald-500',
+                            'yellow' => 'bg-amber-500',
+                            'blue' => 'bg-sky-500',
+                            'red' => 'bg-rose-500',
+                            default => 'bg-gray-400',
+                        };
+                    @endphp
+                    <div class="flex gap-3 rounded-lg px-2 py-2.5 hover:bg-gray-50">
+                        <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full {{ $dot }}"></span>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-sm text-gray-900 truncate">
+                                <span class="font-medium">{{ $activity['user'] }}</span>
+                                <span class="text-gray-500"> {{ $activity['action'] }}</span>
+                            </p>
+                            @if(!empty($activity['title']))
+                                <p class="text-xs text-gray-500 truncate mt-0.5">{{ $activity['title'] }}</p>
+                            @endif
+                            <p class="text-[11px] text-gray-400 mt-0.5">
+                                {{ $activity['time'] ? \Carbon\Carbon::parse($activity['time'])->diffForHumans() : 'Baru saja' }}
+                            </p>
                         </div>
-                        <span class="text-sm font-bold text-blue-600">{{ $stats['articles_today'] ?? 0 }}</span>
                     </div>
-                    <div class="flex items-center justify-between p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
-                        <div class="flex items-center">
-                            <div class="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-                            <span class="text-sm font-medium text-gray-700">Views Hari Ini</span>
-                        </div>
-                        <span class="text-sm font-bold text-green-600">{{ number_format($stats['views_today'] ?? 0) }}</span>
+                @empty
+                    <div class="py-10 text-center">
+                        <p class="text-sm text-gray-500">Belum ada aktivitas</p>
                     </div>
-                    <div class="flex items-center justify-between p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg">
-                        <div class="flex items-center">
-                            <div class="w-2 h-2 bg-purple-500 rounded-full mr-3"></div>
-                            <span class="text-sm font-medium text-gray-700">Komentar Baru</span>
-                        </div>
-                        <span class="text-sm font-bold text-purple-600">{{ $stats['comments_today'] ?? 0 }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Recent Activity Widget -->
-            <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-lg font-semibold text-gray-900">Aktivitas Terbaru</h3>
-                    <div class="p-2 bg-green-100 rounded-lg">
-                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                </div>
-                <div class="space-y-3">
-                    @if(isset($recent_activity) && $recent_activity->count() > 0)
-                        @foreach($recent_activity->take(5) as $activity)
-                            <div class="flex items-center p-3 bg-gray-50 rounded-lg">
-                                <div class="w-8 h-8 bg-{{ $activity['color'] ?? 'blue' }}-100 rounded-full flex items-center justify-center mr-3">
-                                    <i class="fas {{ $activity['icon'] ?? 'fa-circle' }} text-{{ $activity['color'] ?? 'blue' }}-600 text-xs"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <p class="text-sm font-medium text-gray-900">{{ $activity['user'] ?? 'Sistem' }} {{ $activity['action'] ?? 'melakukan aksi' }}</p>
-                                    <p class="text-xs text-gray-500">{{ $activity['time'] ? \Carbon\Carbon::parse($activity['time'])->diffForHumans() : 'Baru saja' }}</p>
-                                </div>
-                            </div>
-                        @endforeach
-                    @else
-                        <div class="flex items-center p-3 bg-gray-50 rounded-lg">
-                            <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3">
-                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                </svg>
-                            </div>
-                            <div class="flex-1">
-                                <p class="text-sm font-medium text-gray-900">Belum ada aktivitas</p>
-                                <p class="text-xs text-gray-500">Aktivitas akan muncul di sini</p>
-                            </div>
-                        </div>
-                    @endif
-                </div>
+                @endforelse
             </div>
         </div>
+    </section>
 
-        <!-- Recent Articles -->
-        <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 mb-8 overflow-hidden">
-            <div class="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
-                <div class="flex items-center justify-between flex-wrap gap-4">
-                    <h2 class="text-lg font-semibold text-gray-900">Artikel Terbaru</h2>
-                    <div class="flex items-center space-x-4 flex-wrap">
-                        <div class="flex items-center text-sm text-gray-500">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            Terakhir diperbarui
-                        </div>
-                        <a href="{{ route('admin.articles.index') }}" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg">
-                            <i class="fas fa-newspaper mr-2"></i>
-                            Lihat Semua Artikel
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50/50">
-                        <tr>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Judul</th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Penulis</th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tanggal</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white/50 divide-y divide-gray-200">
-                        @forelse($recent_articles as $article)
-                            <tr class="hover:bg-gray-50/80 transition-colors duration-200 cursor-pointer" onclick="window.location.href='{{ route('admin.articles.show', $article) }}'">
-                                <td class="px-6 py-4">
-                                    <a href="{{ route('admin.articles.show', $article) }}" class="block hover:text-blue-600 transition-colors">
-                                        <div class="text-sm font-medium text-gray-900">{{ Str::limit($article->title, 50) }}</div>
-                                        <div class="text-xs text-gray-500 mt-1">{{ Str::limit($article->excerpt ?? '', 60) }}</div>
-                                    </a>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center mr-3">
-                                            <span class="text-xs font-semibold text-white">{{ substr($article->author->name ?? 'A', 0, 1) }}</span>
-                                        </div>
-                                        <div>
-                                            <div class="text-xs text-gray-500">Penulis</div>
-                                            <div class="text-sm font-medium text-gray-900">{{ $article->author->name ?? 'Unknown' }}</div>
-                                        </div>
-                                        @if($article->author)
-                                            <x-user-role-badge :user="$article->author" size="xs" class="ml-2" />
-                                        @endif
+    {{-- Recent articles --}}
+    <section class="rounded-xl border border-gray-200 bg-white overflow-hidden">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between px-4 sm:px-5 py-4 border-b border-gray-100">
+            <h3 class="text-sm font-semibold text-gray-900">Artikel terbaru</h3>
+            <a href="{{ route('admin.articles.index') }}" class="text-xs font-medium text-blue-600 hover:text-news-accent">Lihat semua</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-100">
+                <thead>
+                    <tr class="bg-gray-50/80">
+                        <th class="px-5 py-3 text-left text-xs font-medium text-gray-500">Judul</th>
+                        <th class="px-5 py-3 text-left text-xs font-medium text-gray-500">Penulis</th>
+                        <th class="px-5 py-3 text-left text-xs font-medium text-gray-500">Status</th>
+                        <th class="px-5 py-3 text-left text-xs font-medium text-gray-500">Tanggal</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @forelse($recent_articles as $article)
+                        <tr class="hover:bg-gray-50/80 transition-colors">
+                            <td class="px-5 py-3.5">
+                                <a href="{{ route('admin.articles.show', $article) }}" class="block group">
+                                    <div class="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2" title="{{ $article->title }}">
+                                        {{ $article->title }}
                                     </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    @if($article->status === 'published')
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-green-100 to-green-200 text-green-800 border border-green-300">
-                                            <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                                            Terbit
-                                        </span>
-                                    @elseif($article->status === 'pending_review')
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border border-yellow-300">
-                                            <div class="w-2 h-2 bg-yellow-500 rounded-full mr-2"></div>
-                                            Menunggu Review
-                                        </span>
-                                    @elseif($article->status === 'draft')
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border border-gray-300">
-                                            <div class="w-2 h-2 bg-gray-500 rounded-full mr-2"></div>
-                                            Draft
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-red-100 to-red-200 text-red-800 border border-red-300">
-                                            <div class="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
-                                            Ditolak
-                                        </span>
+                                    @if($article->excerpt)
+                                        <div class="text-xs text-gray-500 mt-0.5 line-clamp-1">{{ $article->excerpt }}</div>
                                     @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ $article->created_at ? $article->created_at->format('d-m-Y') : '-' }}</div>
-                                    <div class="text-xs text-gray-500">{{ $article->created_at ? $article->created_at->format('H:i') : '-' }}</div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="4" class="px-6 py-12 text-center">
-                                    <div class="flex flex-col items-center">
-                                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                            </svg>
-                                        </div>
-                                        <p class="text-gray-500 font-medium">Belum ada artikel</p>
-                                        <p class="text-gray-400 text-sm mt-1">Mulai dengan membuat artikel pertama Anda</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+                                </a>
+                            </td>
+                            <td class="px-5 py-3.5 whitespace-nowrap">
+                                <div class="flex items-center gap-2">
+                                    <span class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
+                                        {{ strtoupper(substr($article->author->name ?? 'A', 0, 1)) }}
+                                    </span>
+                                    <span class="text-sm text-gray-800">{{ $article->author->name ?? 'Unknown' }}</span>
+                                </div>
+                            </td>
+                            <td class="px-5 py-3.5 whitespace-nowrap">
+                                @php
+                                    $statusMap = [
+                                        'published' => ['Terbit', 'bg-emerald-50 text-emerald-700 ring-emerald-600/20'],
+                                        'pending_review' => ['Review', 'bg-amber-50 text-amber-700 ring-amber-600/20'],
+                                        'draft' => ['Draft', 'bg-gray-100 text-gray-600 ring-gray-500/20'],
+                                        'rejected' => ['Ditolak', 'bg-rose-50 text-rose-700 ring-rose-600/20'],
+                                    ];
+                                    [$label, $classes] = $statusMap[$article->status] ?? ['Lainnya', 'bg-gray-100 text-gray-600 ring-gray-500/20'];
+                                @endphp
+                                <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {{ $classes }}">
+                                    {{ $label }}
+                                </span>
+                            </td>
+                            <td class="px-5 py-3.5 whitespace-nowrap">
+                                <div class="text-sm text-gray-800">{{ $article->created_at?->format('d M Y') ?? '-' }}</div>
+                                <div class="text-xs text-gray-400">{{ $article->created_at?->format('H:i') ?? '' }}</div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="px-5 py-12 text-center text-sm text-gray-500">
+                                Belum ada artikel
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
-    </div>
+    </section>
 </div>
 @endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const canvas = document.getElementById('adminActivityChart');
+    if (!canvas) return;
+
+    const chartData = @json($chartData);
+    const ctx = canvas.getContext('2d');
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.map(item => item.date),
+            datasets: [
+                {
+                    label: 'Artikel',
+                    data: chartData.map(item => item.articles),
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.08)',
+                    borderWidth: 2,
+                    tension: 0.35,
+                    fill: true,
+                    pointRadius: 3,
+                    pointHoverRadius: 5,
+                },
+                {
+                    label: 'Komentar',
+                    data: chartData.map(item => item.comments),
+                    borderColor: '#d97706',
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    tension: 0.35,
+                    fill: false,
+                    pointRadius: 3,
+                    pointHoverRadius: 5,
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    align: 'end',
+                    labels: {
+                        boxWidth: 8,
+                        boxHeight: 8,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        font: { size: 11 },
+                        color: '#6b7280',
+                    },
+                },
+                tooltip: {
+                    backgroundColor: '#111827',
+                    titleFont: { size: 12 },
+                    bodyFont: { size: 12 },
+                    padding: 10,
+                    cornerRadius: 8,
+                },
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#9ca3af', font: { size: 11 } },
+                    border: { display: false },
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0,
+                        color: '#9ca3af',
+                        font: { size: 11 },
+                    },
+                    grid: { color: 'rgba(0,0,0,0.04)' },
+                    border: { display: false },
+                },
+            },
+            interaction: { intersect: false, mode: 'index' },
+        },
+    });
+});
+</script>
+@endpush

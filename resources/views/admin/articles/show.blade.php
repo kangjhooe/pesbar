@@ -82,12 +82,6 @@
                     </span>
                 </div>
                 <div class="bg-gray-50 p-4 rounded-lg">
-                    <h3 class="font-semibold text-gray-900 mb-2">Tipe</h3>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                        {{ ucfirst($article->type) }}
-                    </span>
-                </div>
-                <div class="bg-gray-50 p-4 rounded-lg">
                     <h3 class="font-semibold text-gray-900 mb-2">Tanggal Publikasi</h3>
                     <p class="text-sm text-gray-600">
                         {{ $article->published_at ? $article->published_at->format('d M Y, H:i') : 'Belum dipublikasi' }}
@@ -275,7 +269,7 @@
                 <div class="flex space-x-2">
                     @can('update', $article)
                     <a href="{{ route('admin.articles.edit', $article) }}" 
-                       class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                       class="bg-news-accent text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors">
                         <i class="fas fa-edit mr-1"></i>Edit
                     </a>
                     @endcan
@@ -298,7 +292,7 @@
                             <i class="fas fa-trash mr-1"></i>Hapus
                         </button>
                     </form>
-                    <a href="{{ route('articles.show', $article) }}" 
+                    <a href="{{ $article->publicUrl() }}" 
                        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors" target="_blank">
                         <i class="fas fa-external-link-alt mr-1"></i>Lihat
                     </a>

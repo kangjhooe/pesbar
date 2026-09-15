@@ -24,7 +24,6 @@ class Article extends Model
         'category_id',
         'author_id',
         'status',
-        'type',
         'is_featured',
         'is_breaking',
         'views',
@@ -137,16 +136,6 @@ class Article extends Model
         return $query->orderBy('published_at', 'desc');
     }
 
-    public function scopeBerita($query)
-    {
-        return $query->where('type', 'berita');
-    }
-
-    public function scopeArtikel($query)
-    {
-        return $query->where('type', 'artikel');
-    }
-
     public function incrementViewCount()
     {
         $this->increment('views');
@@ -167,6 +156,35 @@ class Article extends Model
         return 'slug';
     }
 
+    /**
+     * Parameter untuk route('articles.show', ...).
+     */
+    public function publicRouteParameters(): array
+    {
+        $category = $this->relationLoaded('category')
+            ? $this->category
+            : $this->category()->first();
+
+        return [
+            'category' => $category,
+            'article' => $this,
+        ];
+    }
+
+    /**
+     * URL publik artikel: /{kategori}/{slug}.
+     */
+    public function publicUrl(bool $absolute = true): string
+    {
+        $params = $this->publicRouteParameters();
+
+        if (empty($params['category'])) {
+            return route('articles.index', [], $absolute);
+        }
+
+        return route('articles.show', $params, $absolute);
+    }
+
     public function getFormattedDateAttribute()
     {
         return $this->published_at ? $this->published_at->format('d-m-Y') : '';
@@ -180,5 +198,63 @@ class Article extends Model
     public function getFormattedTimeAttribute()
     {
         return $this->published_at ? $this->published_at->format('H:i') : '';
+    }
+
+    /**
+     * Estimasi waktu baca (menit), ~200 kata/menit.
+     */
+    public function readingTimeMinutes(): int
+    {
+        $text = trim(preg_replace('/\s+/u', ' ', strip_tags($this->content ?? '')) ?? '');
+        if ($text === '') {
+            return 1;
+        }
+
+        $words = count(preg_split('/\s+/u', $text, -1, PREG_SPLIT_NO_EMPTY));
+
+        return max(1, (int) ceil($words / 200));
+    }
+
+    /**
+     * Konten siap tampil: buang paragraf kosong Quill & width inline gambar.
+     */
+    public function formattedContent(): string
+    {
+        $html = $this->content ?? '';
+        if ($html === '') {
+            return '';
+        }
+
+        // Paragraf kosong khas Quill
+        $html = preg_replace('/<p>(?:\s|&nbsp;|<br\s*\/?>)*<\/p>/iu', '', $html) ?? $html;
+
+        // Lepas width/height attribute pada gambar agar CSS yang mengatur ukuran
+        $html = preg_replace_callback(
+            '/<img\b([^>]*)>/iu',
+            static function (array $matches): string {
+                $attrs = $matches[1];
+                $attrs = preg_replace('/\s(?:width|height)\s*=\s*(["\']).*?\1/iu', '', $attrs) ?? $attrs;
+                $attrs = preg_replace_callback(
+                    '/\sstyle\s*=\s*(["\'])(.*?)\1/iu',
+                    static function (array $styleMatch): string {
+                        $quote = $styleMatch[1];
+                        $style = $styleMatch[2];
+                        $style = preg_replace('/(?:^|;)\s*(?:width|height|max-width|min-width)\s*:[^;]*/iu', '', $style) ?? $style;
+                        $style = trim($style, " \t\n\r\0\x0B;");
+                        if ($style === '') {
+                            return '';
+                        }
+
+                        return ' style=' . $quote . $style . $quote;
+                    },
+                    $attrs
+                ) ?? $attrs;
+
+                return '<img' . $attrs . '>';
+            },
+            $html
+        ) ?? $html;
+
+        return trim($html);
     }
 }

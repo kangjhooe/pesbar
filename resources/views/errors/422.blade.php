@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'Data Tidak Valid - Pesisir Barat Hub')
+@section('title', 'Data Tidak Valid - ' . \App\Helpers\SettingsHelper::siteName())
 @section('description', 'Data yang dimasukkan tidak valid, silakan periksa kembali')
 
 @section('content')

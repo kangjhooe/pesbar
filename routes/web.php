@@ -37,19 +37,21 @@ Route::get('/sitemap-news.xml', [\App\Http\Controllers\SitemapController::class,
 // Robots.txt (dynamic)
 Route::get('/robots.txt', [\App\Http\Controllers\RobotsController::class, 'index'])->name('robots');
 
-// Article routes (disembunyikan dari public)
-// Route /berita disembunyikan - redirect ke home, tapi route name tetap ada untuk link internal
-Route::get('/berita', function() {
-    return redirect()->route('home');
-})->name('articles.index');
-Route::get('/artikel', [ArticleController::class, 'artikel'])->name('articles.artikel');
-Route::get('/articles/{article}', [ArticleController::class, 'show'])->name('articles.show');
+// Article routes — listing tunggal; /artikel diarahkan ke /berita
+Route::get('/berita', [ArticleController::class, 'index'])->name('articles.index');
+Route::redirect('/artikel', '/berita')->name('articles.artikel');
 
 // Events routes
 Route::get('/agenda', [WidgetController::class, 'eventsIndex'])->name('events.index');
 
-// Category routes
-Route::get('/categories/{category}', [CategoryController::class, 'show'])->name('categories.show');
+// Legacy public URLs (redirect ke /{kategori}/...)
+Route::get('/articles/{article}', function (\App\Models\Article $article) {
+    return redirect()->to($article->publicUrl(), 301);
+})->name('articles.show.legacy');
+
+Route::get('/categories/{category}', function (\App\Models\Category $category) {
+    return redirect()->to(route('categories.show', $category), 301);
+})->name('categories.show.legacy');
 
 // Newsletter routes
 Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
@@ -194,9 +196,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('polls/{poll}/toggle-status', [\App\Http\Controllers\Admin\PollController::class, 'toggleStatus'])->name('polls.toggle-status');
     Route::post('polls/{poll}/reset-votes', [\App\Http\Controllers\Admin\PollController::class, 'resetVotes'])->name('polls.reset-votes');
     Route::get('/users', [AdminDashboardController::class, 'users'])->name('users');
+    Route::post('/users/bulk', [AdminDashboardController::class, 'bulkUsers'])->name('users.bulk');
     Route::post('/users/{user}/upgrade', [AdminDashboardController::class, 'upgradeUser'])->name('users.upgrade');
     Route::post('/users/{user}/toggle-verified', [AdminDashboardController::class, 'toggleVerified'])->name('users.toggle-verified');
     Route::get('/verification-requests', [AdminDashboardController::class, 'verificationRequests'])->name('verification-requests');
+    Route::post('/verification-requests/bulk', [AdminDashboardController::class, 'bulkVerificationRequests'])->name('verification-requests.bulk');
     Route::post('/verification-requests/{user}/approve', [AdminDashboardController::class, 'approveVerification'])->name('verification-requests.approve');
     Route::post('/verification-requests/{user}/reject', [AdminDashboardController::class, 'rejectVerification'])->name('verification-requests.reject');
     Route::get('/articles/pending', [AdminDashboardController::class, 'pendingArticles'])->name('articles.pending');
@@ -224,22 +228,26 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/categories/{category}/edit', [AdminDashboardController::class, 'editCategory'])->name('categories.edit');
     Route::post('/categories', [AdminDashboardController::class, 'storeCategory'])->name('categories.store');
     Route::put('/categories/{category}', [AdminDashboardController::class, 'updateCategory'])->name('categories.update');
+    Route::post('/categories/bulk', [AdminDashboardController::class, 'bulkCategories'])->name('categories.bulk');
     Route::delete('/categories/{category}', [AdminDashboardController::class, 'destroyCategory'])->name('categories.destroy');
     
     // Comments Management
     Route::get('/comments', [AdminDashboardController::class, 'comments'])->name('comments.index');
+    Route::post('/comments/bulk', [AdminDashboardController::class, 'bulkComments'])->name('comments.bulk');
     Route::post('/comments/{comment}/approve', [AdminDashboardController::class, 'approveComment'])->name('comments.approve');
     Route::post('/comments/{comment}/reject', [AdminDashboardController::class, 'rejectComment'])->name('comments.reject');
     Route::delete('/comments/{comment}', [AdminDashboardController::class, 'destroyComment'])->name('comments.destroy');
     
     // Penulis Management
     Route::get('/penulis', [AdminDashboardController::class, 'penulis'])->name('penulis.index');
+    Route::post('/penulis/bulk', [AdminDashboardController::class, 'bulkPenulis'])->name('penulis.bulk');
     Route::post('/penulis/{user}/promote', [AdminDashboardController::class, 'promoteToPenulis'])->name('penulis.promote');
     Route::post('/penulis/{user}/demote', [AdminDashboardController::class, 'demoteFromPenulis'])->name('penulis.demote');
     
     // Newsletter Management
     Route::get('/newsletter', [AdminDashboardController::class, 'newsletter'])->name('newsletter.index');
     Route::post('/newsletter/send', [AdminDashboardController::class, 'sendNewsletter'])->name('newsletter.send');
+    Route::post('/newsletter/bulk', [AdminDashboardController::class, 'bulkNewsletter'])->name('newsletter.bulk');
     Route::delete('/newsletter/{subscriber}', [AdminDashboardController::class, 'removeSubscriber'])->name('newsletter.remove');
     
     // Media Library
@@ -274,6 +282,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     
     // Event Popup Management
     Route::resource('event-popups', EventPopupController::class);
+    Route::post('/event-popups/bulk', [EventPopupController::class, 'bulkAction'])->name('event-popups.bulk');
     Route::patch('/event-popups/{eventPopup}/toggle-status', [EventPopupController::class, 'toggleStatus'])->name('event-popups.toggle-status');
     
     // Admin Settings
@@ -330,3 +339,29 @@ if (config('app.debug')) {
 }
 
 require __DIR__.'/auth.php';
+
+// Pretty public URLs: /{kategori} dan /{kategori}/{artikel}
+// Harus di akhir agar tidak menabrak route lain (admin, user, auth, dll.)
+$reservedCategorySlugs = implode('|', [
+    'admin', 'penulis', 'user', 'auth', 'api', 'search', 'berita', 'artikel',
+    'articles', 'categories', 'login', 'register', 'password', 'forgot-password',
+    'reset-password', 'confirm-password', 'verify-email', 'email', 'newsletter',
+    'comments', 'agenda', 'terms', 'privacy', 'dashboard', 'upgrade-request',
+    'profile', 'storage', 'up', 'sanctum', 'livewire', 'build', 'test-error',
+]);
+
+// Segmen pertama yang punya sub-route (hindari konflik dengan /{kategori}/{artikel})
+$reservedArticlePrefixes = implode('|', [
+    'admin', 'penulis', 'user', 'auth', 'api', 'articles', 'categories',
+    'password', 'reset-password', 'confirm-password', 'verify-email', 'email',
+    'newsletter', 'comments', 'upgrade-request', 'test-error', 'sanctum', 'livewire',
+]);
+
+Route::get('/{category}', [CategoryController::class, 'show'])
+    ->name('categories.show')
+    ->where('category', '^(?!' . $reservedCategorySlugs . ')([a-z0-9\-]+)$');
+
+Route::get('/{category}/{article}', [ArticleController::class, 'show'])
+    ->name('articles.show')
+    ->where('category', '^(?!' . $reservedArticlePrefixes . ')([a-z0-9\-]+)$')
+    ->where('article', '[a-z0-9\-]+');

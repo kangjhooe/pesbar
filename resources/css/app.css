@@ -13,6 +13,13 @@ form * {
 }
 
 /* Line clamp utilities for text truncation */
+.line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
 .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -76,11 +83,11 @@ form * {
 
 .pagination-wrapper .pagination li a,
 .pagination-wrapper .pagination li span {
-    @apply px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-all duration-200;
+    @apply px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-red-50 hover:text-news-accent hover:border-red-300 transition-all duration-200;
 }
 
 .pagination-wrapper .pagination li.active span {
-    @apply bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:text-white hover:border-blue-700;
+    @apply bg-news-accent text-white border-news-accent hover:bg-red-800 hover:text-white hover:border-red-800;
 }
 
 .pagination-wrapper .pagination li.disabled span {
@@ -103,6 +110,358 @@ form * {
     min-width: 44px;
 }
 
+/* Prevent accidental horizontal scroll on small / laptop screens */
+html {
+    overflow-x: clip;
+}
+
+body {
+    overflow-x: clip;
+    min-width: 0;
+}
+
+/* Documented responsive utilities (used across Blade views) */
+.container-responsive {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full;
+}
+
+.grid-responsive {
+    @apply grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6;
+}
+
+.flex-responsive {
+    @apply flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center;
+}
+
+.text-responsive {
+    @apply text-sm sm:text-base;
+}
+
+.heading-responsive {
+    @apply text-xl sm:text-2xl lg:text-3xl leading-tight;
+}
+
+.page-header-responsive {
+    @apply flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between;
+}
+
+.table-responsive-wrap {
+    @apply w-full overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0;
+}
+
+.article-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5em;
+    overflow-x: auto;
+    max-width: 100%;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+    font-size: 1.0625rem;
+    line-height: 1.8;
+    color: #0a0a0a;
+}
+
+/* Gap handles block spacing — zero vertical margins on direct children */
+.article-content > p,
+.article-content > h2,
+.article-content > h3,
+.article-content > h4,
+.article-content > ul,
+.article-content > ol,
+.article-content > blockquote,
+.article-content > figure,
+.article-content > pre,
+.article-content > table,
+.article-content > hr,
+.article-content > iframe,
+.article-content > video {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.article-content p {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.article-content h2,
+.article-content h3,
+.article-content h4 {
+    color: #0a0a0a;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.article-content h2 {
+    font-size: 1.375rem;
+}
+
+.article-content h3 {
+    font-size: 1.2rem;
+}
+
+.article-content h4 {
+    font-size: 1.05rem;
+}
+
+.article-content a {
+    color: #b91c1c;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    font-weight: 500;
+}
+
+.article-content a:hover {
+    color: #0a0a0a;
+}
+
+.article-content blockquote {
+    margin: 0;
+    padding: 0.75em 0 0.75em 1em;
+    border-left: 3px solid #b91c1c;
+    color: #5c5c5c;
+    font-style: italic;
+    background: transparent;
+}
+
+.article-content blockquote p {
+    margin-bottom: 0.5em;
+}
+
+.article-content blockquote p:last-child {
+    margin-bottom: 0;
+}
+
+.article-content ul,
+.article-content ol {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 2em;
+    list-style-position: outside;
+}
+
+.article-content ul {
+    list-style-type: disc;
+}
+
+.article-content ol {
+    list-style-type: decimal;
+}
+
+.article-content li {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    padding-left: 0.35em;
+    line-height: 1.8;
+    display: list-item;
+}
+
+.article-content ul ul {
+    list-style-type: circle;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+.article-content ul ul ul {
+    list-style-type: square;
+}
+
+.article-content ol ol {
+    list-style-type: lower-alpha;
+}
+
+.article-content ol ol ol {
+    list-style-type: lower-roman;
+}
+
+.article-content ul > li::marker,
+.article-content ol > li::marker {
+    color: #b91c1c;
+    font-weight: 600;
+}
+
+.article-content ul[class*="ql-"] {
+    list-style-type: disc;
+    padding-left: 2em;
+}
+
+.article-content ol[class*="ql-"] {
+    list-style-type: decimal;
+    padding-left: 2em;
+}
+
+.article-content .ql-align-center {
+    text-align: center;
+}
+
+.article-content .ql-align-right {
+    text-align: right;
+}
+
+.article-content .ql-align-justify {
+    text-align: justify;
+}
+
+.article-content .ql-align-center img {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.article-content img,
+.article-content iframe,
+.article-content video,
+.article-content table {
+    max-width: 100%;
+}
+
+.article-content img {
+    display: block;
+    width: auto !important;
+    max-width: min(100%, 640px) !important;
+    height: auto !important;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+}
+
+.article-content p > img:only-child,
+.article-content p > img:first-child:last-child {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.article-content p:has(> img:only-child) {
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+}
+
+.article-content figure {
+    display: block;
+    margin: 0 auto;
+    max-width: min(100%, 640px);
+    text-align: center;
+}
+
+.article-content figure img {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.article-content figcaption,
+.article-content img + em,
+.article-content p > img + br + em {
+    display: block;
+    margin-top: 0.5em;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: #5c5c5c;
+    font-style: italic;
+    text-align: center;
+}
+
+.article-content iframe,
+.article-content video {
+    display: block;
+    width: 100%;
+    max-width: min(100%, 640px);
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 0;
+    margin-bottom: 0;
+    aspect-ratio: 16 / 9;
+    height: auto;
+}
+
+.article-content table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    margin: 0;
+    border-collapse: collapse;
+}
+
+.article-content th,
+.article-content td {
+    border: 1px solid #e5e5e5;
+    padding: 0.5em 0.75em;
+    text-align: left;
+}
+
+.article-content hr {
+    border: 0;
+    border-top: 1px solid #e5e5e5;
+    margin: 0.5em 0;
+    width: 100%;
+}
+
+@media (max-width: 639px) {
+    .article-content {
+        font-size: 1rem;
+    }
+
+    .article-content img,
+    .article-content figure,
+    .article-content iframe,
+    .article-content video {
+        max-width: 100% !important;
+    }
+}
+
+/* Horizontal nav / category strip scrollbar */
+.nav-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 transparent;
+    -webkit-overflow-scrolling: touch;
+}
+
+.nav-scroll::-webkit-scrollbar {
+    height: 4px;
+}
+
+.nav-scroll::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 2px;
+}
+
+/*
+ * Center category links when they fit; when they overflow, spacers
+ * collapse so the first item (e.g. EKONOMI) is never clipped on the left.
+ */
+.portal-nav-strip::before,
+.portal-nav-strip::after {
+    content: "";
+    flex: 1 1 0;
+    min-width: 0;
+    pointer-events: none;
+}
+
+.portal-nav-strip > .portal-nav-link,
+.portal-nav-strip > [x-data] {
+    flex-shrink: 0;
+}
+
+/* Dashboard content: avoid crowding beside fixed sidebar on ~1366px */
+.dashboard-main {
+    @apply min-w-0 w-full max-w-full;
+}
+
+/* Soften article-card lift on touch / small screens */
+@media (max-width: 768px) {
+    .article-card:hover {
+        transform: none;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+}
+
+@media (max-width: 639px) {
+    .prose,
+    .prose-lg {
+        font-size: 1rem;
+    }
+}
+
 /* Responsive typography improvements */
 @media (max-width: 640px) {
     h1 {
@@ -115,6 +474,29 @@ form * {
     
     h3 {
         font-size: 1.125rem;
+    }
+}
+
+/* Admin form / button utilities (Vite Tailwind — no Bootstrap) */
+@layer components {
+    .form-input {
+        @apply w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-news-accent focus:outline-none focus:ring-2 focus:ring-news-accent/30;
+    }
+
+    .btn-primary {
+        @apply inline-flex items-center justify-center rounded-lg bg-news-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-news-accent/40 disabled:cursor-not-allowed disabled:opacity-50;
+    }
+
+    .btn-secondary {
+        @apply inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:cursor-not-allowed disabled:opacity-50;
+    }
+
+    .btn-sm {
+        @apply inline-flex items-center justify-center rounded-md px-3 py-1.5 text-xs font-medium transition-colors;
+    }
+
+    .btn-sm.btn-primary {
+        @apply bg-news-accent text-white hover:bg-red-800;
     }
 }
 
@@ -238,40 +620,33 @@ img {
 
 /* Fallback for article content without prose class */
 article ul,
-article ol,
-.article-content ul,
-.article-content ol {
+article ol {
     margin-top: 1.25em;
     margin-bottom: 1.25em;
     padding-left: 1.625em;
 }
 
-article ul,
-.article-content ul {
+article ul {
     list-style-type: disc;
 }
 
-article ol,
-.article-content ol {
+article ol {
     list-style-type: decimal;
 }
 
-article li,
-.article-content li {
+article li {
     margin-top: 0.5em;
     margin-bottom: 0.5em;
     padding-left: 0.375em;
     line-height: 1.75;
 }
 
-article ul > li::marker,
-.article-content ul > li::marker {
+article ul > li::marker {
     color: #3b82f6;
     font-size: 1.1em;
 }
 
-article ol > li::marker,
-.article-content ol > li::marker {
+article ol > li::marker {
     color: #3b82f6;
     font-weight: 600;
 }

@@ -1,28 +1,28 @@
 @extends('layouts.public')
 
 @section('title', 'Syarat dan Ketentuan - ' . \App\Helpers\SettingsHelper::siteName())
-@section('description', 'Syarat dan Ketentuan penggunaan Pesisir Barat Hub')
+@section('description', 'Syarat dan Ketentuan penggunaan ' . \App\Helpers\SettingsHelper::siteName())
 
 @section('content')
-<div class="container-responsive py-8">
+<div class="container-responsive py-4 sm:py-8">
     <!-- Page Header -->
-    <div class="mb-8">
-        <div class="bg-gradient-to-r from-primary-600 to-primary-700 rounded-lg p-8 text-white">
-            <div class="flex items-center space-x-3 mb-4">
-                <div class="bg-white bg-opacity-20 p-3 rounded-lg">
-                    <i class="fas fa-file-contract text-2xl"></i>
+    <div class="mb-6 sm:mb-8">
+        <div class="bg-gradient-to-r from-primary-600 to-primary-700 rounded-lg p-4 sm:p-6 lg:p-8 text-white">
+            <div class="flex items-start sm:items-center space-x-3 mb-2 sm:mb-4">
+                <div class="bg-white bg-opacity-20 p-2.5 sm:p-3 rounded-lg shrink-0">
+                    <i class="fas fa-file-contract text-xl sm:text-2xl"></i>
                 </div>
-                <div>
+                <div class="min-w-0">
                     <h1 class="heading-responsive font-bold">Syarat dan Ketentuan</h1>
-                    <p class="text-primary-100 text-responsive">Ketentuan penggunaan Pesisir Barat Hub</p>
+                    <p class="text-primary-100 text-responsive mt-1">Ketentuan penggunaan {{ \App\Helpers\SettingsHelper::siteName() }}</p>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Content -->
-    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8">
-        <div class="prose prose-lg max-w-none">
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-4 sm:p-6 lg:p-8">
+        <div class="prose prose-base sm:prose-lg max-w-none article-content">
             <p class="text-sm text-gray-500 mb-6">
                 <strong>Terakhir diperbarui:</strong> {{ date('d F Y') }}
             </p>
@@ -30,7 +30,7 @@
             <section class="mb-8">
                 <h2 class="text-2xl font-bold text-gray-800 mb-4">1. Penerimaan Syarat</h2>
                 <p class="text-gray-700 leading-relaxed mb-4">
-                    Dengan mengakses dan menggunakan Pesisir Barat Hub, Anda menyetujui untuk terikat oleh syarat dan ketentuan ini. Jika Anda tidak setuju dengan bagian mana pun dari syarat ini, maka Anda tidak boleh menggunakan layanan kami.
+                    Dengan mengakses dan menggunakan {{ \App\Helpers\SettingsHelper::siteName() }}, Anda menyetujui untuk terikat oleh syarat dan ketentuan ini. Jika Anda tidak setuju dengan bagian mana pun dari syarat ini, maka Anda tidak boleh menggunakan layanan kami.
                 </p>
             </section>
 
@@ -79,7 +79,7 @@
             <section class="mb-8">
                 <h2 class="text-2xl font-bold text-gray-800 mb-4">5. Hak Kekayaan Intelektual</h2>
                 <p class="text-gray-700 leading-relaxed mb-4">
-                    Semua konten di Pesisir Barat Hub, termasuk teks, grafik, logo, ikon, gambar, klip audio, unduhan digital, dan kompilasi data, adalah milik kami atau pemberi lisensi kami dan dilindungi oleh undang-undang hak cipta dan kekayaan intelektual lainnya.
+                    Semua konten di {{ \App\Helpers\SettingsHelper::siteName() }}, termasuk teks, grafik, logo, ikon, gambar, klip audio, unduhan digital, dan kompilasi data, adalah milik kami atau pemberi lisensi kami dan dilindungi oleh undang-undang hak cipta dan kekayaan intelektual lainnya.
                 </p>
             </section>
 

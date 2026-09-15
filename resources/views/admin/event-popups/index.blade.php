@@ -1,97 +1,110 @@
 @extends('layouts.admin-simple')
 
 @section('title', 'Event Popup Management')
+@section('page-title', 'Event Popup Management')
+@section('page-subtitle', 'Popup di semua halaman publik saat tanggal aktif')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Event Popup Management</h1>
-        <a href="{{ route('admin.event-popups.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+<div class="space-y-6">
+    @include('admin.partials.widget-placement-note', [
+        'items' => [
+            'Semua halaman publik (layout public) — muncul otomatis jika aktif & dalam rentang tanggal',
+            'Pengunjung bisa menutup (dismiss); tidak hanya di beranda',
+        ],
+    ])
+
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <h3 class="text-lg font-semibold text-gray-900">Daftar Event Popup</h3>
+            <p class="text-sm text-gray-600">Total {{ $eventPopups->total() }} popup</p>
+        </div>
+        <a href="{{ route('admin.event-popups.create') }}"
+           class="inline-flex items-center justify-center bg-news-accent text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors">
             <i class="fas fa-plus mr-2"></i>Tambah Event Popup
         </a>
     </div>
 
-    @if(session('success'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-            {{ session('success') }}
-        </div>
-    @endif
+    <x-admin.table :paginator="$eventPopups" :bulk="true" bulk-id="event-popups-bulk">
+        <x-slot:bulkBar>
+            <x-admin.bulk-bar
+                :action="route('admin.event-popups.bulk')"
+                bulk-id="event-popups-bulk"
+                :options="['activate' => 'Aktifkan', 'deactivate' => 'Nonaktifkan', 'delete' => 'Hapus']"
+            />
+        </x-slot:bulkBar>
 
-    @if($eventPopups->count() > 0)
-        <div class="bg-white rounded-lg shadow overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judul</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Mulai</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Selesai</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach($eventPopups as $popup)
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">{{ $popup->title }}</div>
-                                <div class="text-sm text-gray-500 truncate max-w-xs">{{ Str::limit($popup->message, 50) }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $popup->start_date->format('d-m-Y') }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $popup->end_date->format('d-m-Y') }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                @if($popup->status)
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        Aktif
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                        Non-Aktif
-                                    </span>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <div class="flex space-x-2">
-                                    <a href="{{ route('admin.event-popups.edit', $popup) }}" class="text-indigo-600 hover:text-indigo-900">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <form action="{{ route('admin.event-popups.toggle-status', $popup) }}" method="POST" class="inline">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" class="text-yellow-600 hover:text-yellow-900">
-                                            <i class="fas fa-toggle-{{ $popup->status ? 'on' : 'off' }}"></i>
-                                        </button>
-                                    </form>
-                                    <form action="{{ route('admin.event-popups.destroy', $popup) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus event popup ini?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-red-600 hover:text-red-900">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+        <x-slot:head>
+            <x-admin.checkbox all bulk-id="event-popups-bulk" />
+            <x-admin.th :sortable="false" label="#" align="center" class="w-14" />
+            <x-admin.th column="title" label="Judul" />
+            <x-admin.th column="start_date" label="Tanggal Mulai" />
+            <x-admin.th column="end_date" label="Tanggal Selesai" />
+            <x-admin.th column="status" label="Status" />
+            <x-admin.th :sortable="false" label="Aksi" align="right" />
+        </x-slot:head>
 
-        <div class="mt-4">
-            {{ $eventPopups->links() }}
-        </div>
-    @else
-        <div class="bg-white rounded-lg shadow p-6 text-center">
-            <i class="fas fa-bell text-gray-400 text-4xl mb-4"></i>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">Belum ada Event Popup</h3>
-            <p class="text-gray-500 mb-4">Mulai dengan membuat event popup pertama Anda.</p>
-            <a href="{{ route('admin.event-popups.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                <i class="fas fa-plus mr-2"></i>Tambah Event Popup
-            </a>
-        </div>
-    @endif
+        @forelse($eventPopups as $popup)
+            <tr class="hover:bg-slate-50/80 transition-colors">
+                <x-admin.checkbox :value="$popup->id" bulk-id="event-popups-bulk" name="ids[]" />
+                <x-admin.td-number :index="$eventPopups->firstItem() + $loop->index" />
+                <td class="px-4 py-4">
+                    <div class="text-sm font-medium text-gray-900 line-clamp-2" title="{{ $popup->title }}">{{ $popup->title }}</div>
+                    <div class="text-sm text-gray-500 line-clamp-1 max-w-xs">{{ $popup->message }}</div>
+                </td>
+                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {{ $popup->start_date->format('d-m-Y') }}
+                </td>
+                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {{ $popup->end_date->format('d-m-Y') }}
+                </td>
+                <td class="px-4 py-4 whitespace-nowrap">
+                    @if($popup->status)
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Aktif
+                        </span>
+                    @else
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            Non-Aktif
+                        </span>
+                    @endif
+                </td>
+                <x-admin.actions>
+                    <x-admin.action-icon
+                        :href="route('admin.event-popups.edit', $popup)"
+                        icon="fas fa-edit"
+                        color="indigo"
+                        title="Edit"
+                    />
+                    <x-admin.action-icon
+                        :href="route('admin.event-popups.toggle-status', $popup)"
+                        method="PATCH"
+                        :icon="$popup->status ? 'fas fa-toggle-on' : 'fas fa-toggle-off'"
+                        color="amber"
+                        :title="$popup->status ? 'Nonaktifkan' : 'Aktifkan'"
+                    />
+                    <x-admin.action-icon
+                        :href="route('admin.event-popups.destroy', $popup)"
+                        method="DELETE"
+                        icon="fas fa-trash"
+                        color="red"
+                        title="Hapus"
+                        confirm="Apakah Anda yakin ingin menghapus event popup ini?"
+                    />
+                </x-admin.actions>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="7" class="px-4 py-12 text-center text-gray-500">
+                    <i class="fas fa-bell text-4xl mb-4 text-gray-300"></i>
+                    <p class="text-lg font-medium text-gray-700">Belum ada Event Popup</p>
+                    <p class="text-sm mb-4">Mulai dengan membuat event popup pertama Anda.</p>
+                    <a href="{{ route('admin.event-popups.create') }}"
+                       class="inline-flex items-center bg-news-accent text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Tambah Event Popup
+                    </a>
+                </td>
+            </tr>
+        @endforelse
+    </x-admin.table>
 </div>
 @endsection

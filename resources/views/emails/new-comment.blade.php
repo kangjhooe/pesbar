@@ -17,7 +17,7 @@ Ada komentar baru pada artikel Anda yang telah disetujui oleh admin.
 "{{ Str::limit(strip_tags($comment->comment ?? $comment->content ?? ''), 200) }}"
 @endcomponent
 
-@component('mail::button', ['url' => route('articles.show', $article) . '#comments'])
+@component('mail::button', ['url' => $article->publicUrl() . '#comments'])
 Lihat Komentar
 @endcomponent
 

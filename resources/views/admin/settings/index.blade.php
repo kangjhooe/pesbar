@@ -47,44 +47,44 @@
                     <div class="md:col-span-2">
                         <label for="site_name" class="block text-sm font-medium text-gray-700 mb-2">Nama Website</label>
                         <input type="text" id="site_name" name="site_name" value="{{ $settings['site_name'] ?? '' }}" 
-                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent" required>
                     </div>
                     
                     <div class="md:col-span-2">
                         <label for="site_description" class="block text-sm font-medium text-gray-700 mb-2">Deskripsi Website</label>
                         <textarea id="site_description" name="site_description" rows="3" 
-                                  class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>{{ $settings['site_description'] ?? '' }}</textarea>
+                                  class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent" required>{{ $settings['site_description'] ?? '' }}</textarea>
                     </div>
                     
                     <div>
                         <label for="site_keywords" class="block text-sm font-medium text-gray-700 mb-2">Keywords</label>
                         <input type="text" id="site_keywords" name="site_keywords" value="{{ $settings['site_keywords'] ?? '' }}" 
-                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent"
                                placeholder="keyword1, keyword2, keyword3">
                     </div>
                     
                     <div>
                         <label for="site_author" class="block text-sm font-medium text-gray-700 mb-2">Author</label>
                         <input type="text" id="site_author" name="site_author" value="{{ $settings['site_author'] ?? '' }}" 
-                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">
                     </div>
                     
                     <div>
                         <label for="contact_email" class="block text-sm font-medium text-gray-700 mb-2">Email Kontak</label>
                         <input type="email" id="contact_email" name="contact_email" value="{{ $settings['contact_email'] ?? '' }}" 
-                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">
                     </div>
                     
                     <div>
                         <label for="contact_phone" class="block text-sm font-medium text-gray-700 mb-2">Telepon Kontak</label>
                         <input type="text" id="contact_phone" name="contact_phone" value="{{ $settings['contact_phone'] ?? '' }}" 
-                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">
                     </div>
                     
                     <div class="md:col-span-2">
                         <label for="contact_address" class="block text-sm font-medium text-gray-700 mb-2">Alamat</label>
                         <textarea id="contact_address" name="contact_address" rows="2" 
-                                  class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ $settings['contact_address'] ?? '' }}</textarea>
+                                  class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">{{ $settings['contact_address'] ?? '' }}</textarea>
                     </div>
                 </div>
                 
@@ -94,28 +94,28 @@
                         <div>
                             <label for="facebook_url" class="block text-sm font-medium text-gray-700 mb-2">Facebook URL</label>
                             <input type="url" id="facebook_url" name="facebook_url" value="{{ $settings['facebook_url'] ?? '' }}" 
-                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">
                         </div>
                         <div>
                             <label for="twitter_url" class="block text-sm font-medium text-gray-700 mb-2">Twitter URL</label>
                             <input type="url" id="twitter_url" name="twitter_url" value="{{ $settings['twitter_url'] ?? '' }}" 
-                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">
                         </div>
                         <div>
                             <label for="instagram_url" class="block text-sm font-medium text-gray-700 mb-2">Instagram URL</label>
                             <input type="url" id="instagram_url" name="instagram_url" value="{{ $settings['instagram_url'] ?? '' }}" 
-                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">
                         </div>
                         <div>
                             <label for="youtube_url" class="block text-sm font-medium text-gray-700 mb-2">YouTube URL</label>
                             <input type="url" id="youtube_url" name="youtube_url" value="{{ $settings['youtube_url'] ?? '' }}" 
-                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">
                         </div>
                     </div>
                 </div>
                 
                 <div class="mt-6 flex justify-end">
-                    <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    <button type="submit" class="bg-news-accent text-white px-6 py-2 rounded-lg hover:bg-red-800 transition-colors">
                         Simpan Pengaturan Umum
                     </button>
                 </div>
@@ -182,7 +182,7 @@
                         <label for="site_logo" class="block text-sm font-medium text-gray-700 mb-2">Logo Website</label>
                         <div class="file-input-container">
                             <input type="file" id="site_logo" name="site_logo" accept="image/*" 
-                                   class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('site_logo') border-red-500 @enderror"
+                                   class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-news-accent hover:file:bg-blue-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('site_logo') border-red-500 @enderror"
                                    onchange="previewImage(this, 'logo-preview')">
                         </div>
                         <p class="mt-1 text-sm text-gray-500">Format: JPG, PNG, GIF, SVG, WebP. Maksimal 2MB</p>
@@ -206,7 +206,7 @@
                         <label for="site_favicon" class="block text-sm font-medium text-gray-700 mb-2">Favicon</label>
                         <div class="file-input-container">
                             <input type="file" id="site_favicon" name="site_favicon" accept="image/*" 
-                                   class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('site_favicon') border-red-500 @enderror"
+                                   class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-news-accent hover:file:bg-blue-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('site_favicon') border-red-500 @enderror"
                                    onchange="previewImage(this, 'favicon-preview')">
                         </div>
                         <p class="mt-1 text-sm text-gray-500">Format: JPG, PNG, GIF, ICO, SVG. Maksimal 512KB</p>
@@ -228,7 +228,7 @@
                 </div>
                 
                 <div class="mt-6 flex justify-end">
-                    <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    <button type="submit" class="bg-news-accent text-white px-6 py-2 rounded-lg hover:bg-red-800 transition-colors">
                         Simpan Logo
                     </button>
                 </div>
@@ -245,14 +245,14 @@
                     <div>
                         <label for="about_title" class="block text-sm font-medium text-gray-700 mb-2">Judul Halaman Tentang</label>
                         <input type="text" id="about_title" name="about_title" value="{{ $settings['about_title'] ?? '' }}" 
-                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent" required>
                     </div>
                     
                     <div>
                         <label for="about_image" class="block text-sm font-medium text-gray-700 mb-2">Gambar Halaman Tentang</label>
                         <div class="file-input-container">
                             <input type="file" id="about_image" name="about_image" accept="image/*" 
-                                   class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                   class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-news-accent hover:file:bg-blue-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-news-accent focus:border-news-accent"
                                    onchange="previewImage(this, 'about-preview')">
                         </div>
                         @if(isset($settings['about_image']) && $settings['about_image'])
@@ -271,35 +271,35 @@
                     <div>
                         <label for="about_content" class="block text-sm font-medium text-gray-700 mb-2">Konten Halaman Tentang</label>
                         <textarea id="about_content" name="about_content" rows="8" 
-                                  class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>{{ $settings['about_content'] ?? '' }}</textarea>
+                                  class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent" required>{{ $settings['about_content'] ?? '' }}</textarea>
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label for="mission_title" class="block text-sm font-medium text-gray-700 mb-2">Judul Misi</label>
                             <input type="text" id="mission_title" name="mission_title" value="{{ $settings['mission_title'] ?? '' }}" 
-                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">
                         </div>
                         <div>
                             <label for="vision_title" class="block text-sm font-medium text-gray-700 mb-2">Judul Visi</label>
                             <input type="text" id="vision_title" name="vision_title" value="{{ $settings['vision_title'] ?? '' }}" 
-                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">
                         </div>
                         <div>
                             <label for="mission_content" class="block text-sm font-medium text-gray-700 mb-2">Konten Misi</label>
                             <textarea id="mission_content" name="mission_content" rows="4" 
-                                      class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ $settings['mission_content'] ?? '' }}</textarea>
+                                      class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">{{ $settings['mission_content'] ?? '' }}</textarea>
                         </div>
                         <div>
                             <label for="vision_content" class="block text-sm font-medium text-gray-700 mb-2">Konten Visi</label>
                             <textarea id="vision_content" name="vision_content" rows="4" 
-                                      class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ $settings['vision_content'] ?? '' }}</textarea>
+                                      class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">{{ $settings['vision_content'] ?? '' }}</textarea>
                         </div>
                     </div>
                 </div>
                 
                 <div class="mt-6 flex justify-end">
-                    <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    <button type="submit" class="bg-news-accent text-white px-6 py-2 rounded-lg hover:bg-red-800 transition-colors">
                         Simpan Halaman Tentang
                     </button>
                 </div>
@@ -316,7 +316,7 @@
                     <div>
                         <label for="meta_title" class="block text-sm font-medium text-gray-700 mb-2">Meta Title</label>
                         <input type="text" id="meta_title" name="meta_title" value="{{ $settings['meta_title'] ?? '' }}" 
-                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent"
                                maxlength="60">
                         <p class="mt-1 text-sm text-gray-500">Maksimal 60 karakter</p>
                     </div>
@@ -324,7 +324,7 @@
                     <div>
                         <label for="meta_description" class="block text-sm font-medium text-gray-700 mb-2">Meta Description</label>
                         <textarea id="meta_description" name="meta_description" rows="3" 
-                                  class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                  class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent"
                                   maxlength="160">{{ $settings['meta_description'] ?? '' }}</textarea>
                         <p class="mt-1 text-sm text-gray-500">Maksimal 160 karakter</p>
                     </div>
@@ -332,34 +332,34 @@
                     <div>
                         <label for="meta_keywords" class="block text-sm font-medium text-gray-700 mb-2">Meta Keywords</label>
                         <input type="text" id="meta_keywords" name="meta_keywords" value="{{ $settings['meta_keywords'] ?? '' }}" 
-                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent"
                                placeholder="keyword1, keyword2, keyword3">
                     </div>
                     
                     <div>
                         <label for="google_analytics" class="block text-sm font-medium text-gray-700 mb-2">Google Analytics ID</label>
                         <input type="text" id="google_analytics" name="google_analytics" value="{{ $settings['google_analytics'] ?? '' }}" 
-                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent"
                                placeholder="GA-XXXXXXXXX-X">
                     </div>
                     
                     <div>
                         <label for="google_search_console" class="block text-sm font-medium text-gray-700 mb-2">Google Search Console</label>
                         <input type="text" id="google_search_console" name="google_search_console" value="{{ $settings['google_search_console'] ?? '' }}" 
-                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent"
                                placeholder="Verification code">
                     </div>
                     
                     <div>
                         <label for="facebook_pixel" class="block text-sm font-medium text-gray-700 mb-2">Facebook Pixel ID</label>
                         <input type="text" id="facebook_pixel" name="facebook_pixel" value="{{ $settings['facebook_pixel'] ?? '' }}" 
-                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent"
                                placeholder="Pixel ID">
                     </div>
                 </div>
                 
                 <div class="mt-6 flex justify-end">
-                    <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    <button type="submit" class="bg-news-accent text-white px-6 py-2 rounded-lg hover:bg-red-800 transition-colors">
                         Simpan Pengaturan SEO
                     </button>
                 </div>
@@ -376,7 +376,7 @@
                     <div>
                         <label for="editorial_team_title" class="block text-sm font-medium text-gray-700 mb-2">Judul Tim Redaksi</label>
                         <input type="text" id="editorial_team_title" name="editorial_team_title" value="{{ $settings['editorial_team_title'] ?? 'Tim Redaksi' }}" 
-                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent" required>
                     </div>
                     
                     <div>
@@ -404,19 +404,19 @@
                                     <div>
                                         <label class="block text-xs font-medium text-gray-600 mb-1">Nama</label>
                                         <input type="text" name="editorial_team[{{ $index }}][name]" value="{{ $member['name'] ?? '' }}" 
-                                               class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                               class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-news-accent focus:border-news-accent" 
                                                placeholder="Nama lengkap">
                                     </div>
                                     <div>
                                         <label class="block text-xs font-medium text-gray-600 mb-1">Posisi</label>
                                         <input type="text" name="editorial_team[{{ $index }}][position]" value="{{ $member['position'] ?? '' }}" 
-                                               class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                               class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-news-accent focus:border-news-accent" 
                                                placeholder="Jabatan">
                                     </div>
                                     <div>
                                         <label class="block text-xs font-medium text-gray-600 mb-1">Deskripsi</label>
                                         <input type="text" name="editorial_team[{{ $index }}][description]" value="{{ $member['description'] ?? '' }}" 
-                                               class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                               class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-news-accent focus:border-news-accent" 
                                                placeholder="Deskripsi singkat">
                                     </div>
                                 </div>
@@ -431,7 +431,7 @@
                 </div>
                 
                 <div class="mt-6 flex justify-end">
-                    <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    <button type="submit" class="bg-news-accent text-white px-6 py-2 rounded-lg hover:bg-red-800 transition-colors">
                         Simpan Tim Redaksi
                     </button>
                 </div>
@@ -450,14 +450,14 @@
                             <label for="articles_per_page" class="block text-sm font-medium text-gray-700 mb-2">Artikel per Halaman</label>
                             <input type="number" id="articles_per_page" name="articles_per_page" 
                                    value="{{ $settings['articles_per_page'] ?? 10 }}" min="1" max="100"
-                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent" required>
                         </div>
                         
                         <div>
                             <label for="comments_per_page" class="block text-sm font-medium text-gray-700 mb-2">Komentar per Halaman</label>
                             <input type="number" id="comments_per_page" name="comments_per_page" 
                                    value="{{ $settings['comments_per_page'] ?? 10 }}" min="1" max="100"
-                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent" required>
                         </div>
                     </div>
                     
@@ -466,14 +466,14 @@
                         <div class="space-y-3">
                             <label class="flex items-center">
                                 <input type="checkbox" name="auto_approve_comments" value="1" 
-                                       class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                       class="rounded border-gray-300 text-blue-600 focus:ring-news-accent"
                                        {{ ($settings['auto_approve_comments'] ?? false) ? 'checked' : '' }}>
                                 <span class="ml-2 text-sm text-gray-700">Otomatis setujui komentar</span>
                             </label>
                             
                             <label class="flex items-center">
                                 <input type="checkbox" name="require_comment_approval" value="1" 
-                                       class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                       class="rounded border-gray-300 text-blue-600 focus:ring-news-accent"
                                        {{ ($settings['require_comment_approval'] ?? true) ? 'checked' : '' }}>
                                 <span class="ml-2 text-sm text-gray-700">Perlu persetujuan komentar</span>
                             </label>
@@ -485,21 +485,21 @@
                         <div class="space-y-3">
                             <label class="flex items-center">
                                 <input type="checkbox" name="enable_registration" value="1" 
-                                       class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                       class="rounded border-gray-300 text-blue-600 focus:ring-news-accent"
                                        {{ ($settings['enable_registration'] ?? true) ? 'checked' : '' }}>
                                 <span class="ml-2 text-sm text-gray-700">Aktifkan registrasi pengguna</span>
                             </label>
                             
                             <label class="flex items-center">
                                 <input type="checkbox" name="enable_newsletter" value="1" 
-                                       class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                       class="rounded border-gray-300 text-blue-600 focus:ring-news-accent"
                                        {{ ($settings['enable_newsletter'] ?? true) ? 'checked' : '' }}>
                                 <span class="ml-2 text-sm text-gray-700">Aktifkan newsletter</span>
                             </label>
                             
                             <label class="flex items-center">
                                 <input type="checkbox" name="maintenance_mode" value="1" 
-                                       class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                       class="rounded border-gray-300 text-blue-600 focus:ring-news-accent"
                                        {{ ($settings['maintenance_mode'] ?? false) ? 'checked' : '' }}>
                                 <span class="ml-2 text-sm text-gray-700">Mode maintenance</span>
                             </label>
@@ -513,7 +513,7 @@
                        onclick="return confirm('Apakah Anda yakin ingin membersihkan cache?')">
                         <i class="fas fa-broom mr-2"></i>Bersihkan Cache
                     </a>
-                    <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    <button type="submit" class="bg-news-accent text-white px-6 py-2 rounded-lg hover:bg-red-800 transition-colors">
                         Simpan Pengaturan Sistem
                     </button>
                 </div>
@@ -635,19 +635,19 @@ function addEditorialMember() {
                 <div>
                     <label class="block text-xs font-medium text-gray-600 mb-1">Nama</label>
                     <input type="text" name="editorial_team[${editorialMemberIndex}][name]" value="" 
-                           class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                           class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-news-accent focus:border-news-accent" 
                            placeholder="Nama lengkap">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-600 mb-1">Posisi</label>
                     <input type="text" name="editorial_team[${editorialMemberIndex}][position]" value="" 
-                           class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                           class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-news-accent focus:border-news-accent" 
                            placeholder="Jabatan">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-600 mb-1">Deskripsi</label>
                     <input type="text" name="editorial_team[${editorialMemberIndex}][description]" value="" 
-                           class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                           class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-news-accent focus:border-news-accent" 
                            placeholder="Deskripsi singkat">
                 </div>
             </div>

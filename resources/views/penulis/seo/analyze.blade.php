@@ -11,7 +11,7 @@
         <div class="flex items-center justify-between flex-wrap gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">Analisis SEO</h1>
-                <p class="text-gray-600 mt-1">{{ Str::limit($article->title, 60) }}</p>
+                <p class="text-gray-600 mt-1 line-clamp-2" title="{{ $article->title }}">{{ $article->title }}</p>
             </div>
             <div class="flex gap-2">
                 <a href="{{ route('penulis.seo.index') }}" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition">

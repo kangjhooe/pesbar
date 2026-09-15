@@ -48,7 +48,7 @@
             <i class="fas fa-plus text-blue-600 text-xl mr-3"></i>
             <div>
                 <p class="font-medium text-blue-900">Tambah Artikel</p>
-                <p class="text-sm text-blue-700">Buat artikel baru</p>
+                <p class="text-sm text-news-accent">Buat artikel baru</p>
             </div>
         </a>
         <a href="#" class="flex items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
@@ -106,7 +106,7 @@
                             @endif
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h4 class="text-sm font-medium text-gray-900 truncate">
+                            <h4 class="text-sm font-medium text-gray-900 line-clamp-2" title="{{ $article->title }}">
                                 {{ $article->title }}
                             </h4>
                             <div class="flex items-center space-x-4 mt-1">
@@ -150,7 +150,7 @@
             
             <!-- Load More Button -->
             <div class="mt-6 text-center">
-                <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                <button class="px-4 py-2 bg-news-accent text-white rounded-lg hover:bg-red-800 transition-colors">
                     <i class="fas fa-plus mr-2"></i>
                     Lihat Semua Artikel
                 </button>
@@ -159,7 +159,7 @@
             <div class="text-center py-8">
                 <i class="fas fa-newspaper text-gray-400 text-4xl mb-4"></i>
                 <p class="text-gray-600 mb-4">Belum ada artikel</p>
-                <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                <button class="px-4 py-2 bg-news-accent text-white rounded-lg hover:bg-red-800 transition-colors">
                     <i class="fas fa-plus mr-2"></i>
                     Buat Artikel Pertama
                 </button>

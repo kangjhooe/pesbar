@@ -202,7 +202,7 @@
 
                 @if($article->status === 'published')
                     <div class="mt-6 pt-6 border-t border-gray-200">
-                        <a href="{{ route('articles.show', $article) }}" target="_blank" class="text-blue-600 hover:text-blue-800 font-medium">
+                        <a href="{{ $article->publicUrl() }}" target="_blank" class="text-blue-600 hover:text-blue-800 font-medium">
                             Lihat di Website →
                         </a>
                     </div>
@@ -298,7 +298,7 @@
                         Kelola Komentar
                     </a>
                     @if($article->status === 'published')
-                        <a href="{{ route('articles.show', $article) }}" target="_blank" class="block w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-center font-medium transition-colors">
+                        <a href="{{ $article->publicUrl() }}" target="_blank" class="block w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-center font-medium transition-colors">
                             Lihat di Website
                         </a>
                     @endif

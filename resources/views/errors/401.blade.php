@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'Akses Ditolak - Pesisir Barat Hub')
+@section('title', 'Akses Ditolak - ' . \App\Helpers\SettingsHelper::siteName())
 @section('description', 'Anda harus login terlebih dahulu untuk mengakses halaman ini')
 
 @section('content')

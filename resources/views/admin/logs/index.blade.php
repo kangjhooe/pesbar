@@ -15,7 +15,7 @@
             </div>
             <div class="flex gap-2">
                 <button onclick="refreshLogs()" 
-                        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center">
+                        class="bg-news-accent text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors flex items-center">
                     <i class="fas fa-sync-alt mr-2"></i>
                     Refresh
                 </button>
@@ -110,7 +110,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Level</label>
-                <select id="logLevel" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <select id="logLevel" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">
                     <option value="">Semua Level</option>
                     <option value="ERROR">Error</option>
                     <option value="WARNING">Warning</option>
@@ -121,7 +121,7 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Pencarian</label>
                 <input type="text" id="logSearch" placeholder="Cari dalam log..."
-                       class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">
             </div>
             <div class="flex items-end">
                 <button onclick="filterLogs()" class="w-full bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">

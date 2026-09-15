@@ -30,7 +30,6 @@ class ArticleRequest extends FormRequest
             'category_id' => 'required|exists:categories,id',
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB max
             'tags' => 'nullable|string|max:1000',
-            'type' => 'required|in:berita,artikel',
             'is_featured' => 'boolean',
             'is_breaking' => 'boolean',
             'status' => 'required|in:draft,pending_review,published,rejected,archived',
@@ -53,8 +52,6 @@ class ArticleRequest extends FormRequest
             'featured_image.image' => 'File yang diupload harus berupa gambar.',
             'featured_image.mimes' => 'Gambar harus berformat JPEG, PNG, JPG, GIF, atau WebP.',
             'featured_image.max' => 'Ukuran gambar maksimal 5MB.',
-            'type.required' => 'Tipe konten wajib dipilih.',
-            'type.in' => 'Tipe konten harus berita atau artikel.',
             'status.required' => 'Status artikel wajib dipilih.',
             'status.in' => 'Status artikel tidak valid.',
         ];
@@ -72,7 +69,6 @@ class ArticleRequest extends FormRequest
             'category_id' => 'kategori',
             'featured_image' => 'gambar unggulan',
             'tags' => 'tag',
-            'type' => 'tipe konten',
             'status' => 'status artikel',
         ];
     }

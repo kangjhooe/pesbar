@@ -22,7 +22,7 @@
                            id="title" 
                            name="title" 
                            value="{{ old('title') }}"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('title') border-red-500 @enderror"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-news-accent focus:border-transparent @error('title') border-red-500 @enderror"
                            placeholder="Masukkan judul event popup"
                            required>
                     @error('title')
@@ -35,7 +35,7 @@
                     <textarea id="message" 
                               name="message" 
                               rows="4"
-                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('message') border-red-500 @enderror"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-news-accent focus:border-transparent @error('message') border-red-500 @enderror"
                               placeholder="Masukkan pesan yang akan ditampilkan di popup"
                               required>{{ old('message') }}</textarea>
                     @error('message')
@@ -50,7 +50,7 @@
                                id="start_date" 
                                name="start_date" 
                                value="{{ old('start_date') }}"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('start_date') border-red-500 @enderror"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-news-accent focus:border-transparent @error('start_date') border-red-500 @enderror"
                                required>
                         @error('start_date')
                             <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -63,7 +63,7 @@
                                id="end_date" 
                                name="end_date" 
                                value="{{ old('end_date') }}"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('end_date') border-red-500 @enderror"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-news-accent focus:border-transparent @error('end_date') border-red-500 @enderror"
                                required>
                         @error('end_date')
                             <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -86,7 +86,7 @@
                     <a href="{{ route('admin.event-popups.index') }}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors">
                         Batal
                     </a>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                    <button type="submit" class="px-4 py-2 bg-news-accent text-white rounded-md hover:bg-red-800 transition-colors">
                         <i class="fas fa-save mr-2"></i>Simpan
                     </button>
                 </div>

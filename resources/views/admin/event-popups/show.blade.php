@@ -99,7 +99,7 @@
                     </div>
 
                     <div class="flex space-x-3">
-                        <a href="{{ route('admin.event-popups.edit', $eventPopup) }}" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-center">
+                        <a href="{{ route('admin.event-popups.edit', $eventPopup) }}" class="flex-1 bg-news-accent text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors text-center">
                             <i class="fas fa-edit mr-2"></i>Edit
                         </a>
                         <form action="{{ route('admin.event-popups.toggle-status', $eventPopup) }}" method="POST" class="flex-1">

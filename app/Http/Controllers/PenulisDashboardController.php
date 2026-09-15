@@ -121,7 +121,6 @@ class PenulisDashboardController extends Controller
             'content' => 'nullable|string',
             'content_html' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
-            'type' => 'required|in:berita,artikel',
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'tags' => 'array',
             'tags.*' => 'exists:tags,id',
@@ -156,7 +155,6 @@ class PenulisDashboardController extends Controller
             'excerpt' => $request->excerpt,
             'content' => $content,
             'category_id' => $request->category_id,
-            'type' => $request->type,
             'status' => $status,
             'meta_description' => $request->meta_description,
             'meta_keywords' => $request->meta_keywords,
@@ -197,7 +195,6 @@ class PenulisDashboardController extends Controller
             'content' => 'nullable|string',
             'content_html' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
-            'type' => 'required|in:berita,artikel',
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'tags' => 'array',
             'tags.*' => 'exists:tags,id',
@@ -236,7 +233,6 @@ class PenulisDashboardController extends Controller
             'excerpt' => $request->excerpt,
             'content' => $content,
             'category_id' => $request->category_id,
-            'type' => $request->type,
             'status' => $status,
             'meta_description' => $request->meta_description,
             'meta_keywords' => $request->meta_keywords,
@@ -431,7 +427,7 @@ class PenulisDashboardController extends Controller
 
     public function updateCommentStatus(Request $request, Article $article, Comment $comment)
     {
-        $this->authorize('view', $article);
+        $this->authorize('update', $article);
         
         // Verify comment belongs to article
         if ($comment->article_id !== $article->id) {
@@ -451,7 +447,7 @@ class PenulisDashboardController extends Controller
 
     public function deleteComment(Article $article, Comment $comment)
     {
-        $this->authorize('view', $article);
+        $this->authorize('update', $article);
         
         // Verify comment belongs to article
         if ($comment->article_id !== $article->id) {
@@ -470,7 +466,6 @@ class PenulisDashboardController extends Controller
             'excerpt' => 'nullable|string|max:500',
             'content' => 'nullable|string',
             'category_id' => 'nullable|exists:categories,id',
-            'type' => 'nullable|in:berita,artikel',
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'tags' => 'array',
             'tags.*' => 'exists:tags,id',
@@ -524,7 +519,6 @@ class PenulisDashboardController extends Controller
             'excerpt' => $request->excerpt ?? ($article ? $article->excerpt : null),
             'content' => $request->content ?? ($article ? $article->content : ''),
             'category_id' => $request->category_id ?? ($article ? $article->category_id : null),
-            'type' => $request->type ?? ($article ? $article->type : 'berita'),
             'status' => 'draft',
             'slug' => $slug,
             'meta_description' => $request->meta_description ?? ($article ? $article->meta_description : null),
@@ -558,11 +552,12 @@ class PenulisDashboardController extends Controller
 
     public function duplicate(Article $article)
     {
-        $this->authorize('view', $article);
+        $this->authorize('update', $article);
         
         $newArticle = $article->replicate();
         $newArticle->title = $article->title . ' (Copy)';
         $newArticle->slug = \Str::slug($newArticle->title) . '-' . time();
+        $newArticle->author_id = Auth::id();
         $newArticle->status = 'draft';
         $newArticle->published_at = null;
         $newArticle->scheduled_at = null;
@@ -764,13 +759,24 @@ class PenulisDashboardController extends Controller
             'path' => 'required|string',
         ]);
         
-        $path = $request->path;
+        $path = str_replace('\\', '/', (string) $request->path);
+
+        // Reject traversal / absolute / null-byte paths
+        if (
+            $path === ''
+            || str_contains($path, '..')
+            || str_contains($path, "\0")
+            || str_starts_with($path, '/')
+            || preg_match('#^[a-zA-Z]:#', $path)
+        ) {
+            return response()->json(['success' => false, 'message' => 'Path tidak valid'], 403);
+        }
         
-        // Check if file belongs to user's articles
         $user = Auth::user();
+        $userMediaPrefix = 'media/penulis/' . $user->id . '/';
         $article = $user->articles()->where('featured_image', $path)->first();
         
-        if (!$article && !str_contains($path, 'media/penulis/' . $user->id)) {
+        if (!$article && !str_starts_with($path, $userMediaPrefix)) {
             return response()->json(['success' => false, 'message' => 'File tidak ditemukan atau tidak memiliki akses'], 403);
         }
         
@@ -885,7 +891,7 @@ class PenulisDashboardController extends Controller
      */
     public function replyComment(Request $request, Article $article, Comment $comment)
     {
-        $this->authorize('view', $article);
+        $this->authorize('update', $article);
         
         if ($comment->article_id !== $article->id) {
             abort(403);
@@ -915,7 +921,7 @@ class PenulisDashboardController extends Controller
      */
     public function exportComments(Article $article)
     {
-        $this->authorize('view', $article);
+        $this->authorize('update', $article);
         
         $comments = $article->comments()->with('user', 'parent')->get();
         

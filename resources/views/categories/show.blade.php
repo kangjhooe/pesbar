@@ -1,146 +1,100 @@
 @extends('layouts.public')
 
-@section('title', $category->name . ' - Pesisir Barat Hub')
-@section('description', 'Baca berita terkini dari kategori ' . $category->name . '. Informasi terbaru dan terpercaya dari Kabupaten Pesisir Barat.')
+@section('title', $category->name . ' - ' . \App\Helpers\SettingsHelper::siteName())
+@section('description', $category->description ?: ('Berita kategori ' . $category->name . ' di ' . \App\Helpers\SettingsHelper::siteName()))
 
 @section('content')
-<div class="container mx-auto px-4 py-8">
-    <!-- Breadcrumb -->
-    <nav class="flex items-center space-x-2 text-sm text-gray-600 mb-6">
-        <a href="{{ route('home') }}" class="hover:text-primary-600 transition-colors">Beranda</a>
-        <i class="fas fa-chevron-right text-xs"></i>
-        <a href="{{ route('articles.index') }}" class="hover:text-primary-600 transition-colors">Berita</a>
-        <i class="fas fa-chevron-right text-xs"></i>
-        <span class="text-gray-800">{{ $category->name }}</span>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+    <nav class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-news-muted mb-6" aria-label="Breadcrumb">
+        <a href="{{ route('home') }}" class="hover:text-news-accent transition-colors">Beranda</a>
+        <span aria-hidden="true" class="text-news-line">/</span>
+        <span class="text-news-ink font-medium break-words">{{ $category->name }}</span>
     </nav>
 
-    <!-- Page Header -->
-    <div class="mb-8">
-        <div class="flex items-center space-x-4 mb-4">
+    <header class="border-b-2 border-news-ink pb-4 mb-8">
+        <div class="flex items-start gap-3 sm:gap-4">
             @if($category->icon)
-            <div class="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
-                <i class="{{ $category->icon }} text-primary-600 text-xl"></i>
+            <div class="w-10 h-10 sm:w-12 sm:h-12 border border-news-line flex items-center justify-center shrink-0 text-news-accent">
+                <i class="{{ $category->icon }} text-lg sm:text-xl"></i>
             </div>
             @endif
-            <div>
-                <h1 class="text-3xl lg:text-4xl font-bold text-gray-900">{{ $category->name }}</h1>
+            <div class="min-w-0">
+                <h1 class="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-news-ink tracking-tight break-words">{{ $category->name }}</h1>
                 @if($category->description)
-                <p class="text-gray-600 text-lg mt-2">{{ $category->description }}</p>
+                <p class="mt-2 text-sm sm:text-base text-news-muted">{{ $category->description }}</p>
                 @endif
+                <p class="mt-2 text-[11px] font-bold uppercase tracking-wider text-news-muted">{{ $articles->total() }} artikel</p>
             </div>
         </div>
-        <p class="text-gray-500">{{ $articles->total() }} artikel ditemukan</p>
-    </div>
+    </header>
 
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <!-- Main Content -->
-        <div class="lg:col-span-3">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="lg:col-span-9 min-w-0">
             @if($articles->count() > 0)
-                <!-- Articles Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 mb-8">
                     @foreach($articles as $article)
-                    <article class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-                        <!-- Featured Image -->
-                        @if($article->featured_image)
-                        <div class="aspect-video bg-gray-200">
-                            <img src="{{ asset('storage/' . $article->featured_image) }}" 
-                                 alt="{{ $article->title }}" 
-                                 class="w-full h-full object-cover">
-                        </div>
-                        @else
-                        <div class="aspect-video bg-gradient-to-r from-primary-500 to-primary-600 flex items-center justify-center">
-                            <i class="fas fa-newspaper text-white text-4xl"></i>
-                        </div>
-                        @endif
-
-                        <!-- Article Content -->
-                        <div class="p-6">
-                            <!-- Category Badge -->
-                            <div class="mb-3">
-                                <span class="inline-block bg-primary-100 text-primary-800 text-xs font-medium px-2 py-1 rounded-full">
-                                    {{ $article->category->name }}
-                                </span>
-                            </div>
-
-                            <!-- Title -->
-                            <h2 class="text-xl font-bold text-gray-900 leading-tight mb-3">
-                                <a href="{{ route('articles.show', $article) }}" 
-                                   class="hover:text-primary-600 transition-colors">
-                                    {{ $article->title }}
-                                </a>
-                            </h2>
-
-                            <!-- Excerpt -->
-                            <p class="text-gray-600 text-sm leading-relaxed mb-4">
-                                {{ Str::limit(strip_tags($article->content), 120) }}
-                            </p>
-
-                            <!-- Meta Information -->
-                            <div class="flex items-center justify-between text-xs text-gray-500">
-                                <div class="flex items-center space-x-3">
-                                    <span class="flex items-center space-x-1">
-                                        <i class="fas fa-calendar"></i>
-                                        <span>{{ $article->published_at ? $article->published_at->format('d-m-Y') : 'Belum dipublikasi' }}</span>
-                                    </span>
-                                    <span class="flex items-center space-x-1">
-                                        <i class="fas fa-eye"></i>
-                                        <span>{{ number_format($article->views) }}</span>
-                                    </span>
-                                </div>
-                                <a href="{{ route('articles.show', $article) }}" 
-                                   class="text-primary-600 hover:text-primary-700 font-medium">
-                                    Baca Selengkapnya →
-                                </a>
-                            </div>
+                    <article class="group min-w-0">
+                        <a href="{{ $article->publicUrl() }}" class="block aspect-[4/3] overflow-hidden bg-news-line mb-2">
+                            <img
+                                src="{{ $article->featured_image ? asset('storage/' . $article->featured_image) : asset('images/default-news.jpg') }}"
+                                alt="{{ $article->title }}"
+                                class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                                loading="lazy"
+                                onerror="this.onerror=null;this.src='{{ asset('images/default-news.jpg') }}';"
+                            >
+                        </a>
+                        <h2 class="font-display text-[13px] sm:text-sm font-bold leading-snug text-news-ink line-clamp-2">
+                            <a href="{{ $article->publicUrl() }}" class="hover:text-news-accent transition-colors">
+                                {{ $article->title }}
+                            </a>
+                        </h2>
+                        <p class="mt-1 text-xs text-news-muted line-clamp-2 hidden sm:block">
+                            {{ Str::limit(strip_tags($article->content), 90) }}
+                        </p>
+                        <div class="mt-1.5 flex items-center gap-1.5 text-[10px] sm:text-[11px] text-news-muted">
+                            <time datetime="{{ optional($article->published_at)->toIso8601String() }}">
+                                {{ $article->published_at ? $article->published_at->format('d M Y') : 'Belum dipublikasi' }}
+                            </time>
+                            <span aria-hidden="true" class="hidden sm:inline">·</span>
+                            <span class="hidden sm:inline">{{ number_format($article->views) }} views</span>
                         </div>
                     </article>
                     @endforeach
                 </div>
 
-                <!-- Pagination -->
-                <div class="flex justify-center">
+                <div class="flex justify-center border-t border-news-line pt-6">
                     {{ $articles->links() }}
                 </div>
             @else
-                <!-- No Articles Found -->
-                <div class="bg-white rounded-lg shadow-lg p-12 text-center">
-                    <div class="text-gray-400 mb-4">
-                        <i class="fas fa-newspaper text-6xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-700 mb-2">Belum Ada Berita</h3>
-                    <p class="text-gray-500">Saat ini belum ada berita dalam kategori {{ $category->name }}. Silakan kembali lagi nanti.</p>
-                    <div class="mt-6">
-                        <a href="{{ route('articles.index') }}" 
-                           class="inline-flex items-center space-x-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors">
-                            <i class="fas fa-arrow-left"></i>
-                            <span>Lihat Semua Berita</span>
-                        </a>
-                    </div>
+                <div class="text-center py-20 border border-news-line">
+                    <p class="font-display text-xl text-news-ink font-bold mb-2">Belum Ada Berita</p>
+                    <p class="text-sm text-news-muted mb-6">Saat ini belum ada berita dalam kategori {{ $category->name }}.</p>
+                    <a href="{{ route('articles.index') }}"
+                       class="inline-flex items-center gap-2 bg-news-ink text-white px-4 py-2 text-sm font-semibold hover:bg-news-accent transition-colors">
+                        <i class="fas fa-arrow-left text-xs"></i>
+                        Lihat Semua Berita
+                    </a>
                 </div>
             @endif
         </div>
 
-        <!-- Sidebar -->
-        <div class="lg:col-span-1">
-            <!-- All Categories -->
+        <aside class="lg:col-span-3 space-y-8" aria-label="Sidebar">
             @php
-                $allCategories = \App\Models\Category::where('is_active', true)
-                    ->orderBy('name')
-                    ->get();
+                $allCategories = \App\Models\Category::where('is_active', true)->orderBy('name')->get();
             @endphp
-            
+
             @if($allCategories->count() > 0)
-            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-                <h3 class="text-xl font-bold text-gray-900 mb-4">Semua Kategori</h3>
-                <ul class="space-y-2">
+            <div class="border border-news-line">
+                <div class="bg-news-ink text-white px-4 py-2.5">
+                    <h2 class="text-xs font-bold uppercase tracking-[0.15em]">Semua Kategori</h2>
+                </div>
+                <ul class="divide-y divide-news-line">
                     @foreach($allCategories as $cat)
                     <li>
-                        <a href="{{ route('categories.show', $cat) }}" 
-                           class="flex items-center justify-between text-gray-700 hover:text-primary-600 transition-colors py-2 {{ $cat->id === $category->id ? 'text-primary-600 font-semibold' : '' }}">
+                        <a href="{{ route('categories.show', $cat) }}"
+                           class="flex items-center justify-between px-4 py-3 text-sm transition-colors {{ $cat->id === $category->id ? 'text-news-accent font-bold bg-news-paper' : 'text-news-ink hover:text-news-accent' }}">
                             <span>{{ $cat->name }}</span>
-                            <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                                {{ $cat->publishedBeritaArticles()->count() }}
-                            </span>
+                            <span class="text-[11px] text-news-muted tabular-nums">{{ $cat->publishedArticles()->count() }}</span>
                         </a>
                     </li>
                     @endforeach
@@ -148,75 +102,58 @@
             </div>
             @endif
 
-            <!-- Popular Articles -->
-            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-                <h3 class="text-xl font-bold text-gray-900 mb-4">Berita Populer</h3>
-                <div class="space-y-4">
-                    @php
-                        $popularArticles = \App\Models\Article::published()
-                            ->popular()
-                            ->take(5)
-                            ->get();
-                    @endphp
-                    
-                    @if($popularArticles->count() > 0)
-                        @foreach($popularArticles as $popularArticle)
-                        <article class="flex space-x-3">
-                            @if($popularArticle->featured_image)
-                            <div class="flex-shrink-0">
-                                <img src="{{ asset('storage/' . $popularArticle->featured_image) }}" 
-                                     alt="{{ $popularArticle->title }}" 
-                                     class="w-16 h-16 object-cover rounded">
-                            </div>
-                            @else
-                            <div class="flex-shrink-0 w-16 h-16 bg-gradient-to-r from-primary-500 to-primary-600 rounded flex items-center justify-center">
-                                <i class="fas fa-newspaper text-white text-sm"></i>
-                            </div>
-                            @endif
-                            <div class="flex-1 min-w-0">
-                                <h4 class="text-sm font-semibold text-gray-900 leading-tight mb-1">
-                                    <a href="{{ route('articles.show', $popularArticle) }}" 
-                                       class="hover:text-primary-600 transition-colors">
-                                        {{ Str::limit($popularArticle->title, 50) }}
-                                    </a>
-                                </h4>
-                                <div class="flex items-center space-x-2 text-xs text-gray-500">
-                                    <span>{{ $popularArticle->published_at ? $popularArticle->published_at->format('d-m-Y') : 'Belum dipublikasi' }}</span>
-                                    <span>•</span>
-                                    <span class="flex items-center space-x-1">
-                                        <i class="fas fa-eye"></i>
-                                        <span>{{ number_format($popularArticle->views) }}</span>
-                                    </span>
-                                </div>
-                            </div>
-                        </article>
-                        @endforeach
-                    @else
-                        <p class="text-gray-500 text-sm">Belum ada berita populer</p>
-                    @endif
+            @php
+                $popularArticles = \App\Models\Article::published()->popular()->take(5)->get();
+            @endphp
+            <div class="border border-news-line">
+                <div class="bg-news-ink text-white px-4 py-2.5">
+                    <h2 class="text-xs font-bold uppercase tracking-[0.15em]">Terpopuler</h2>
                 </div>
+                <ul class="divide-y divide-news-line">
+                    @forelse($popularArticles as $popularArticle)
+                    <li class="flex gap-3 px-4 py-3">
+                        <a href="{{ $popularArticle->publicUrl() }}" class="w-16 h-16 shrink-0 overflow-hidden bg-news-line">
+                            <img
+                                src="{{ $popularArticle->featured_image ? asset('storage/' . $popularArticle->featured_image) : asset('images/default-news.jpg') }}"
+                                alt=""
+                                class="w-full h-full object-cover"
+                                loading="lazy"
+                            >
+                        </a>
+                        <div class="min-w-0">
+                            <h3 class="text-sm font-bold leading-snug text-news-ink line-clamp-2">
+                                <a href="{{ $popularArticle->publicUrl() }}" class="hover:text-news-accent transition-colors" title="{{ $popularArticle->title }}">
+                                    {{ $popularArticle->title }}
+                                </a>
+                            </h3>
+                            <time class="block mt-1 text-[11px] text-news-muted">
+                                {{ $popularArticle->published_at ? $popularArticle->published_at->format('d M Y') : 'Belum dipublikasi' }}
+                            </time>
+                        </div>
+                    </li>
+                    @empty
+                    <li class="px-4 py-6 text-sm text-news-muted">Belum ada data.</li>
+                    @endforelse
+                </ul>
             </div>
 
-            <!-- Newsletter Subscription -->
-            <div class="bg-gradient-to-r from-primary-600 to-primary-700 rounded-lg shadow-lg p-6 text-white">
-                <h3 class="text-lg font-bold mb-2">Berlangganan Newsletter</h3>
-                <p class="text-primary-100 text-sm mb-4">
-                    Dapatkan berita terbaru langsung di email Anda
-                </p>
+            <div class="border border-news-line bg-news-ink text-white p-5">
+                <h2 class="text-xs font-bold uppercase tracking-[0.15em] mb-2">Newsletter</h2>
+                <p class="text-sm text-white/70 mb-4">Dapatkan berita terbaru langsung di email Anda.</p>
                 <form action="{{ route('newsletter.subscribe') }}" method="POST" class="space-y-3">
                     @csrf
-                    <input type="email" 
-                           name="email" 
-                           placeholder="Masukkan email Anda" 
+                    <input type="email"
+                           name="email"
+                           placeholder="Email Anda"
                            required
-                           class="w-full px-3 py-2 rounded text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-white">
-                    <button type="submit" 
-                            class="w-full bg-white text-primary-600 font-semibold py-2 rounded hover:bg-gray-100 transition-colors text-sm">
+                           class="w-full px-3 py-2 bg-white text-news-ink text-sm border-0 focus:outline-none focus:ring-2 focus:ring-news-accent">
+                    <button type="submit"
+                            class="w-full bg-news-accent text-white font-semibold py-2 text-sm hover:bg-red-800 transition-colors">
                         Berlangganan
                     </button>
                 </form>
             </div>
-        </div>
+        </aside>
     </div>
 </div>
 @endsection

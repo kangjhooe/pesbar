@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Admin - Pesisir Barat Hub')</title>
+    <title>@yield('title', 'Admin - ' . \App\Helpers\SettingsHelper::siteName())</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ \App\Helpers\SettingsHelper::siteFavicon() }}">
@@ -14,110 +14,37 @@
     <meta name="google-site-verification" content="{{ \App\Helpers\SettingsHelper::googleSearchConsole() }}" />
     @endif
     
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    
-    <!-- Vite CSS -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
-    <!-- Custom CSS for better tab compatibility -->
+
     <style>
-        /* Ensure tab navigation works properly */
         .tab-navigation {
             scrollbar-width: thin;
             scrollbar-color: #cbd5e0 #f7fafc;
         }
-        
-        .tab-navigation::-webkit-scrollbar {
-            height: 6px;
-        }
-        
+        .tab-navigation::-webkit-scrollbar { height: 6px; }
         .tab-navigation::-webkit-scrollbar-track {
             background: #f7fafc;
             border-radius: 3px;
         }
-        
         .tab-navigation::-webkit-scrollbar-thumb {
             background: #cbd5e0;
             border-radius: 3px;
         }
-        
-        .tab-navigation::-webkit-scrollbar-thumb:hover {
-            background: #a0aec0;
-        }
-        
-        /* Mobile touch improvements */
+        .tab-navigation::-webkit-scrollbar-thumb:hover { background: #a0aec0; }
         @media (max-width: 768px) {
-            .tab-item {
-                min-height: 48px;
-                padding: 0.875rem 1rem;
-            }
-            
-            .tab-navigation {
-                padding: 0.5rem 0;
-            }
+            .tab-item { min-height: 48px; padding: 0.875rem 1rem; }
+            .tab-navigation { padding: 0.5rem 0; }
         }
-        
-        /* Notification Toast Animations */
         @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        
-        .animate-slide-down {
-            animation: slideDown 0.3s ease-out;
-        }
-        
-        .notification-toast {
-            position: relative;
-            z-index: 50;
-        }
-        
-        .notification-toast button {
-            transition: all 0.2s ease;
-        }
-        
-        .notification-toast button:hover {
-            transform: scale(1.1);
-        }
+        .animate-slide-down { animation: slideDown 0.3s ease-out; }
+        .notification-toast { position: relative; z-index: 50; }
+        .notification-toast button { transition: all 0.2s ease; }
+        .notification-toast button:hover { transform: scale(1.1); }
     </style>
-    
-    <!-- Fallback Tailwind CSS CDN for development -->
-    @if(app()->environment('local'))
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
-                            200: '#bfdbfe',
-                            300: '#93c5fd',
-                            400: '#60a5fa',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8',
-                            800: '#1e40af',
-                            900: '#1e3a8a',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    @endif
-    
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-50">
     <div class="min-h-screen flex flex-col lg:flex-row">
@@ -321,7 +248,7 @@
         </aside>
 
         <!-- Main Content -->
-        <div class="flex-1 flex flex-col lg:ml-64">
+        <div class="flex-1 flex flex-col lg:ml-64 min-w-0 dashboard-main">
             <!-- Top Bar -->
             <header class="bg-white shadow-sm border-b border-gray-200 safe-top">
                 <div class="flex items-center justify-between px-4 lg:px-6 py-4">
@@ -352,7 +279,7 @@
             </header>
 
             <!-- Page Content -->
-            <main class="flex-1 p-4 lg:p-6 safe-bottom overflow-y-auto">
+            <main class="flex-1 p-3 sm:p-4 lg:p-6 safe-bottom overflow-y-auto overflow-x-hidden min-w-0">
                 @if(session('success'))
                     <div class="notification-toast notification-success mb-6 animate-slide-down">
                         <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 rounded-lg shadow-lg p-4">
@@ -438,7 +365,7 @@
             toggleSidebar();
         });
         
-        // Handle window resize
+        // Handle window resize — open on desktop, force-close on smaller screens
         window.addEventListener('resize', function() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('mobile-overlay');
@@ -446,7 +373,11 @@
             if (window.innerWidth >= 1024) {
                 sidebar.classList.remove('-translate-x-full');
                 overlay.classList.add('hidden');
-                document.body.style.overflow = ''; // Restore scrolling
+                document.body.style.overflow = '';
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+                document.body.style.overflow = '';
             }
         });
         
@@ -459,9 +390,6 @@
             });
         });
     </script>
-    
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Google Analytics -->
     @if(\App\Helpers\SettingsHelper::googleAnalytics())

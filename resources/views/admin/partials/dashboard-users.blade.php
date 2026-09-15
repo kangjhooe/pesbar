@@ -78,7 +78,7 @@
             <i class="fas fa-user-plus text-blue-600 text-xl mr-3"></i>
             <div>
                 <p class="font-medium text-blue-900">Tambah User</p>
-                <p class="text-sm text-blue-700">Buat user baru</p>
+                <p class="text-sm text-news-accent">Buat user baru</p>
             </div>
         </a>
         <a href="#" class="flex items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">

@@ -1,152 +1,78 @@
 @extends('layouts.public')
 
-@section('title', 'Agenda Kegiatan - Pesisir Barat Hub')
+@section('title', 'Agenda Kegiatan - ' . \App\Helpers\SettingsHelper::siteName())
 @section('description', 'Lihat semua agenda dan kegiatan yang akan diselenggarakan di Kabupaten Pesisir Barat')
 
 @section('content')
-<div class="container-responsive py-8">
-    <!-- Page Header -->
-    <div class="mb-8">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-800 mb-2">
-                    <i class="fas fa-calendar-alt text-blue-600 mr-3"></i>
-                    Agenda Kegiatan
-                </h1>
-                <p class="text-gray-600">
-                    Daftar lengkap agenda dan kegiatan yang akan diselenggarakan di Kabupaten Pesisir Barat
-                </p>
-            </div>
-            <div class="text-right">
-                <div class="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg">
-                    <div class="text-2xl font-bold">{{ $total_count }}</div>
-                    <div class="text-sm">Total Kegiatan</div>
-                </div>
-            </div>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+    <header class="border-b-2 border-news-ink pb-4 mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div class="min-w-0">
+            <h1 class="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-news-ink tracking-tight">Agenda Kegiatan</h1>
+            <p class="mt-2 text-sm sm:text-base text-news-muted max-w-2xl">
+                Daftar lengkap agenda dan kegiatan di Kabupaten Pesisir Barat
+            </p>
         </div>
-    </div>
+        <div class="shrink-0 text-left sm:text-right">
+            <p class="font-display text-3xl font-bold text-news-accent leading-none">{{ $total_count }}</p>
+            <p class="mt-1 text-[11px] font-bold uppercase tracking-wider text-news-muted">Total Kegiatan</p>
+        </div>
+    </header>
 
     @if($events->count() > 0)
-        <!-- Events Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             @foreach($events as $event)
-            <div class="card group hover:shadow-lg transition-shadow duration-300">
-                <div class="p-6">
-                    <!-- Event Date -->
-                    <div class="flex items-center mb-4">
-                        <div class="bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-lg p-3 text-center min-w-[60px]">
-                            <div class="text-xl font-bold">{{ $event->event_date->format('d') }}</div>
-                            <div class="text-xs uppercase">{{ $event->event_date->format('M') }}</div>
-                        </div>
-                        <div class="ml-4 flex-1">
-                            <h3 class="font-semibold text-gray-800 text-lg line-clamp-2 group-hover:text-blue-600 transition-colors">
-                                {{ $event->title }}
-                            </h3>
-                            <div class="flex items-center mt-1">
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-{{ $event->priority_color }}-100 text-{{ $event->priority_color }}-600">
-                                    {{ $event->event_type_label }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Event Details -->
-                    <div class="space-y-3">
-                        @if($event->start_time)
-                        <div class="flex items-center text-gray-600">
-                            <i class="fas fa-clock text-blue-600 w-4 mr-3"></i>
-                            <span class="text-sm">
-                                {{ $event->formatted_start_time }}
-                                @if($event->end_time)
-                                    - {{ $event->formatted_end_time }}
-                                @endif
-                            </span>
-                        </div>
-                        @endif
-
-                        @if($event->location)
-                        <div class="flex items-center text-gray-600">
-                            <i class="fas fa-map-marker-alt text-green-600 w-4 mr-3"></i>
-                            <span class="text-sm">{{ $event->location }}</span>
-                        </div>
-                        @endif
-
-                        @if($event->organizer)
-                        <div class="flex items-center text-gray-600">
-                            <i class="fas fa-user text-purple-600 w-4 mr-3"></i>
-                            <span class="text-sm">{{ $event->organizer }}</span>
-                        </div>
-                        @endif
-
-                        @if($event->description)
-                        <div class="pt-2 border-t border-gray-100">
-                            <p class="text-gray-600 text-sm line-clamp-3">
-                                {{ $event->description }}
-                            </p>
-                        </div>
-                        @endif
-                    </div>
-
-                    <!-- Event Status -->
-                    <div class="mt-4 pt-4 border-t border-gray-100">
-                        <div class="flex items-center justify-between">
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $event->is_active ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600' }}">
-                                <i class="fas fa-circle w-2 h-2 mr-1 {{ $event->is_active ? 'text-green-500' : 'text-gray-400' }}"></i>
-                                {{ $event->is_active ? 'Aktif' : 'Tidak Aktif' }}
-                            </span>
-                            <span class="text-xs text-gray-500">
-                                {{ $event->created_at->format('d-m-Y') }}
-                            </span>
-                        </div>
-                    </div>
+            <article class="flex gap-3 border border-news-line p-4 hover:border-news-ink transition-colors">
+                <div class="w-14 shrink-0 text-center border-r border-news-line pr-3 flex flex-col justify-center">
+                    <span class="font-display text-2xl font-bold text-news-accent leading-none">{{ $event->event_date->format('d') }}</span>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-news-muted mt-1">{{ $event->event_date->format('M') }}</span>
                 </div>
-            </div>
+                <div class="min-w-0 flex-1">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-news-accent">{{ $event->event_type_label }}</span>
+                    <h2 class="font-display text-base font-bold leading-snug text-news-ink mt-0.5 line-clamp-2" title="{{ $event->title }}">
+                        {{ $event->title }}
+                    </h2>
+                    <div class="mt-2 space-y-1 text-[11px] text-news-muted">
+                        @if($event->start_time)
+                        <p>
+                            {{ $event->formatted_start_time }}
+                            @if($event->end_time)
+                                – {{ $event->formatted_end_time }}
+                            @endif
+                        </p>
+                        @endif
+                        @if($event->location)
+                        <p class="line-clamp-1">{{ $event->location }}</p>
+                        @endif
+                        @if($event->organizer)
+                        <p class="line-clamp-1">{{ $event->organizer }}</p>
+                        @endif
+                    </div>
+                    @if($event->description)
+                    <p class="mt-2 text-sm text-news-muted line-clamp-2">{{ $event->description }}</p>
+                    @endif
+                    <p class="mt-3 text-[10px] font-bold uppercase tracking-wider {{ $event->is_active ? 'text-news-accent' : 'text-news-muted' }}">
+                        {{ $event->is_active ? 'Aktif' : 'Tidak Aktif' }}
+                    </p>
+                </div>
+            </article>
             @endforeach
         </div>
-
-        <!-- Empty State (if no events) -->
     @else
-        <div class="text-center py-16">
-            <div class="max-w-md mx-auto">
-                <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <i class="fas fa-calendar-alt text-4xl text-gray-400"></i>
-                </div>
-                <h3 class="text-xl font-semibold text-gray-600 mb-2">Belum Ada Agenda</h3>
-                <p class="text-gray-500 mb-6">
-                    Saat ini belum ada agenda kegiatan yang tersedia. Silakan kembali lagi nanti.
-                </p>
-                <a href="{{ route('home') }}" class="btn-primary inline-flex items-center">
-                    <i class="fas fa-arrow-left mr-2"></i>
-                    Kembali ke Beranda
-                </a>
-            </div>
+        <div class="text-center py-20 border border-news-line">
+            <p class="font-display text-xl text-news-ink font-bold mb-2">Belum Ada Agenda</p>
+            <p class="text-sm text-news-muted mb-6">Saat ini belum ada agenda kegiatan yang tersedia.</p>
+            <a href="{{ route('home') }}"
+               class="inline-flex items-center gap-2 bg-news-ink text-white px-4 py-2 text-sm font-semibold hover:bg-news-accent transition-colors">
+                <i class="fas fa-arrow-left text-xs"></i>
+                Kembali ke Beranda
+            </a>
         </div>
     @endif
 
-    <!-- Update Info -->
     @if($updated_at)
-    <div class="mt-8 text-center">
-        <div class="inline-flex items-center px-4 py-2 bg-gray-100 rounded-lg text-sm text-gray-600">
-            <i class="fas fa-sync-alt mr-2"></i>
-            Terakhir diperbarui: {{ $updated_at }}
-        </div>
-    </div>
+    <p class="mt-8 text-center text-[11px] text-news-muted">
+        Terakhir diperbarui: {{ $updated_at }}
+    </p>
     @endif
 </div>
-
-<style>
-.line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.line-clamp-3 {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-</style>
 @endsection

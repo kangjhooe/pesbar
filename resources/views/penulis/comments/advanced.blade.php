@@ -69,7 +69,7 @@
 
     <!-- Filters -->
     <div class="bg-white rounded-xl shadow-md p-6 mb-6">
-        <form method="GET" action="{{ route('penulis.comments.advanced') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <form method="GET" action="{{ route('penulis.comments.advanced') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
                 <select name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -166,8 +166,8 @@
                             @endif
                         </td>
                         <td class="px-6 py-4">
-                            <a href="{{ route('penulis.articles.show', $comment->article_id) }}" class="text-sm text-blue-600 hover:text-blue-900">
-                                {{ Str::limit($comment->article->title, 40) }}
+                            <a href="{{ route('penulis.articles.show', $comment->article_id) }}" class="text-sm text-blue-600 hover:text-blue-900 line-clamp-2" title="{{ $comment->article->title }}">
+                                {{ $comment->article->title }}
                             </a>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">

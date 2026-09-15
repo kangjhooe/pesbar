@@ -4,1702 +4,471 @@
 @section('description', $siteDescription)
 
 @section('content')
-<div class="container-responsive py-8">
-    @if($breakingNews)
-    <!-- Breaking News -->
-    <div class="breaking-news-container bg-gradient-to-r from-red-600 via-red-650 to-red-700 text-white rounded-lg mb-6 md:mb-8 overflow-hidden shadow-lg border-2 border-red-500">
-        <div class="relative">
-            <!-- Animated background effect -->
-            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer"></div>
-            
-            <!-- Content -->
-            <div class="relative z-10 p-3 md:p-4">
-                <div class="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-                    <!-- Badge -->
-                    <div class="flex-shrink-0 flex items-center justify-center md:justify-start">
-                        <div class="breaking-badge bg-red-500 px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-bold flex items-center space-x-2 animate-pulse">
-                            <i class="fas fa-bolt text-yellow-300"></i>
-                            <span>BERITA TERKINI</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Title with marquee effect for long text -->
-                    <div class="flex-1 min-w-0">
-                        <div class="breaking-news-title-wrapper overflow-hidden">
-                            <p class="text-sm md:text-base font-semibold md:font-medium leading-tight">
-                                <a href="{{ route('articles.show', $breakingNews) }}" 
-                                   class="breaking-news-link hover:text-yellow-200 transition-colors duration-300 block">
-                                    <span class="breaking-news-text inline-block whitespace-nowrap">
-                                        {{ $breakingNews->title }}
-                                    </span>
-                                </a>
-                            </p>
-                        </div>
-                    </div>
-                </div>
+<div class="portal-home">
+    {{-- Breaking ticker (multi-item + animasi) --}}
+    @if($breakingNews->isNotEmpty())
+    <div
+        class="breaking-bar bg-news-ink text-white border-b-4 border-news-accent"
+        x-data="{
+            index: 0,
+            total: {{ $breakingNews->count() }},
+            paused: false,
+            timer: null,
+            init() {
+                if (this.total > 1) {
+                    this.timer = setInterval(() => { if (!this.paused) this.next() }, 4800);
+                }
+            },
+            next() { this.index = (this.index + 1) % this.total },
+            prev() { this.index = (this.index - 1 + this.total) % this.total },
+            go(i) { this.index = i }
+        }"
+        @mouseenter="paused = true"
+        @mouseleave="paused = false"
+        role="region"
+        aria-label="Breaking news"
+        aria-live="polite"
+    >
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 flex items-center gap-2 sm:gap-3 min-w-0">
+            <span class="breaking-label shrink-0 inline-flex items-center gap-1.5 bg-news-accent text-white text-[10px] sm:text-[11px] font-bold tracking-wider uppercase px-2 sm:px-2.5 py-1">
+                <span class="breaking-pulse" aria-hidden="true"></span>
+                Breaking
+            </span>
+
+            <div class="relative flex-1 min-w-0 h-6 sm:h-7 overflow-hidden">
+                @foreach($breakingNews as $i => $item)
+                <a
+                    href="{{ $item->publicUrl() }}"
+                    class="absolute inset-0 flex items-center text-sm md:text-base font-semibold hover:underline line-clamp-1"
+                    x-show="index === {{ $i }}"
+                    x-transition:enter="transition ease-out duration-300"
+                    x-transition:enter-start="opacity-0 translate-y-2"
+                    x-transition:enter-end="opacity-100 translate-y-0"
+                    x-transition:leave="transition ease-in duration-200"
+                    x-transition:leave-start="opacity-100 translate-y-0"
+                    x-transition:leave-end="opacity-0 -translate-y-2"
+                    @if($i > 0) style="display: none;" @endif
+                >
+                    {{ $item->title }}
+                </a>
+                @endforeach
             </div>
+
+            @if($breakingNews->count() > 1)
+            <div class="shrink-0 flex items-center gap-1.5 sm:gap-2">
+                <span class="hidden sm:inline text-[10px] text-white/50 font-medium tabular-nums" x-text="(index + 1) + '/' + total"></span>
+                <button type="button" class="breaking-nav touch-target p-1 text-white/60 hover:text-white" @click="prev()" aria-label="Berita sebelumnya">
+                    <i class="fas fa-chevron-left text-xs"></i>
+                </button>
+                <div class="flex items-center gap-1" role="tablist" aria-label="Daftar breaking">
+                    @foreach($breakingNews as $i => $item)
+                    <button
+                        type="button"
+                        class="breaking-dot"
+                        :class="index === {{ $i }} ? 'is-active' : ''"
+                        @click="go({{ $i }})"
+                        aria-label="Breaking {{ $i + 1 }}: {{ Str::limit($item->title, 40) }}"
+                        :aria-selected="(index === {{ $i }}).toString()"
+                    ></button>
+                    @endforeach
+                </div>
+                <button type="button" class="breaking-nav touch-target p-1 text-white/60 hover:text-white" @click="next()" aria-label="Berita berikutnya">
+                    <i class="fas fa-chevron-right text-xs"></i>
+                </button>
+            </div>
+            @endif
         </div>
     </div>
+
+    <style>
+        .breaking-label { position: relative; }
+        .breaking-pulse {
+            width: 6px; height: 6px; border-radius: 9999px;
+            background: #fff; display: inline-block;
+            box-shadow: 0 0 0 0 rgba(255,255,255,0.7);
+            animation: breaking-pulse 1.6s ease-out infinite;
+        }
+        @keyframes breaking-pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255,255,255,0.55); }
+            70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(255,255,255,0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+        }
+        .breaking-dot {
+            width: 6px; height: 6px; border-radius: 9999px;
+            background: rgba(255,255,255,0.35); border: 0; padding: 0;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .breaking-dot.is-active {
+            background: #fff; transform: scale(1.25);
+        }
+        .breaking-bar .breaking-nav:focus-visible,
+        .breaking-bar .breaking-dot:focus-visible {
+            outline: 2px solid #fff; outline-offset: 2px;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .breaking-pulse { animation: none; }
+        }
+    </style>
     @endif
 
-    <!-- Main Layout with Left and Right Sidebars -->
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-12">
-        <!-- Left Sidebar -->
-        <div class="lg:col-span-1 space-y-4 order-2 lg:order-1">
-            <!-- Trending News Widget -->
-            <div class="widget">
-                <div class="p-4">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-bold text-gray-800 flex items-center">
-                            <i class="fas fa-fire text-red-500 mr-2 text-sm"></i>Konten Trending
-                        </h3>
-                        <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{{ $popularArticles->count() }} konten</span>
-                    </div>
-                    <div class="space-y-3">
-                        @forelse($popularArticles as $index => $article)
-                        <article class="flex space-x-3 group">
-                            <div class="trending-number">
-                                {{ $index + 1 }}
-                            </div>
-                            <div class="flex-1">
-                                <h4 class="font-medium text-gray-800 mb-1 line-clamp-2 group-hover:text-blue-600 transition-colors text-sm">
-                                    <a href="{{ route('articles.show', $article) }}" class="hover:text-blue-600 transition-colors">
-                                        {{ $article->title }}
-                                    </a>
-                                </h4>
-                                <div class="flex items-center space-x-2 text-xs text-gray-500">
-                                    <span class="flex items-center space-x-1">
-                                        <i class="fas fa-calendar text-blue-600"></i>
-                                        <span>{{ $article->formatted_date }}</span>
-                                    </span>
-                                    <span class="flex items-center space-x-1">
-                                        <i class="fas fa-eye text-blue-600"></i>
-                                        <span>{{ number_format($article->views) }}</span>
-                                    </span>
-                                </div>
-                            </div>
-                        </article>
-                        @empty
-                        <div class="text-center py-8">
-                            <i class="fas fa-chart-line text-4xl text-gray-300 mb-3"></i>
-                            <p class="text-gray-500 text-sm">Belum ada data trending</p>
-                        </div>
-                        @endforelse
-                    </div>
-                </div>
-            </div>
-
-            <!-- Contact Important Widget -->
-            @include('widgets.contact-important')
-
-            <!-- Popular News Widget -->
-            <div class="widget">
-                <div class="p-4">
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-base font-bold text-gray-800 flex items-center">
-                            <i class="fas fa-chart-line text-green-500 mr-2 text-sm"></i>Berita Populer
-                        </h3>
-                        <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{{ $popularArticles->count() }} berita</span>
-                    </div>
-                    <div class="space-y-3">
-                        @forelse($popularArticles->take(5) as $article)
-                        <article class="flex space-x-3 group">
-                            <div class="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 shadow-md">
-                                <img src="{{ $article->featured_image ? asset('storage/' . $article->featured_image) : asset('images/default-news.jpg') }}" 
-                                     alt="{{ $article->title }}" 
-                                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
-                            </div>
-                            <div class="flex-1">
-                                <h4 class="font-medium text-gray-800 mb-1 line-clamp-2 group-hover:text-blue-600 transition-colors text-xs">
-                                    <a href="{{ route('articles.show', $article) }}" class="hover:text-blue-600 transition-colors">
-                                        {{ $article->title }}
-                                    </a>
-                                </h4>
-                                <div class="flex items-center space-x-2 text-xs text-gray-500">
-                                    <span class="flex items-center space-x-1">
-                                        <i class="fas fa-calendar text-blue-600"></i>
-                                        <span>{{ $article->formatted_date }}</span>
-                                    </span>
-                                    <span class="flex items-center space-x-1">
-                                        <i class="fas fa-eye text-blue-600"></i>
-                                        <span>{{ number_format($article->views) }}</span>
-                                    </span>
-                                </div>
-                            </div>
-                        </article>
-                        @empty
-                        <div class="text-center py-4">
-                            <i class="fas fa-chart-line text-3xl text-gray-300 mb-2"></i>
-                            <p class="text-gray-500 text-sm">Belum ada data populer</p>
-                        </div>
-                        @endforelse
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Main Content Area -->
-        <div class="lg:col-span-2 order-1 lg:order-2">
-            <!-- Featured Articles Slider -->
-            @if($featuredArticles->count() > 0)
-                <div class="relative">
-                    <!-- Slider Container -->
-                    <div class="slider-container relative overflow-hidden rounded-lg shadow-lg">
-                        <div class="slider-wrapper flex transition-transform duration-500 ease-in-out" id="featuredSlider" style="display: flex;">
-                            @foreach($featuredArticles as $index => $featured)
-                            <div class="slider-slide w-full flex-shrink-0" style="min-width: 100%;">
-                                <article class="card group">
-                                    <div class="relative h-80 overflow-hidden" style="position: relative;">
-                                        <img src="{{ $featured->featured_image ? asset('storage/' . $featured->featured_image) : asset('images/default-news.jpg') }}" 
-                                             alt="{{ $featured->title }}" 
-                                             class="w-full h-full object-cover image-hover"
-                                             style="position: relative; z-index: 0; display: block; width: 100%; height: 100%;"
-                                             onerror="this.onerror=null; this.src='{{ asset('images/default-news.jpg') }}';"
-                                             loading="eager">
-                                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20 z-10"></div>
-                                        <div class="absolute top-4 left-4 z-20">
-                                            <span class="category-badge {{ $featured->type === 'berita' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
-                                                {{ $featured->category->name }}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {{-- Main column --}}
+            <div class="lg:col-span-9 space-y-10">
+                {{-- Hero: slider headline + 3 berita samping --}}
+                @if($headlines->isNotEmpty())
+                <section class="grid grid-cols-1 md:grid-cols-12 gap-5 md:gap-6" aria-label="Headline">
+                    <div
+                        class="md:col-span-8 relative"
+                        x-data="{
+                            index: 0,
+                            total: {{ $headlines->count() }},
+                            paused: false,
+                            timer: null,
+                            init() {
+                                if (this.total > 1) {
+                                    this.timer = setInterval(() => { if (!this.paused) this.next() }, 4000);
+                                }
+                            },
+                            next() { this.index = (this.index + 1) % this.total },
+                            prev() { this.index = (this.index - 1 + this.total) % this.total },
+                            go(i) { this.index = i }
+                        }"
+                        @mouseenter="paused = true"
+                        @mouseleave="paused = false"
+                        role="region"
+                        aria-roledescription="carousel"
+                        aria-label="Headline utama"
+                    >
+                        <div class="relative overflow-hidden bg-news-ink aspect-[16/10]">
+                            @foreach($headlines as $i => $slide)
+                            <article
+                                class="absolute inset-0"
+                                x-show="index === {{ $i }}"
+                                x-transition:enter="transition ease-out duration-500"
+                                x-transition:enter-start="opacity-0"
+                                x-transition:enter-end="opacity-100"
+                                x-transition:leave="transition ease-in duration-300"
+                                x-transition:leave-start="opacity-100"
+                                x-transition:leave-end="opacity-0"
+                                @if($i > 0) style="display: none;" @endif
+                            >
+                                <a href="{{ $slide->publicUrl() }}" class="group block relative h-full w-full">
+                                    <img
+                                        src="{{ $slide->featured_image ? asset('storage/' . $slide->featured_image) : asset('images/default-news.jpg') }}"
+                                        alt="{{ $slide->title }}"
+                                        class="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-[1.02] transition-transform duration-500"
+                                        @if($i > 0) loading="lazy" @endif
+                                        onerror="this.onerror=null;this.src='{{ asset('images/default-news.jpg') }}';"
+                                    >
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
+                                    <div class="absolute bottom-0 left-0 right-0 p-5 md:p-7 pr-16 md:pr-20">
+                                        @if($slide->category)
+                                            <span class="inline-block bg-white text-news-accent text-[11px] font-bold uppercase tracking-widest px-2 py-0.5 mb-2 shadow-sm">
+                                                {{ $slide->category->name }}
                                             </span>
-                                        </div>
-                                        <div class="absolute top-4 right-4 z-20">
-                                            <span class="text-xs font-semibold px-2 py-1 rounded-full {{ $featured->type === 'berita' ? 'bg-blue-600 text-white' : 'bg-green-600 text-white' }}">
-                                                {{ ucfirst($featured->type) }}
-                                            </span>
-                                        </div>
-                                        @if($featured->is_breaking)
-                                        <div class="absolute bottom-20 left-4 z-20">
-                                            <span class="breaking-badge">
-                                                <i class="fas fa-bolt mr-1"></i>BREAKING
-                                            </span>
-                                        </div>
                                         @endif
-                                        <div class="absolute bottom-0 left-0 right-0 z-20">
-                                            <div class="slider-title-container px-4 md:px-6 pb-4 md:pb-6 pt-8">
-                                                <h2 class="text-white text-base md:text-xl lg:text-2xl font-bold leading-tight slider-title">
-                                                    <a href="{{ route('articles.show', $featured) }}" class="hover:text-yellow-300 transition-colors block">
-                                                        {{ $featured->title }}
-                                                    </a>
-                                                </h2>
-                                            </div>
+                                        <{{ $i === 0 ? 'h1' : 'h2' }} class="font-display text-2xl md:text-4xl lg:text-[2.6rem] leading-tight text-white font-bold line-clamp-3">
+                                            {{ $slide->title }}
+                                        </{{ $i === 0 ? 'h1' : 'h2' }}>
+                                        @if($slide->excerpt)
+                                            <p class="mt-2 text-sm md:text-base text-white/80 line-clamp-2 max-w-2xl">
+                                                {{ $slide->excerpt }}
+                                            </p>
+                                        @endif
+                                        <div class="mt-3 text-xs text-white/60 flex items-center gap-3">
+                                            <span>{{ $slide->author->name ?? 'Redaksi' }}</span>
+                                            <span aria-hidden="true">·</span>
+                                            <time datetime="{{ optional($slide->published_at)->toIso8601String() }}">{{ $slide->formatted_date }}</time>
                                         </div>
                                     </div>
-                                    <div class="p-6">
-                                        <p class="text-gray-600 mb-4 line-clamp-3">
-                                            {{ $featured->excerpt }}
-                                        </p>
-                                        <div class="flex items-center justify-between text-sm text-gray-500">
-                                            <div class="flex items-center space-x-4">
-                                                <span class="flex items-center space-x-1">
-                                                    <i class="fas fa-user text-blue-600"></i>
-                                                    @if($featured->author && $featured->author->isPenulis() && $featured->author->username)
-                                                        <a href="{{ route('penulis.public-profile', $featured->author->username) }}" class="hover:text-blue-700 font-medium text-gray-900">
-                                                            {{ $featured->author->name ?? 'Admin' }}
-                                                        </a>
-                                                    @else
-                                                        <span class="font-medium text-gray-900">{{ $featured->author->name ?? 'Admin' }}</span>
-                                                    @endif
-                                                    @if($featured->author)
-                                                        <x-user-role-badge :user="$featured->author" size="xs" />
-                                                    @endif
-                                                </span>
-                                                <span class="flex items-center space-x-1">
-                                                    <i class="fas fa-calendar text-blue-600"></i>
-                                                    <span>{{ $featured->formatted_date }}</span>
-                                                </span>
-                                                <span class="flex items-center space-x-1">
-                                                    <i class="fas fa-eye text-blue-600"></i>
-                                                    <span>{{ number_format($featured->views) }}</span>
-                                                </span>
-                                            </div>
-                                            <a href="{{ route('articles.show', $featured) }}" class="text-blue-600 hover:text-blue-700 font-semibold flex items-center space-x-1">
-                                                <span>Baca Selengkapnya</span>
-                                                <i class="fas fa-arrow-right"></i>
-                                            </a>
-                                        </div>
-                                    </div>
-                                </article>
-                            </div>
+                                </a>
+                            </article>
                             @endforeach
-                        </div>
-                        
-                        <!-- Navigation Arrows -->
-                        <button class="slider-nav slider-prev absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 rounded-full w-10 h-10 flex items-center justify-center shadow-lg transition-all duration-300 z-10" onclick="changeSlide(-1)">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                        <button class="slider-nav slider-next absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 rounded-full w-10 h-10 flex items-center justify-center shadow-lg transition-all duration-300 z-10" onclick="changeSlide(1)">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                        
-                        <!-- Dots Indicator -->
-                        <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
-                            @foreach($featuredArticles as $index => $featured)
-                            <button class="slider-dot w-3 h-3 rounded-full {{ $index === 0 ? 'bg-white' : 'bg-white/50' }} transition-all duration-300" 
-                                    onclick="currentSlide({{ $index + 1 }})" 
-                                    data-slide="{{ $index + 1 }}"></button>
-                            @endforeach
-                        </div>
-                        
-                        <!-- Auto-play indicator -->
-                        <div class="absolute top-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-xs flex items-center space-x-2 z-10">
-                            <i class="fas fa-play text-green-400"></i>
-                            <span>Auto Play</span>
-                        </div>
-                    </div>
-                </div>
-            @else
-                <!-- Default featured article if none available -->
-                <div class="card">
-                    <div class="p-8 text-center">
-                        <i class="fas fa-newspaper text-6xl text-gray-300 mb-4"></i>
-                        <h3 class="text-xl font-semibold text-gray-600 mb-2">Belum Ada Konten Unggulan</h3>
-                        <p class="text-gray-500">Konten unggulan akan ditampilkan di sini</p>
-                    </div>
-                </div>
-            @endif
 
-            <!-- News Grid - Below featured article in center column -->
-            <div class="mt-6">
-                <div class="grid grid-cols-2 gap-4">
-                    @forelse($latestArticles as $article)
-                    <article class="card group">
-                        <div class="relative h-32 overflow-hidden">
-                            <img src="{{ $article->featured_image ? asset('storage/' . $article->featured_image) : asset('images/default-news.jpg') }}" 
-                                 alt="{{ $article->title }}" 
-                                 class="w-full h-full object-cover image-hover">
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
-                            <div class="absolute top-2 left-2">
-                                <span class="category-badge text-xs px-2 py-1 {{ $article->type === 'berita' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
-                                    {{ $article->category->name }}
-                                </span>
-                            </div>
-                            <div class="absolute top-2 right-2">
-                                <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full {{ $article->type === 'berita' ? 'bg-blue-600 text-white' : 'bg-green-600 text-white' }}">
-                                    {{ ucfirst($article->type) }}
-                                </span>
-                            </div>
-                            @if($article->is_breaking)
-                            <div class="absolute bottom-2 left-2">
-                                <span class="breaking-badge text-xs px-1.5 py-0.5">
-                                    <i class="fas fa-bolt mr-1"></i>BREAKING
-                                </span>
+                            @if($headlines->count() > 1)
+                            <div class="absolute bottom-4 right-4 z-10 flex items-center gap-2">
+                                <button type="button" class="w-8 h-8 bg-black/50 hover:bg-news-accent text-white flex items-center justify-center transition-colors" @click="prev()" aria-label="Slide sebelumnya">
+                                    <i class="fas fa-chevron-left text-xs"></i>
+                                </button>
+                                <div class="flex items-center gap-1.5 px-1" role="tablist" aria-label="Slide headline">
+                                    @foreach($headlines as $i => $slide)
+                                    <button
+                                        type="button"
+                                        class="hero-dot"
+                                        :class="index === {{ $i }} ? 'is-active' : ''"
+                                        @click="go({{ $i }})"
+                                        aria-label="Headline {{ $i + 1 }}"
+                                        :aria-selected="(index === {{ $i }}).toString()"
+                                    ></button>
+                                    @endforeach
+                                </div>
+                                <button type="button" class="w-8 h-8 bg-black/50 hover:bg-news-accent text-white flex items-center justify-center transition-colors" @click="next()" aria-label="Slide berikutnya">
+                                    <i class="fas fa-chevron-right text-xs"></i>
+                                </button>
                             </div>
                             @endif
                         </div>
-                        <div class="p-3">
-                            <h3 class="font-medium text-gray-800 mb-1 line-clamp-2 group-hover:text-blue-600 transition-colors text-sm">
-                                <a href="{{ route('articles.show', $article) }}" class="hover:text-blue-600 transition-colors">
+                    </div>
+
+                    <div class="md:col-span-4 flex flex-col divide-y divide-news-line border-t md:border-t-0 md:border-l border-news-line md:pl-5">
+                        @forelse($sideNews as $side)
+                        <article class="py-3 first:pt-0 last:pb-0 group">
+                            @if($side->category)
+                                <a href="{{ route('categories.show', $side->category) }}" class="text-[10px] font-bold uppercase tracking-widest text-news-accent hover:underline">
+                                    {{ $side->category->name }}
+                                </a>
+                            @endif
+                            <h2 class="font-display text-base md:text-lg leading-snug font-bold text-news-ink mt-1 line-clamp-2">
+                                <a href="{{ $side->publicUrl() }}" class="hover:text-news-accent transition-colors">
+                                    {{ $side->title }}
+                                </a>
+                            </h2>
+                            <time class="block mt-1 text-[11px] text-news-muted" datetime="{{ optional($side->published_at)->toIso8601String() }}">
+                                {{ $side->formatted_date }}
+                            </time>
+                        </article>
+                        @empty
+                        <p class="text-sm text-news-muted py-4">Belum ada berita samping.</p>
+                        @endforelse
+                    </div>
+                </section>
+
+                <style>
+                    .hero-dot {
+                        width: 7px; height: 7px; border-radius: 9999px;
+                        background: rgba(255,255,255,0.4); border: 0; padding: 0;
+                        transition: background 0.2s, transform 0.2s;
+                    }
+                    .hero-dot.is-active {
+                        background: #fff; transform: scale(1.3);
+                    }
+                </style>
+                @endif
+
+                {{-- Pilihan Redaksi --}}
+                @if($editorPicks->isNotEmpty())
+                <section class="border-t-2 border-news-ink pt-5" aria-labelledby="editor-picks">
+                    <div class="flex items-baseline justify-between gap-4 mb-4">
+                        <h2 id="editor-picks" class="font-display text-xl md:text-2xl font-bold text-news-ink tracking-tight">
+                            Pilihan Redaksi
+                        </h2>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        @foreach($editorPicks as $pick)
+                        <article class="group flex gap-4">
+                            <a href="{{ $pick->publicUrl() }}" class="w-28 sm:w-32 shrink-0 aspect-[4/3] overflow-hidden bg-news-line">
+                                <img
+                                    src="{{ $pick->featured_image ? asset('storage/' . $pick->featured_image) : asset('images/default-news.jpg') }}"
+                                    alt=""
+                                    class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                                    loading="lazy"
+                                    onerror="this.onerror=null;this.src='{{ asset('images/default-news.jpg') }}';"
+                                >
+                            </a>
+                            <div class="min-w-0 flex flex-col justify-center">
+                                @if($pick->category)
+                                    <a href="{{ route('categories.show', $pick->category) }}" class="text-[10px] font-bold uppercase tracking-widest text-news-accent hover:underline">
+                                        {{ $pick->category->name }}
+                                    </a>
+                                @endif
+                                <h3 class="font-display text-base md:text-lg font-bold leading-snug text-news-ink mt-1 line-clamp-2">
+                                    <a href="{{ $pick->publicUrl() }}" class="hover:text-news-accent transition-colors">
+                                        {{ $pick->title }}
+                                    </a>
+                                </h3>
+                                <time class="block mt-1.5 text-[11px] text-news-muted" datetime="{{ optional($pick->published_at)->toIso8601String() }}">
+                                    {{ $pick->formatted_date }}
+                                </time>
+                            </div>
+                        </article>
+                        @endforeach
+                    </div>
+                </section>
+                @endif
+
+                {{-- Agenda Minggu Ini --}}
+                @if($weekEvents->isNotEmpty())
+                <section class="border-t-2 border-news-ink pt-5" aria-labelledby="week-agenda">
+                    <div class="flex items-baseline justify-between gap-4 mb-4">
+                        <h2 id="week-agenda" class="font-display text-xl md:text-2xl font-bold text-news-ink tracking-tight">
+                            Agenda Minggu Ini
+                        </h2>
+                        <a href="{{ route('events.index') }}" class="text-xs font-bold uppercase tracking-wider text-news-accent hover:underline shrink-0">
+                            Lihat semua
+                        </a>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        @foreach($weekEvents as $event)
+                        <article class="flex gap-3 border border-news-line p-3 hover:border-news-ink transition-colors">
+                            <div class="w-14 shrink-0 text-center border-r border-news-line pr-3 flex flex-col justify-center">
+                                <span class="font-display text-2xl font-bold text-news-accent leading-none">{{ $event->event_date->format('d') }}</span>
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-news-muted mt-1">{{ $event->event_date->format('M') }}</span>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-news-accent">{{ $event->event_type_label }}</span>
+                                <h3 class="font-display text-sm md:text-base font-bold leading-snug text-news-ink mt-0.5 line-clamp-2" title="{{ $event->title }}">
+                                    {{ $event->title }}
+                                </h3>
+                                <p class="mt-1 text-[11px] text-news-muted flex flex-wrap gap-x-2 gap-y-0.5">
+                                    @if($event->start_time)
+                                        <span><i class="far fa-clock mr-0.5"></i>{{ $event->formatted_start_time }}@if($event->end_time)–{{ $event->formatted_end_time }}@endif</span>
+                                    @endif
+                                    @if($event->location)
+                                        <span><i class="fas fa-map-marker-alt mr-0.5"></i>{{ Str::limit($event->location, 40) }}</span>
+                                    @endif
+                                </p>
+                            </div>
+                        </article>
+                        @endforeach
+                    </div>
+                </section>
+                @endif
+
+                {{-- Sections per kategori --}}
+                @foreach($categorySections as $section)
+                <section class="border-t-2 border-news-ink pt-5" aria-labelledby="cat-{{ $section['category']->slug }}">
+                    <div class="flex items-baseline justify-between gap-4 mb-4">
+                        <h2 id="cat-{{ $section['category']->slug }}" class="font-display text-xl md:text-2xl font-bold text-news-ink tracking-tight">
+                            {{ $section['category']->name }}
+                        </h2>
+                        <a href="{{ route('categories.show', $section['category']) }}" class="text-xs font-bold uppercase tracking-wider text-news-accent hover:underline shrink-0">
+                            Lihat semua
+                        </a>
+                    </div>
+
+                    <div class="grid grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-5">
+                        @foreach($section['articles'] as $article)
+                        <article class="group min-w-0">
+                            <a href="{{ $article->publicUrl() }}" class="block aspect-[16/10] overflow-hidden bg-news-line mb-2 sm:mb-3">
+                                <img
+                                    src="{{ $article->featured_image ? asset('storage/' . $article->featured_image) : asset('images/default-news.jpg') }}"
+                                    alt="{{ $article->title }}"
+                                    class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                                    loading="lazy"
+                                    onerror="this.onerror=null;this.src='{{ asset('images/default-news.jpg') }}';"
+                                >
+                            </a>
+                            <h3 class="font-display text-[13px] sm:text-[15px] md:text-base font-bold leading-snug text-news-ink line-clamp-2">
+                                <a href="{{ $article->publicUrl() }}" class="hover:text-news-accent transition-colors">
                                     {{ $article->title }}
                                 </a>
                             </h3>
-                            <p class="text-gray-600 text-xs mb-2 line-clamp-2">
-                                {{ $article->excerpt }}
-                            </p>
-                            <div class="flex justify-between items-center text-xs text-gray-500">
-                                <div class="flex items-center space-x-2">
-                                    <span class="flex items-center space-x-1">
-                                        <i class="fas fa-calendar text-blue-600 text-xs"></i>
-                                        <span>{{ $article->formatted_date }}</span>
-                                    </span>
-                                    <span class="flex items-center space-x-1">
-                                        <i class="fas fa-eye text-blue-600 text-xs"></i>
-                                        <span>{{ number_format($article->views) }}</span>
-                                    </span>
+                            <time class="block mt-1 sm:mt-1.5 text-[10px] sm:text-[11px] text-news-muted" datetime="{{ optional($article->published_at)->toIso8601String() }}">
+                                {{ $article->formatted_date }}
+                            </time>
+                        </article>
+                        @endforeach
+                    </div>
+                </section>
+                @endforeach
+
+                {{-- Penulis aktif --}}
+                @if($activeAuthors->isNotEmpty())
+                <section class="border-t-2 border-news-ink pt-5" aria-labelledby="active-authors">
+                    <div class="flex items-baseline justify-between gap-4 mb-4">
+                        <h2 id="active-authors" class="font-display text-xl md:text-2xl font-bold text-news-ink tracking-tight">
+                            Redaksi
+                        </h2>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+                        @foreach($activeAuthors as $author)
+                        <a href="{{ route('penulis.public-profile', $author) }}" class="group text-center">
+                            @if($author->profile && $author->profile->avatar)
+                                <img
+                                    src="{{ asset('storage/' . $author->profile->avatar) }}"
+                                    alt="{{ $author->name }}"
+                                    class="w-16 h-16 mx-auto object-cover border border-news-line group-hover:border-news-accent transition-colors"
+                                    loading="lazy"
+                                >
+                            @else
+                                <div class="w-16 h-16 mx-auto bg-news-ink text-white flex items-center justify-center font-display text-xl font-bold group-hover:bg-news-accent transition-colors">
+                                    {{ strtoupper(substr($author->name, 0, 1)) }}
                                 </div>
-                                <a href="{{ route('articles.show', $article) }}" class="text-blue-600 hover:text-blue-700 font-medium text-xs">
-                                    Baca →
-                                </a>
-                            </div>
-                        </div>
-                    </article>
-                    @empty
-                    <div class="col-span-full">
-                        <div class="card">
-                            <div class="p-6 text-center">
-                                <i class="fas fa-newspaper text-4xl text-gray-300 mb-3"></i>
-                                <h3 class="text-lg font-semibold text-gray-600 mb-2">Belum Ada Konten</h3>
-                                <p class="text-gray-500 text-sm">Berita dan artikel terbaru akan ditampilkan di sini</p>
-                            </div>
-                        </div>
+                            @endif
+                            <p class="mt-2 text-sm font-bold text-news-ink group-hover:text-news-accent transition-colors line-clamp-1">{{ $author->name }}</p>
+                            <p class="text-[11px] text-news-muted">{{ $author->articles_count }} artikel</p>
+                        </a>
+                        @endforeach
                     </div>
-                    @endforelse
-                </div>
-                
-                <!-- Pagination -->
-                @if($latestArticles->hasPages())
-                <div class="mt-8 flex justify-center">
-                    <div class="pagination-wrapper">
-                        {{ $latestArticles->links() }}
-                    </div>
+                </section>
+                @endif
+
+                @if($categorySections->isEmpty() && $headlines->isEmpty())
+                <div class="text-center py-20 border border-news-line">
+                    <p class="font-display text-xl text-news-ink font-bold mb-2">Belum ada berita</p>
+                    <p class="text-sm text-news-muted">Konten akan muncul di sini setelah dipublikasikan.</p>
                 </div>
                 @endif
             </div>
-        </div>
 
-        <!-- Right Sidebar -->
-        <div class="lg:col-span-1 space-y-4 order-3 lg:order-3">
-            <!-- Weather Widget -->
-            <div class="widget" id="home-weather-widget">
-                <div class="p-4">
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-base font-bold text-gray-800 flex items-center">
-                            <i class="home-weather-icon {{ $weatherData['icon'] ?? 'fas fa-cloud-sun' }} text-yellow-500 mr-2 text-sm"></i>Prakiraan Cuaca
-                        </h3>
-                        <span class="text-xs text-gray-500 bg-green-100 text-green-600 px-2 py-1 rounded-full font-semibold relative">Live</span>
+            {{-- Sidebar --}}
+            <aside class="lg:col-span-3 space-y-8" aria-label="Sidebar">
+                <div class="border border-news-line">
+                    <div class="bg-news-ink text-white px-4 py-2.5">
+                        <h2 class="text-xs font-bold uppercase tracking-[0.15em]">Terpopuler</h2>
                     </div>
-                    <div class="flex items-center space-x-3">
-                        <div class="text-3xl text-yellow-500">
-                            <i class="home-weather-icon-large {{ $weatherData['icon'] ?? 'fas fa-sun' }}"></i>
-                        </div>
-                        <div>
-                            <div class="home-weather-temp text-xl font-bold text-gray-800">{{ $weatherData['temperature'] ?? 28 }}°C</div>
-                            <div class="home-weather-condition text-gray-600">{{ $weatherData['condition'] ?? 'Cerah' }}</div>
-                            <div class="text-sm text-gray-500">
-                                <span class="home-weather-location">{{ $weatherData['location'] ?? 'Pesisir Barat' }}</span>
-                                @if(isset($weatherData['updated_at']))
-                                    <br><span class="home-weather-update text-xs">Update: {{ $weatherData['updated_at'] }}</span>
+                    <ol class="divide-y divide-news-line">
+                        @forelse($popularArticles as $index => $article)
+                        <li class="flex gap-3 px-4 py-3 group">
+                            <span class="font-display text-2xl font-bold text-news-accent leading-none w-7 shrink-0">{{ $index + 1 }}</span>
+                            <div class="min-w-0">
+                                <h3 class="text-sm font-bold leading-snug text-news-ink line-clamp-2">
+                                    <a href="{{ $article->publicUrl() }}" class="hover:text-news-accent transition-colors" title="{{ $article->title }}">
+                                        {{ $article->title }}
+                                    </a>
+                                </h3>
+                                <p class="mt-1 text-[11px] text-news-muted">{{ number_format($article->views) }} views</p>
+                            </div>
+                        </li>
+                        @empty
+                        <li class="px-4 py-6 text-sm text-news-muted">Belum ada data.</li>
+                        @endforelse
+                    </ol>
+                </div>
+
+                <div class="border border-news-line">
+                    <div class="bg-news-ink text-white px-4 py-2.5">
+                        <h2 class="text-xs font-bold uppercase tracking-[0.15em]">Terkini</h2>
+                    </div>
+                    <ul class="divide-y divide-news-line">
+                        @forelse($latestSidebar as $article)
+                        <li class="flex gap-3 px-4 py-3 group">
+                            <a href="{{ $article->publicUrl() }}" class="w-16 h-16 shrink-0 overflow-hidden bg-news-line">
+                                <img
+                                    src="{{ $article->featured_image ? asset('storage/' . $article->featured_image) : asset('images/default-news.jpg') }}"
+                                    alt=""
+                                    class="w-full h-full object-cover"
+                                    loading="lazy"
+                                >
+                            </a>
+                            <div class="min-w-0">
+                                @if($article->category)
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-news-accent">{{ $article->category->name }}</span>
                                 @endif
+                                <h3 class="text-sm font-bold leading-snug text-news-ink mt-0.5 line-clamp-2">
+                                    <a href="{{ $article->publicUrl() }}" class="hover:text-news-accent transition-colors" title="{{ $article->title }}">
+                                        {{ $article->title }}
+                                    </a>
+                                </h3>
+                                <time class="block mt-1 text-[11px] text-news-muted">{{ $article->formatted_date }}</time>
                             </div>
-                        </div>
-                    </div>
-                    <div class="mt-3 pt-3 border-t border-gray-200">
-                        <div class="grid grid-cols-3 gap-1 text-center">
-                            <div class="bg-gray-50 p-1 rounded">
-                                <div class="text-xs text-gray-500">Kelembaban</div>
-                                <div class="text-xs font-semibold text-blue-600">{{ $weatherData['humidity'] ?? 75 }}%</div>
-                            </div>
-                            <div class="bg-gray-50 p-1 rounded">
-                                <div class="text-xs text-gray-500">Angin</div>
-                                <div class="text-xs font-semibold text-green-600">12 km/h</div>
-                            </div>
-                            <div class="bg-gray-50 p-1 rounded">
-                                <div class="text-xs text-gray-500">UV Index</div>
-                                <div class="text-xs font-semibold text-orange-600">8</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    @if(isset($weatherData['forecast']) && count($weatherData['forecast']) > 0)
-                    <div class="mt-3 pt-3 border-t border-gray-200">
-                        <div class="text-xs font-semibold text-gray-700 mb-2">Prakiraan 3 Hari</div>
-                        <div class="space-y-2 home-weather-forecast-container">
-                            @foreach($weatherData['forecast'] as $forecast)
-                            <div class="flex items-center justify-between bg-gray-50 p-2 rounded-lg hover:bg-gray-100 transition">
-                                <div class="flex items-center space-x-2 flex-1">
-                                    <div class="text-yellow-500 text-sm">
-                                        <i class="{{ $forecast['icon'] ?? 'fas fa-sun' }}"></i>
-                                    </div>
-                                    <div class="flex-1">
-                                        <div class="text-xs font-semibold text-gray-800">{{ $forecast['day'] ?? 'N/A' }}</div>
-                                        <div class="text-xs text-gray-500">{{ $forecast['date'] ?? '' }}</div>
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <div class="text-xs font-bold text-gray-800">
-                                        @if(isset($forecast['temp_min']) && isset($forecast['temp_max']))
-                                            {{ $forecast['temp_min'] }}-{{ $forecast['temp_max'] }}°C
-                                        @else
-                                            {{ $forecast['temperature'] ?? 28 }}°C
-                                        @endif
-                                    </div>
-                                    <div class="text-xs text-gray-600">{{ $forecast['condition'] ?? 'Cerah' }}</div>
-                                </div>
-                            </div>
-                            @endforeach
-                        </div>
-                    </div>
-                    @else
-                    <div class="mt-3 pt-3 border-t border-gray-200">
-                        <div class="text-xs font-semibold text-gray-700 mb-2">Prakiraan 3 Hari</div>
-                        <div class="space-y-2 home-weather-forecast-container"></div>
-                    </div>
-                    @endif
+                        </li>
+                        @empty
+                        <li class="px-4 py-6 text-sm text-news-muted">Belum ada data.</li>
+                        @endforelse
+                    </ul>
                 </div>
-            </div>
 
-            <!-- Prayer Times Widget -->
-            <div class="widget" id="home-prayer-times-widget">
-                <div class="p-4">
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-base font-bold text-gray-800 flex items-center">
-                            <i class="fas fa-mosque text-green-500 mr-2 text-sm"></i>Waktu Sholat
-                        </h3>
-                        <span class="text-xs text-gray-500 bg-green-100 text-green-600 px-2 py-1 rounded-full font-semibold">Hari Ini</span>
-                    </div>
-                    <div class="text-center mb-3 p-2 bg-green-50 rounded-lg">
-                        <div class="home-prayer-location text-xs font-semibold text-green-800">{{ $prayerData['location'] ?? 'Pesisir Barat' }}</div>
-                        <div class="home-prayer-date text-xs text-green-600">{{ $prayerData['date'] ? \Carbon\Carbon::parse($prayerData['date'])->format('d-m-Y') : date('d-m-Y') }}</div>
-                    </div>
-                    <div class="space-y-1 home-prayer-times-list">
-                        @php
-                            $prayers = [
-                                'fajr' => ['name' => 'Subuh', 'icon' => 'fas fa-sun', 'color' => 'text-yellow-600'],
-                                'dhuhr' => ['name' => 'Dzuhur', 'icon' => 'fas fa-sun', 'color' => 'text-orange-600'],
-                                'asr' => ['name' => 'Ashar', 'icon' => 'fas fa-sun', 'color' => 'text-yellow-600'],
-                                'maghrib' => ['name' => 'Maghrib', 'icon' => 'fas fa-sun', 'color' => 'text-orange-600'],
-                                'isha' => ['name' => 'Isya', 'icon' => 'fas fa-moon', 'color' => 'text-blue-600']
-                            ];
-                        @endphp
-                        
-                        @foreach($prayers as $key => $prayer)
-                        <div class="flex justify-between items-center p-1 hover:bg-gray-50 rounded">
-                            <span class="flex items-center space-x-1">
-                                <i class="{{ $prayer['icon'] }} {{ $prayer['color'] }} text-xs"></i>
-                                <span class="text-gray-700 font-medium text-xs">{{ $prayer['name'] }}</span>
-                            </span>
-                            <span class="home-prayer-{{ $key }} font-bold text-gray-900 text-xs">
-                                {{ $prayerData['prayers'][$key] ?? '--:--' }}
-                            </span>
-                        </div>
-                        @endforeach
-                    </div>
-                    @if(isset($prayerData['updated_at']))
-                    <div class="text-center mt-3 pt-3 border-t border-gray-100">
-                        <div class="home-prayer-update text-xs text-gray-500">Update: {{ $prayerData['updated_at'] }}</div>
-                    </div>
-                    @endif
-                </div>
-            </div>
-
-            <!-- Maritime Widget -->
-            @include('widgets.maritime', ['maritimeData' => $maritimeData ?? [], 'isHome' => true])
-
-            <!-- Events Widget -->
-            @include('widgets.events')
-
-            <!-- Poll Widget -->
-            @include('widgets.poll')
-
-            <!-- Newsletter -->
-            <div class="widget bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200">
-                <div class="p-4">
-                    <div class="flex items-center mb-3">
-                        <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-envelope text-white text-sm"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-base font-bold text-gray-800">Newsletter</h3>
-                            <p class="text-gray-600 text-xs">Dapatkan berita terbaru</p>
-                        </div>
-                    </div>
-                    <p class="text-gray-600 text-xs mb-3">Dapatkan berita terbaru langsung di email Anda</p>
-                    <form id="newsletterForm" class="space-y-2">
-                        @csrf
-                        <div class="relative">
-                            <input type="email" name="email" placeholder="Masukkan email Anda" 
-                                   class="input-field pl-10" required>
-                            <i class="fas fa-envelope absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                        </div>
-                        <button type="submit" class="btn-primary w-full flex items-center justify-center space-x-2">
-                            <i class="fas fa-paper-plane"></i>
-                            <span>Berlangganan</span>
-                        </button>
-                    </form>
-                    <p class="text-xs text-gray-500 mt-3 text-center">
-                        <i class="fas fa-shield-alt mr-1"></i>
-                        Email Anda aman dan tidak akan dibagikan
-                    </p>
-                </div>
-            </div>
+                @include('widgets.weather')
+                @include('widgets.prayer')
+                @include('widgets.maritime', ['maritimeData' => $maritimeData ?? [], 'isHome' => true])
+                @include('widgets.events')
+                @include('widgets.poll')
+                @include('widgets.contact-important')
+                @include('widgets.newsletter')
+            </aside>
         </div>
     </div>
 </div>
-
-<!-- Featured Articles Slider Script -->
-<script>
-// Featured Articles Slider Variables
-let currentSlideIndex = 0;
-let totalSlides = {{ $featuredArticles->count() }};
-let autoPlayInterval;
-let isAutoPlayActive = true;
-
-// Initialize slider when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    if (totalSlides > 0) {
-        initializeSlider();
-        startAutoPlay();
-        
-        // Pause auto-play on hover
-        const sliderContainer = document.querySelector('.slider-container');
-        if (sliderContainer) {
-            sliderContainer.addEventListener('mouseenter', pauseAutoPlay);
-            sliderContainer.addEventListener('mouseleave', startAutoPlay);
-        }
-    }
-    
-    // Newsletter Form
-    const newsletterForm = document.getElementById('newsletterForm');
-    if (newsletterForm) {
-        newsletterForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            const button = this.querySelector('button[type="submit"]');
-            const originalHTML = button.innerHTML;
-            
-            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
-            button.disabled = true;
-            button.classList.add('loading');
-            
-            try {
-                const response = await fetch('{{ route("newsletter.subscribe") }}', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    }
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    // Show success message
-                    showNotification(data.message, 'success');
-                    this.reset();
-                } else {
-                    showNotification(data.message, 'error');
-                }
-            } catch (error) {
-                showNotification('Terjadi kesalahan. Silakan coba lagi.', 'error');
-            } finally {
-                button.innerHTML = originalHTML;
-                button.disabled = false;
-                button.classList.remove('loading');
-            }
-        });
-    }
-    
-    // Smooth scrolling for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        });
-    });
-    
-    // Add fade-in animation to cards
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-    
-    const observer = new IntersectionObserver(function(entries) {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('fade-in-up');
-            }
-        });
-    }, observerOptions);
-    
-    // Observe all cards
-    document.querySelectorAll('.card').forEach(card => {
-        observer.observe(card);
-    });
-    
-    // Enhanced image loading
-    document.querySelectorAll('img').forEach(img => {
-        img.addEventListener('load', function() {
-            this.classList.add('loaded');
-        });
-        
-        img.addEventListener('error', function() {
-            this.src = '{{ asset("images/default-news.jpg") }}';
-        });
-    });
-    
-    // Breaking News Marquee Effect - only if text overflows
-    function initBreakingNewsMarquee() {
-        const breakingNewsWrapper = document.querySelector('.breaking-news-title-wrapper');
-        const breakingNewsText = document.querySelector('.breaking-news-text');
-        
-        if (!breakingNewsWrapper || !breakingNewsText) return;
-        
-        // Remove any existing duplicates
-        const existingDuplicates = breakingNewsWrapper.querySelectorAll('.breaking-news-text:not(:first-child)');
-        existingDuplicates.forEach(dup => dup.remove());
-        
-        if (window.innerWidth <= 768) {
-            // Temporarily set to nowrap to measure
-            breakingNewsText.style.whiteSpace = 'nowrap';
-            const wrapperWidth = breakingNewsWrapper.offsetWidth;
-            const textWidth = breakingNewsText.scrollWidth;
-            
-            if (textWidth > wrapperWidth) {
-                // Text overflows, enable marquee
-                breakingNewsWrapper.classList.add('has-overflow');
-                // Duplicate text for seamless loop
-                const duplicateText = breakingNewsText.cloneNode(true);
-                duplicateText.classList.add('breaking-news-text');
-                breakingNewsText.parentElement.appendChild(duplicateText);
-            } else {
-                // Text doesn't overflow, disable marquee
-                breakingNewsWrapper.classList.remove('has-overflow');
-                breakingNewsText.style.whiteSpace = 'normal';
-            }
-        } else {
-            // Desktop - no marquee needed
-            breakingNewsWrapper.classList.remove('has-overflow');
-            breakingNewsText.style.whiteSpace = 'normal';
-        }
-    }
-    
-    // Initialize breaking news marquee after a short delay to ensure layout is ready
-    setTimeout(initBreakingNewsMarquee, 100);
-    
-    // Re-check on window resize
-    let resizeTimer;
-    window.addEventListener('resize', function() {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(initBreakingNewsMarquee, 250);
-    });
-});
-
-// Slider Functions
-function initializeSlider() {
-    const slider = document.getElementById('featuredSlider');
-    if (slider) {
-        slider.style.transform = 'translateX(0)';
-        // Ensure images are loaded
-        const images = slider.querySelectorAll('img');
-        images.forEach(img => {
-            if (img.complete) {
-                img.style.display = 'block';
-            } else {
-                img.onload = function() {
-                    this.style.display = 'block';
-                };
-            }
-        });
-    }
-    updateDots();
-}
-
-function changeSlide(direction) {
-    if (totalSlides <= 1) return;
-    
-    currentSlideIndex += direction;
-    
-    // Loop back to first slide if at the end
-    if (currentSlideIndex >= totalSlides) {
-        currentSlideIndex = 0;
-    }
-    // Loop to last slide if going backwards from first
-    else if (currentSlideIndex < 0) {
-        currentSlideIndex = totalSlides - 1;
-    }
-    
-    updateSliderPosition();
-    updateDots();
-}
-
-function currentSlide(slideNumber) {
-    if (totalSlides <= 1) return;
-    
-    currentSlideIndex = slideNumber - 1;
-    updateSliderPosition();
-    updateDots();
-}
-
-function updateSliderPosition() {
-    const slider = document.getElementById('featuredSlider');
-    if (slider) {
-        const translateX = -currentSlideIndex * 100;
-        slider.style.transform = `translateX(${translateX}%)`;
-    }
-}
-
-function updateDots() {
-    const dots = document.querySelectorAll('.slider-dot');
-    dots.forEach((dot, index) => {
-        if (index === currentSlideIndex) {
-            dot.classList.remove('bg-white/50');
-            dot.classList.add('bg-white');
-        } else {
-            dot.classList.remove('bg-white');
-            dot.classList.add('bg-white/50');
-        }
-    });
-}
-
-function startAutoPlay() {
-    if (totalSlides <= 1) return;
-    
-    pauseAutoPlay(); // Clear any existing interval
-    autoPlayInterval = setInterval(() => {
-        if (isAutoPlayActive) {
-            changeSlide(1);
-        }
-    }, 2000); // Auto-play every 2 seconds
-}
-
-function pauseAutoPlay() {
-    if (autoPlayInterval) {
-        clearInterval(autoPlayInterval);
-    }
-}
-
-// Touch/Swipe support for mobile
-let startX = 0;
-let endX = 0;
-
-document.addEventListener('touchstart', function(e) {
-    startX = e.touches[0].clientX;
-});
-
-document.addEventListener('touchend', function(e) {
-    endX = e.changedTouches[0].clientX;
-    handleSwipe();
-});
-
-function handleSwipe() {
-    const threshold = 50; // Minimum swipe distance
-    const diff = startX - endX;
-    
-    if (Math.abs(diff) > threshold) {
-        if (diff > 0) {
-            // Swipe left - next slide
-            changeSlide(1);
-        } else {
-            // Swipe right - previous slide
-            changeSlide(-1);
-        }
-    }
-}
-
-// Notification system
-function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transform transition-all duration-300 translate-x-full`;
-    
-    const colors = {
-        success: 'bg-green-500 text-white',
-        error: 'bg-red-500 text-white',
-        info: 'bg-blue-500 text-white',
-        warning: 'bg-yellow-500 text-white'
-    };
-    
-    const icons = {
-        success: 'fas fa-check-circle',
-        error: 'fas fa-exclamation-circle',
-        info: 'fas fa-info-circle',
-        warning: 'fas fa-exclamation-triangle'
-    };
-    
-    notification.className += ` ${colors[type]}`;
-    notification.innerHTML = `
-        <div class="flex items-center space-x-3">
-            <i class="${icons[type]}"></i>
-            <span>${message}</span>
-            <button onclick="this.parentElement.parentElement.remove()" class="ml-auto">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // Animate in
-    setTimeout(() => {
-        notification.classList.remove('translate-x-full');
-    }, 100);
-    
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-        notification.classList.add('translate-x-full');
-        setTimeout(() => {
-            if (notification.parentElement) {
-                notification.remove();
-            }
-        }, 300);
-    }, 5000);
-}
-
-// Widget Auto-Refresh System
-document.addEventListener('DOMContentLoaded', function() {
-    // Auto-refresh widget data every 30 minutes
-    setInterval(function() {
-        updateHomeWidgetData();
-    }, 30 * 60 * 1000); // 30 minutes
-    
-    // Initial update
-    updateHomeWidgetData();
-    
-    function updateHomeWidgetData() {
-        // Update weather widget
-        fetch('/api/widgets/weather')
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    updateHomeWeatherWidget(data.data);
-                }
-            })
-            .catch(error => {
-                console.log('Home weather update failed:', error);
-            });
-        
-        // Update prayer times widget
-        fetch('/api/widgets/prayer-times')
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    updateHomePrayerTimesWidget(data.data);
-                }
-            })
-            .catch(error => {
-                console.log('Home prayer times update failed:', error);
-            });
-        
-        // Update maritime widget
-        fetch('/api/widgets/maritime')
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    updateHomeMaritimeWidget(data.data);
-                }
-            })
-            .catch(error => {
-                console.log('Home maritime update failed:', error);
-            });
-    }
-    
-    function updateHomeWeatherWidget(weatherData) {
-        const widget = document.getElementById('home-weather-widget');
-        const weatherIcon = document.querySelector('.home-weather-icon');
-        const weatherIconLarge = document.querySelector('.home-weather-icon-large');
-        const weatherTemp = document.querySelector('.home-weather-temp');
-        const weatherCondition = document.querySelector('.home-weather-condition');
-        const weatherLocation = document.querySelector('.home-weather-location');
-        const weatherUpdate = document.querySelector('.home-weather-update');
-        
-        // Add updating animation
-        if (widget) {
-            widget.classList.add('updating');
-            setTimeout(() => widget.classList.remove('updating'), 500);
-        }
-        
-        // Animate temperature change
-        if (weatherTemp) {
-            weatherTemp.classList.add('updating');
-            setTimeout(() => {
-                weatherTemp.textContent = weatherData.temperature + '°C';
-                setTimeout(() => weatherTemp.classList.remove('updating'), 500);
-            }, 100);
-        }
-        
-        if (weatherIcon) {
-            weatherIcon.style.opacity = '0';
-            setTimeout(() => {
-                weatherIcon.className = 'home-weather-icon ' + weatherData.icon + ' text-yellow-500 mr-2 text-sm';
-                weatherIcon.style.opacity = '1';
-            }, 200);
-        }
-        
-        if (weatherIconLarge) {
-            weatherIconLarge.style.opacity = '0';
-            setTimeout(() => {
-                weatherIconLarge.className = 'home-weather-icon-large ' + weatherData.icon;
-                weatherIconLarge.style.opacity = '1';
-            }, 200);
-        }
-        
-        if (weatherCondition) {
-            weatherCondition.style.opacity = '0';
-            setTimeout(() => {
-                weatherCondition.textContent = weatherData.condition;
-                weatherCondition.style.opacity = '1';
-            }, 300);
-        }
-        
-        if (weatherLocation) weatherLocation.textContent = weatherData.location;
-        if (weatherUpdate) {
-            weatherUpdate.style.opacity = '0';
-            setTimeout(() => {
-                weatherUpdate.textContent = 'Update: ' + weatherData.updated_at;
-                weatherUpdate.style.opacity = '1';
-            }, 400);
-        }
-        
-        // Update forecast
-        if (weatherData.forecast && weatherData.forecast.length > 0) {
-            updateHomeWeatherForecast(weatherData.forecast);
-        }
-    }
-    
-    function updateHomeWeatherForecast(forecastData) {
-        const forecastContainer = document.querySelector('.home-weather-forecast-container');
-        if (!forecastContainer) return;
-        
-        // Fade out existing items
-        const existingItems = forecastContainer.querySelectorAll('div');
-        existingItems.forEach((item, index) => {
-            item.style.opacity = '0';
-            item.style.transform = 'translateX(-20px)';
-        });
-        
-        setTimeout(() => {
-            forecastContainer.innerHTML = '';
-            
-            forecastData.forEach((forecast, index) => {
-                const tempDisplay = forecast.temp_min && forecast.temp_max 
-                    ? `${forecast.temp_min}-${forecast.temp_max}°C`
-                    : `${forecast.temperature}°C`;
-                
-                const forecastItem = document.createElement('div');
-                forecastItem.className = 'flex items-center justify-between bg-gray-50 p-2 rounded-lg hover:bg-gray-100 transition';
-                forecastItem.style.opacity = '0';
-                forecastItem.style.transform = 'translateY(20px)';
-                forecastItem.innerHTML = `
-                    <div class="flex items-center space-x-2 flex-1">
-                        <div class="text-yellow-500 text-sm">
-                            <i class="${forecast.icon || 'fas fa-sun'}"></i>
-                        </div>
-                        <div class="flex-1">
-                            <div class="text-xs font-semibold text-gray-800">${forecast.day || 'N/A'}</div>
-                            <div class="text-xs text-gray-500">${forecast.date || ''}</div>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-xs font-bold text-gray-800">${tempDisplay}</div>
-                        <div class="text-xs text-gray-600">${forecast.condition || 'Cerah'}</div>
-                    </div>
-                `;
-                forecastContainer.appendChild(forecastItem);
-                
-                // Animate in
-                setTimeout(() => {
-                    forecastItem.style.transition = 'all 0.5s ease';
-                    forecastItem.style.opacity = '1';
-                    forecastItem.style.transform = 'translateY(0)';
-                }, index * 100);
-            });
-        }, 300);
-    }
-    
-    function updateHomePrayerTimesWidget(prayerData) {
-        const widget = document.getElementById('home-prayer-times-widget');
-        const prayerLocation = document.querySelector('.home-prayer-location');
-        const prayerDate = document.querySelector('.home-prayer-date');
-        const prayerUpdate = document.querySelector('.home-prayer-update');
-        
-        // Add updating animation
-        if (widget) {
-            widget.classList.add('updating');
-            setTimeout(() => widget.classList.remove('updating'), 500);
-        }
-        
-        if (prayerLocation) {
-            prayerLocation.style.opacity = '0';
-            setTimeout(() => {
-                prayerLocation.textContent = prayerData.location;
-                prayerLocation.style.opacity = '1';
-            }, 200);
-        }
-        
-        if (prayerDate) {
-            prayerDate.style.opacity = '0';
-            setTimeout(() => {
-                prayerDate.textContent = new Date(prayerData.date).toLocaleDateString('id-ID');
-                prayerDate.style.opacity = '1';
-            }, 300);
-        }
-        
-        if (prayerUpdate) {
-            prayerUpdate.style.opacity = '0';
-            setTimeout(() => {
-                prayerUpdate.textContent = 'Update: ' + prayerData.updated_at;
-                prayerUpdate.style.opacity = '1';
-            }, 400);
-        }
-        
-        // Update prayer times with animation
-        const prayers = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
-        prayers.forEach((prayer, index) => {
-            const element = document.querySelector(`.home-prayer-${prayer}`);
-            if (element && prayerData.prayers[prayer]) {
-                element.classList.add('updating');
-                setTimeout(() => {
-                    element.textContent = prayerData.prayers[prayer];
-                    setTimeout(() => element.classList.remove('updating'), 500);
-                }, 100 + (index * 50));
-            }
-        });
-    }
-    
-    function updateHomeMaritimeWidget(maritimeData) {
-        const widget = document.getElementById('home-maritime-widget');
-        if (!widget) return;
-        
-        // Add updating animation
-        widget.classList.add('loading');
-        setTimeout(() => widget.classList.remove('loading'), 500);
-        
-        // Update wave height
-        const waveHeight = widget.querySelector('.maritime-wave-height');
-        if (waveHeight) {
-            waveHeight.classList.add('updating');
-            setTimeout(() => {
-                waveHeight.textContent = maritimeData.wave_height || '1.2';
-                setTimeout(() => waveHeight.classList.remove('updating'), 500);
-            }, 200);
-        }
-        
-        // Update wave category
-        const waveCategory = widget.querySelector('.maritime-wave-category');
-        if (waveCategory && maritimeData.wave_height_category) {
-            waveCategory.textContent = maritimeData.wave_height_category;
-            const category = maritimeData.wave_height_category;
-            waveCategory.className = 'maritime-wave-category px-2 py-0.5 rounded-full text-xs font-bold ' + (
-                category === 'Sangat Tinggi' ? 'bg-red-100 text-red-800' : 
-                category === 'Tinggi' ? 'bg-orange-100 text-orange-800' : 
-                category === 'Sedang' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
-            );
-        }
-        
-        // Update wave bar
-        const waveBar = widget.querySelector('.wave-bar');
-        if (waveBar && maritimeData.wave_height) {
-            const height = Math.min(100, (maritimeData.wave_height / 4) * 100);
-            waveBar.style.height = height + '%';
-        }
-        
-        // Update tide status
-        const tideStatus = widget.querySelector('.maritime-tide-status');
-        if (tideStatus && maritimeData.tide) {
-            tideStatus.textContent = maritimeData.tide.status || 'Pasang';
-            tideStatus.className = 'maritime-tide-status font-bold text-xs ' + (
-                maritimeData.tide.status === 'Pasang' ? 'text-blue-600' : 'text-gray-600'
-            );
-        }
-        
-        // Update tide icon
-        const tideIcon = widget.querySelector('.maritime-tide-icon');
-        if (tideIcon && maritimeData.tide) {
-            tideIcon.className = 'maritime-tide-icon ' + (maritimeData.tide.icon || 'fas fa-arrow-up') + ' ' + (
-                maritimeData.tide.status === 'Pasang' ? 'text-blue-600' : 'text-gray-600'
-            ) + ' tide-animation text-sm';
-        }
-        
-        // Update tide times
-        const nextHighTide = widget.querySelector('.maritime-next-high-tide');
-        const nextLowTide = widget.querySelector('.maritime-next-low-tide');
-        if (nextHighTide && maritimeData.tide) {
-            nextHighTide.textContent = maritimeData.tide.next_high_tide || '07:00';
-        }
-        if (nextLowTide && maritimeData.tide) {
-            nextLowTide.textContent = maritimeData.tide.next_low_tide || '13:00';
-        }
-        
-        // Update tide level indicator
-        const tideLevelIndicator = widget.querySelector('.tide-level-indicator');
-        if (tideLevelIndicator && maritimeData.tide) {
-            tideLevelIndicator.style.width = (maritimeData.tide.level || 50) + '%';
-        }
-        
-        // Update wind
-        const windSpeed = widget.querySelector('.maritime-wind-speed');
-        const windDirection = widget.querySelector('.maritime-wind-direction');
-        if (windSpeed && maritimeData.wind_speed) {
-            windSpeed.textContent = maritimeData.wind_speed + ' ';
-        }
-        if (windDirection && maritimeData.wind_direction) {
-            windDirection.textContent = maritimeData.wind_direction;
-        }
-        
-        // Update location and timestamp
-        const location = widget.querySelector('.maritime-location');
-        const update = widget.querySelector('.maritime-update');
-        if (location && maritimeData.location) {
-            location.textContent = maritimeData.location;
-        }
-        if (update && maritimeData.updated_at) {
-            update.textContent = 'Update: ' + maritimeData.updated_at;
-        }
-        
-        // Update warnings
-        if (maritimeData.warning && maritimeData.warning.length > 0) {
-            updateHomeMaritimeWarnings(maritimeData.warning);
-        }
-        
-        // Update forecast
-        if (maritimeData.forecast && maritimeData.forecast.length > 0) {
-            updateHomeMaritimeForecast(maritimeData.forecast);
-        }
-    }
-    
-    function updateHomeMaritimeWarnings(warnings) {
-        const widget = document.getElementById('home-maritime-widget');
-        if (!widget) return;
-        
-        let warningsContainer = widget.querySelector('.mb-3.space-y-1\\.5');
-        if (!warningsContainer) {
-            const windInfo = widget.querySelector('.bg-gradient-to-r.from-gray-50');
-            if (windInfo) {
-                warningsContainer = document.createElement('div');
-                warningsContainer.className = 'mb-3 space-y-1.5';
-                windInfo.parentNode.insertBefore(warningsContainer, windInfo.nextSibling);
-            }
-        }
-        
-        if (warningsContainer) {
-            warningsContainer.innerHTML = '';
-            warnings.forEach(warning => {
-                const warningDiv = document.createElement('div');
-                warningDiv.className = 'p-2 rounded-lg border-l-4 warning-animation ' + (
-                    warning.level === 'danger' ? 'bg-red-50 border-red-500' : 'bg-yellow-50 border-yellow-500'
-                );
-                warningDiv.innerHTML = `
-                    <div class="flex items-center space-x-2">
-                        <i class="${warning.icon} ${warning.level === 'danger' ? 'text-red-600' : 'text-yellow-600'} text-xs"></i>
-                        <span class="text-xs font-semibold ${warning.level === 'danger' ? 'text-red-800' : 'text-yellow-800'}">${warning.message}</span>
-                    </div>
-                `;
-                warningsContainer.appendChild(warningDiv);
-            });
-        }
-    }
-    
-    function updateHomeMaritimeForecast(forecastData) {
-        const forecastContainer = document.querySelector('#home-maritime-widget .maritime-forecast-container');
-        if (!forecastContainer) return;
-        
-        const existingItems = forecastContainer.querySelectorAll('.maritime-forecast-item');
-        existingItems.forEach((item, index) => {
-            item.style.opacity = '0';
-            item.style.transform = 'translateX(-20px)';
-        });
-        
-        setTimeout(() => {
-            forecastContainer.innerHTML = '';
-            
-            forecastData.forEach((forecast, index) => {
-                const forecastItem = document.createElement('div');
-                forecastItem.className = 'flex items-center justify-between p-1.5 hover:bg-gray-50 rounded transition-all duration-200 maritime-forecast-item';
-                forecastItem.style.opacity = '0';
-                forecastItem.style.transform = 'translateY(20px)';
-                forecastItem.innerHTML = `
-                    <div class="flex items-center space-x-2 flex-1">
-                        <i class="${forecast.icon || 'fas fa-water'} text-sm"></i>
-                        <div class="flex-1 min-w-0">
-                            <div class="text-xs font-semibold text-gray-700 truncate">${forecast.day || 'N/A'}, ${forecast.date || ''}</div>
-                            <div class="text-xs text-gray-500">${forecast.wave_category || 'Sedang'}</div>
-                        </div>
-                    </div>
-                    <div class="text-right flex-shrink-0 ml-2">
-                        <div class="text-xs font-bold text-blue-600">${forecast.wave_height || '1.2'}m</div>
-                        <div class="text-xs text-gray-500">${forecast.wind_speed || '15'} km/j</div>
-                    </div>
-                `;
-                forecastContainer.appendChild(forecastItem);
-                
-                setTimeout(() => {
-                    forecastItem.style.transition = 'all 0.3s ease';
-                    forecastItem.style.opacity = '1';
-                    forecastItem.style.transform = 'translateY(0)';
-                }, 100 + (index * 50));
-            });
-        }, 300);
-    }
-});
-</script>
-
-<style>
-/* Weather Widget Animations */
-@keyframes rotateSun {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-@keyframes pulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.1); opacity: 0.9; }
-}
-
-@keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-}
-
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-    20%, 40%, 60%, 80% { transform: translateX(5px); }
-}
-
-@keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes numberChange {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.2); color: #f39c12; }
-    100% { transform: scale(1); }
-}
-
-@keyframes shimmer {
-    0% { left: -100%; }
-    100% { left: 100%; }
-}
-
-/* Weather Icon Animations - Applied directly to icons */
-#home-weather-widget i.fa-sun,
-#home-weather-widget i[class*="fa-sun"]:not([class*="fa-cloud-sun"]) {
-    animation: rotateSun 20s linear infinite !important;
-    display: inline-block;
-}
-
-#home-weather-widget i.fa-cloud:not([class*="fa-cloud-sun"]):not([class*="fa-cloud-rain"]):not([class*="fa-cloud-showers"]) {
-    animation: float 3s ease-in-out infinite !important;
-    display: inline-block;
-}
-
-#home-weather-widget i[class*="fa-cloud-sun"] {
-    animation: pulse 2s ease-in-out infinite !important;
-    display: inline-block;
-}
-
-#home-weather-widget i[class*="fa-cloud-rain"],
-#home-weather-widget i[class*="fa-cloud-showers"] {
-    animation: float 2s ease-in-out infinite !important;
-    display: inline-block;
-}
-
-#home-weather-widget i[class*="fa-bolt"] {
-    animation: pulse 1s ease-in-out infinite !important;
-    display: inline-block;
-    color: #f1c40f !important;
-}
-
-#home-weather-widget i[class*="fa-smog"] {
-    animation: float 4s ease-in-out infinite !important;
-    display: inline-block;
-}
-
-/* Widget Container Animations */
-#home-weather-widget {
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s ease !important;
-}
-
-#home-weather-widget::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-    transition: left 0.5s;
-    z-index: 1;
-    pointer-events: none;
-}
-
-#home-weather-widget:hover::before {
-    left: 100%;
-}
-
-#home-weather-widget:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
-}
-
-#home-weather-widget.updating {
-    animation: shake 0.5s ease !important;
-}
-
-/* Temperature Animation */
-.home-weather-temp {
-    transition: all 0.3s ease !important;
-    display: inline-block;
-}
-
-.home-weather-temp.updating {
-    animation: numberChange 0.5s ease !important;
-}
-
-/* Forecast Items Animation */
-.home-weather-forecast-container > div {
-    animation: fadeInUp 0.5s ease forwards !important;
-    opacity: 0;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-
-.home-weather-forecast-container > div:nth-child(1) {
-    animation-delay: 0.1s !important;
-}
-
-.home-weather-forecast-container > div:nth-child(2) {
-    animation-delay: 0.2s !important;
-}
-
-.home-weather-forecast-container > div:nth-child(3) {
-    animation-delay: 0.3s !important;
-}
-
-.home-weather-forecast-container > div:hover {
-    transform: translateX(5px) scale(1.02) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-}
-
-.home-weather-forecast-container > div::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: linear-gradient(to bottom, #f39c12, #3498db);
-    transform: scaleY(0);
-    transition: transform 0.3s ease;
-}
-
-.home-weather-forecast-container > div:hover::before {
-    transform: scaleY(1);
-}
-
-.home-weather-forecast-container > div:hover i {
-    transform: scale(1.2) rotate(5deg) !important;
-}
-
-/* Live Badge Animation */
-#home-weather-widget .bg-green-100 {
-    position: relative;
-    overflow: hidden;
-}
-
-#home-weather-widget .bg-green-100::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
-    animation: shimmer 2s infinite;
-    z-index: 1;
-    pointer-events: none;
-}
-
-.trending-number {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 12px;
-    flex-shrink: 0;
-}
-
-/* Slider Image Fix */
-.slider-container {
-    position: relative;
-}
-
-.slider-wrapper {
-    display: flex !important;
-    width: 100%;
-}
-
-.slider-slide {
-    min-width: 100% !important;
-    flex-shrink: 0 !important;
-    display: block !important;
-}
-
-.slider-slide img {
-    display: block !important;
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important;
-    position: relative !important;
-    z-index: 0 !important;
-}
-
-/* Slider Title Styling for Better Readability */
-.slider-title-container {
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.5) 50%, transparent 100%);
-    position: relative;
-}
-
-.slider-title-container::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.3), transparent);
-}
-
-.slider-title {
-    text-shadow: 
-        0 2px 8px rgba(0, 0, 0, 0.9),
-        0 4px 12px rgba(0, 0, 0, 0.7),
-        0 0 20px rgba(0, 0, 0, 0.5);
-    letter-spacing: -0.01em;
-    line-height: 1.3;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.slider-title a {
-    text-shadow: 
-        0 2px 8px rgba(0, 0, 0, 0.95),
-        0 4px 12px rgba(0, 0, 0, 0.8),
-        0 0 25px rgba(0, 0, 0, 0.6);
-    transition: all 0.3s ease;
-}
-
-.slider-title a:hover {
-    text-shadow: 
-        0 2px 8px rgba(0, 0, 0, 0.95),
-        0 4px 12px rgba(0, 0, 0, 0.8),
-        0 0 25px rgba(0, 0, 0, 0.6),
-        0 0 30px rgba(255, 235, 59, 0.4);
-    transform: translateY(-1px);
-}
-
-/* Breaking News Styles */
-.breaking-news-container {
-    position: relative;
-    animation: slideDown 0.5s ease-out;
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes shimmer {
-    0% {
-        transform: translateX(-100%);
-    }
-    100% {
-        transform: translateX(100%);
-    }
-}
-
-.animate-shimmer {
-    animation: shimmer 3s infinite;
-}
-
-.breaking-badge {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.breaking-news-link {
-    display: block;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-.breaking-news-text {
-    display: inline-block;
-}
-
-/* Marquee effect for long titles on mobile */
-@media (max-width: 768px) {
-    .breaking-news-title-wrapper {
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .breaking-news-title-wrapper.has-overflow {
-        white-space: nowrap;
-    }
-    
-    .breaking-news-title-wrapper.has-overflow .breaking-news-text {
-        animation: marquee 8s linear infinite;
-        display: inline-block;
-        padding-right: 30px;
-    }
-    
-    .breaking-news-title-wrapper.has-overflow:hover .breaking-news-text {
-        animation-play-state: paused;
-    }
-    
-    @keyframes marquee {
-        0% {
-            transform: translateX(0);
-        }
-        100% {
-            transform: translateX(-50%);
-        }
-    }
-    
-    /* Only animate if text is long enough to overflow */
-    .breaking-news-title-wrapper:not(.has-overflow) .breaking-news-text {
-        animation: none;
-        white-space: normal;
-    }
-}
-
-/* Desktop hover effects */
-@media (min-width: 768px) {
-    .breaking-news-container:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 25px rgba(220, 38, 38, 0.4);
-        transition: all 0.3s ease;
-    }
-    
-    .breaking-news-link:hover {
-        text-decoration: underline;
-    }
-}
-
-/* Prayer Times Widget Animations */
-@keyframes pulseMoon {
-    0%, 100% { 
-        transform: scale(1); 
-        opacity: 1; 
-        filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.5));
-    }
-    50% { 
-        transform: scale(1.15); 
-        opacity: 0.9; 
-        filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.8));
-    }
-}
-
-/* Mosque icon animation */
-#home-prayer-times-widget i.fa-mosque {
-    animation: pulse 2s ease-in-out infinite !important;
-    display: inline-block;
-}
-
-/* Sun icons in prayer times - rotate */
-#home-prayer-times-widget i.fa-sun,
-#home-prayer-times-widget .home-prayer-times-list i.fa-sun {
-    animation: rotateSun 20s linear infinite !important;
-    display: inline-block;
-}
-
-/* Moon icon in prayer times - pulse with glow */
-#home-prayer-times-widget i.fa-moon,
-#home-prayer-times-widget .home-prayer-times-list i.fa-moon {
-    animation: pulseMoon 3s ease-in-out infinite !important;
-    display: inline-block;
-}
-
-/* Prayer times container hover effect */
-#home-prayer-times-widget {
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s ease !important;
-}
-
-#home-prayer-times-widget::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.1), transparent);
-    transition: left 0.5s;
-    z-index: 1;
-    pointer-events: none;
-}
-
-#home-prayer-times-widget:hover::before {
-    left: 100%;
-}
-
-#home-prayer-times-widget:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
-}
-
-#home-prayer-times-widget.updating {
-    animation: shake 0.5s ease !important;
-}
-
-/* Prayer items animation - fade in with delay */
-#home-prayer-times-widget .home-prayer-times-list > div {
-    animation: fadeInUp 0.5s ease forwards !important;
-    opacity: 0;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-
-#home-prayer-times-widget .home-prayer-times-list > div:nth-child(1) {
-    animation-delay: 0.1s !important;
-}
-
-#home-prayer-times-widget .home-prayer-times-list > div:nth-child(2) {
-    animation-delay: 0.2s !important;
-}
-
-#home-prayer-times-widget .home-prayer-times-list > div:nth-child(3) {
-    animation-delay: 0.3s !important;
-}
-
-#home-prayer-times-widget .home-prayer-times-list > div:nth-child(4) {
-    animation-delay: 0.4s !important;
-}
-
-#home-prayer-times-widget .home-prayer-times-list > div:nth-child(5) {
-    animation-delay: 0.5s !important;
-}
-
-/* Prayer item hover effect */
-#home-prayer-times-widget .home-prayer-times-list > div:hover {
-    transform: translateX(5px) scale(1.02) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-    background-color: rgba(34, 197, 94, 0.05) !important;
-}
-
-/* Prayer item icon hover */
-#home-prayer-times-widget .home-prayer-times-list > div:hover i {
-    transform: scale(1.2) rotate(5deg) !important;
-    transition: all 0.3s ease !important;
-}
-
-/* Prayer time text animation on update */
-#home-prayer-times-widget .home-prayer-times-list > div span[class*="home-prayer-"] {
-    transition: all 0.3s ease !important;
-    display: inline-block;
-}
-
-#home-prayer-times-widget .home-prayer-times-list > div span[class*="home-prayer-"].updating {
-    animation: numberChange 0.5s ease !important;
-}
-
-/* Green header shimmer effect */
-#home-prayer-times-widget .bg-green-50 {
-    position: relative;
-    overflow: hidden;
-}
-
-#home-prayer-times-widget .bg-green-50::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
-    animation: shimmer 3s infinite;
-    z-index: 1;
-    pointer-events: none;
-}
-</style>
 @endsection

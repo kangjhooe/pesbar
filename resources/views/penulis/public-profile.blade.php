@@ -477,7 +477,7 @@
                                     </span>
                                 </div>
                                 <h3 class="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
-                                    <a href="{{ route('articles.show', $article) }}" class="hover:text-blue-600">
+                                    <a href="{{ $article->publicUrl() }}" class="hover:text-blue-600">
                                         {{ $article->title }}
                                     </a>
                                 </h3>

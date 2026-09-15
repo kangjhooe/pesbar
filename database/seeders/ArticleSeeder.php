@@ -27,7 +27,6 @@ Proyek ini diharapkan selesai dalam waktu 8 bulan dan akan memberikan dampak pos
                 'category_id' => 1, // Politik
                 'author_id' => 1,
                 'status' => 'published',
-                'type' => 'berita',
                 'is_featured' => true,
                 'is_breaking' => true,
                 'published_at' => now(),
@@ -49,7 +48,6 @@ Penghargaan ini diharapkan dapat memotivasi UMKM lain untuk terus berinovasi dan
                 'category_id' => 2, // Ekonomi
                 'author_id' => 1,
                 'status' => 'published',
-                'type' => 'berita',
                 'is_featured' => false,
                 'is_breaking' => false,
                 'published_at' => now()->subDays(1),
@@ -73,7 +71,6 @@ Pemerintah daerah memberikan apresiasi khusus atas prestasi yang diraih sekolah 
                 'category_id' => 7, // Pendidikan
                 'author_id' => 1,
                 'status' => 'published',
-                'type' => 'berita',
                 'is_featured' => false,
                 'is_breaking' => false,
                 'published_at' => now()->subDays(2),
@@ -116,7 +113,6 @@ Dengan menerapkan tips-tips di atas, kita dapat menjaga kesehatan mental di era 
                 'category_id' => 3, // Kesehatan
                 'author_id' => 1,
                 'status' => 'published',
-                'type' => 'artikel',
                 'is_featured' => true,
                 'is_breaking' => false,
                 'published_at' => now()->subDays(3),
@@ -146,7 +142,6 @@ Melestarikan budaya dan tradisi ini menjadi tanggung jawab bersama untuk memasti
                 'category_id' => 4, // Budaya
                 'author_id' => 1,
                 'status' => 'published',
-                'type' => 'artikel',
                 'is_featured' => false,
                 'is_breaking' => false,
                 'published_at' => now()->subDays(4),
@@ -182,7 +177,6 @@ Dengan mengikuti panduan ini, wisatawan dapat menikmati keindahan alam Pesisir B
                 'category_id' => 5, // Pariwisata
                 'author_id' => 3, // Penulis
                 'status' => 'published',
-                'type' => 'artikel',
                 'is_featured' => false,
                 'is_breaking' => false,
                 'published_at' => now()->subDays(5),
@@ -202,7 +196,6 @@ Proyek ini akan dimulai pada bulan depan dan diharapkan selesai dalam waktu 3 ta
                 'category_id' => 1, // Politik
                 'author_id' => 1, // Admin
                 'status' => 'published',
-                'type' => 'berita',
                 'is_featured' => true,
                 'is_breaking' => true,
                 'published_at' => now()->subDays(6),
@@ -221,7 +214,6 @@ Selain kuliner, festival ini juga menampilkan berbagai pertunjukan seni dan buda
                 'category_id' => 2, // Ekonomi
                 'author_id' => 1, // Admin
                 'status' => 'published',
-                'type' => 'berita',
                 'is_featured' => false,
                 'is_breaking' => false,
                 'published_at' => now()->subDays(7),
@@ -240,7 +232,6 @@ Prestasi ini diharapkan dapat memotivasi generasi muda Pesisir Barat untuk lebih
                 'category_id' => 4, // Olahraga
                 'author_id' => 1, // Admin
                 'status' => 'published',
-                'type' => 'berita',
                 'is_featured' => false,
                 'is_breaking' => false,
                 'published_at' => now()->subDays(8),
@@ -259,7 +250,6 @@ Pembangunan puskesmas ini diharapkan selesai dalam waktu 18 bulan dan akan melay
                 'category_id' => 6, // Kesehatan
                 'author_id' => 1, // Admin
                 'status' => 'published',
-                'type' => 'berita',
                 'is_featured' => false,
                 'is_breaking' => false,
                 'published_at' => now()->subDays(9),
@@ -278,7 +268,6 @@ Program beasiswa ini akan berjalan selama 4 tahun dan diharapkan dapat menghasil
                 'category_id' => 7, // Pendidikan
                 'author_id' => 1, // Admin
                 'status' => 'published',
-                'type' => 'berita',
                 'is_featured' => false,
                 'is_breaking' => false,
                 'published_at' => now()->subDays(10),
@@ -297,7 +286,6 @@ Proyek ini diharapkan selesai dalam waktu 2 tahun dan akan menjadi model untuk p
                 'category_id' => 5, // Teknologi
                 'author_id' => 1, // Admin
                 'status' => 'published',
-                'type' => 'berita',
                 'is_featured' => false,
                 'is_breaking' => false,
                 'published_at' => now()->subDays(11),
@@ -316,7 +304,6 @@ Pembangunan taman kota ini diharapkan selesai dalam waktu 1 tahun dan akan menja
                 'category_id' => 3, // Sosial
                 'author_id' => 1, // Admin
                 'status' => 'published',
-                'type' => 'berita',
                 'is_featured' => false,
                 'is_breaking' => false,
                 'published_at' => now()->subDays(12),
@@ -335,7 +322,6 @@ Pembangunan pasar rakyat modern ini diharapkan selesai dalam waktu 2 tahun dan a
                 'category_id' => 2, // Ekonomi
                 'author_id' => 1, // Admin
                 'status' => 'published',
-                'type' => 'berita',
                 'is_featured' => false,
                 'is_breaking' => false,
                 'published_at' => now()->subDays(13),
@@ -366,7 +352,6 @@ Dengan memahami sejarah dan perkembangan Pesisir Barat, kita dapat lebih menghar
                 'category_id' => 4, // Budaya
                 'author_id' => 3, // Penulis
                 'status' => 'published',
-                'type' => 'artikel',
                 'is_featured' => false,
                 'is_breaking' => false,
                 'published_at' => now()->subDays(14),
@@ -411,7 +396,6 @@ Dengan mengikuti panduan ini, nelayan pemula dapat memulai budidaya ikan laut ya
                 'category_id' => 2, // Ekonomi
                 'author_id' => 3, // Penulis
                 'status' => 'published',
-                'type' => 'artikel',
                 'is_featured' => false,
                 'is_breaking' => false,
                 'published_at' => now()->subDays(15),
@@ -456,7 +440,6 @@ Dengan mengikuti tips ini, kita dapat menjaga kesehatan dan tetap produktif di m
                 'category_id' => 6, // Kesehatan
                 'author_id' => 3, // Penulis
                 'status' => 'published',
-                'type' => 'artikel',
                 'is_featured' => false,
                 'is_breaking' => false,
                 'published_at' => now()->subDays(16),
@@ -501,7 +484,6 @@ Dengan mengadopsi teknologi digital yang tepat, UMKM di Pesisir Barat dapat bers
                 'category_id' => 5, // Teknologi
                 'author_id' => 3, // Penulis
                 'status' => 'published',
-                'type' => 'artikel',
                 'is_featured' => false,
                 'is_breaking' => false,
                 'published_at' => now()->subDays(17),
@@ -546,7 +528,6 @@ Dengan mengikuti panduan ini, pemula dapat memulai olahraga dengan aman dan efek
                 'category_id' => 4, // Olahraga
                 'author_id' => 3, // Penulis
                 'status' => 'published',
-                'type' => 'artikel',
                 'is_featured' => false,
                 'is_breaking' => false,
                 'published_at' => now()->subDays(18),
@@ -591,7 +572,6 @@ Dengan implementasi pendidikan inklusif yang baik, Pesisir Barat dapat menciptak
                 'category_id' => 7, // Pendidikan
                 'author_id' => 3, // Penulis
                 'status' => 'published',
-                'type' => 'artikel',
                 'is_featured' => false,
                 'is_breaking' => false,
                 'published_at' => now()->subDays(19),
@@ -636,7 +616,6 @@ Dengan mengikuti panduan ini, masyarakat Pesisir Barat dapat menikmati berkebun 
                 'category_id' => 3, // Sosial
                 'author_id' => 3, // Penulis
                 'status' => 'published',
-                'type' => 'artikel',
                 'is_featured' => false,
                 'is_breaking' => false,
                 'published_at' => now()->subDays(20),

@@ -5,54 +5,49 @@ namespace App\Http\Controllers;
 use App\Models\Article;
 use App\Models\Category;
 use App\Models\ReadingHistory;
-use App\Services\WeatherService;
+use App\Helpers\SettingsHelper;
 use App\Services\PrayerTimeService;
-use App\Services\MaritimeService;
-use App\Services\EventService;
-use App\Services\PollService;
-use Illuminate\Http\Request;
+use App\Services\WeatherService;
 use Illuminate\Support\Facades\Auth;
 
 class ArticleController extends Controller
 {
-    protected $weatherService;
-    protected $prayerTimeService;
-    protected $maritimeService;
-    protected $eventService;
-    protected $pollService;
-    
-    public function __construct(
-        WeatherService $weatherService, 
-        PrayerTimeService $prayerTimeService,
-        MaritimeService $maritimeService,
-        EventService $eventService,
-        PollService $pollService
+    public function show(
+        Category $category,
+        Article $article,
+        WeatherService $weatherService,
+        PrayerTimeService $prayerTimeService
     ) {
-        $this->weatherService = $weatherService;
-        $this->prayerTimeService = $prayerTimeService;
-        $this->maritimeService = $maritimeService;
-        $this->eventService = $eventService;
-        $this->pollService = $pollService;
-    }
-    
-    public function show(Article $article)
-    {
-        // Load relationships to avoid N+1 queries
+        if ((int) $article->category_id !== (int) $category->id) {
+            return redirect()->to($article->publicUrl(), 301);
+        }
+
+        $isPublic = $article->status === 'published' && $article->published_at !== null;
+        if (!$isPublic) {
+            $user = Auth::user();
+            $canPreview = $user && (
+                $user->isAdmin()
+                || $user->isEditor()
+                || (int) $user->id === (int) $article->author_id
+            );
+            if (!$canPreview) {
+                abort(404);
+            }
+        }
+
         $article->load([
-            'author', 
-            'category', 
-            'tags', 
-            'approvedComments' => function($query) {
+            'author',
+            'category',
+            'tags',
+            'approvedComments' => function ($query) {
                 $query->topLevel()
                     ->with(['user', 'replies.user'])
                     ->orderBy('created_at', 'desc');
-            }
+            },
         ]);
-        
-        // Increment view count
+
         $article->incrementViewCount();
 
-        // Track reading history for authenticated users
         if (Auth::check()) {
             $existing = ReadingHistory::where('user_id', Auth::id())
                 ->where('article_id', $article->id)
@@ -69,7 +64,6 @@ class ArticleController extends Controller
             }
         }
 
-        // Get related articles
         $relatedArticles = Article::published()
             ->with(['author', 'category'])
             ->where('category_id', $article->category_id)
@@ -78,43 +72,28 @@ class ArticleController extends Controller
             ->take(4)
             ->get();
 
-        // Get widget data
-        $weatherData = $this->weatherService->getWeatherData();
-        $prayerData = $this->prayerTimeService->getPrayerTimes();
-        $maritimeData = $this->maritimeService->getMaritimeData();
-        $eventsData = $this->eventService->getWidgetEvents();
-        $pollData = $this->pollService->getActivePoll();
+        $weatherData = $weatherService->getWeatherData();
+        $prayerData = $prayerTimeService->getPrayerTimes();
 
-        return view('articles.show', compact('article', 'relatedArticles', 'weatherData', 'prayerData', 'maritimeData', 'eventsData', 'pollData'));
+        return view('articles.show', compact(
+            'article',
+            'relatedArticles',
+            'weatherData',
+            'prayerData'
+        ));
     }
 
     public function index()
     {
         $articles = Article::published()
-            ->berita()
             ->with(['author', 'category'])
             ->latest()
-            ->paginate(12);
+            ->paginate(SettingsHelper::articlesPerPage() ?: 12);
 
         $categories = Category::where('is_active', true)
             ->orderBy('name')
             ->get();
 
         return view('articles.index', compact('articles', 'categories'));
-    }
-
-    public function artikel()
-    {
-        $articles = Article::published()
-            ->artikel()
-            ->with(['author', 'category'])
-            ->latest()
-            ->paginate(12);
-
-        $categories = Category::where('is_active', true)
-            ->orderBy('name')
-            ->get();
-
-        return view('articles.artikel', compact('articles', 'categories'));
     }
 }

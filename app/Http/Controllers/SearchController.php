@@ -22,7 +22,7 @@ class SearchController extends Controller
         $query = $request->get('q', '');
         
         // If no query, show search page with filters
-        if (empty($query) && !$request->hasAny(['category', 'author', 'date_from', 'date_to', 'type'])) {
+        if (empty($query) && !$request->hasAny(['category', 'author', 'date_from', 'date_to'])) {
             $filters = $this->searchService->getSearchFilters();
             return view('search.index', [
                 'articles' => collect([]),

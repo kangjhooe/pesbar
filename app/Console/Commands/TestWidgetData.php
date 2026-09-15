@@ -34,10 +34,12 @@ class TestWidgetData extends Command
         $this->info('🌤️  Testing Weather Service:');
         try {
             $weatherData = $weatherService->getWeatherData();
-            $this->line("   Temperature: {$weatherData['temperature']}°C");
+            $this->line("   Temperature: " . ($weatherData['temperature'] ?? '—') . "°C");
             $this->line("   Condition: {$weatherData['condition']}");
             $this->line("   Location: {$weatherData['location']}");
             $this->line("   Source: {$weatherData['source']}");
+            $this->line("   Available: " . (!empty($weatherData['available']) ? 'yes' : 'no'));
+            $this->line("   Forecast days: " . count($weatherData['forecast'] ?? []));
             $this->line("   Updated: {$weatherData['updated_at']}");
             $this->info('   ✅ Weather service working correctly');
         } catch (\Exception $e) {
@@ -51,12 +53,16 @@ class TestWidgetData extends Command
         try {
             $prayerData = $prayerTimeService->getPrayerTimes();
             $this->line("   Location: {$prayerData['location']}");
+            $this->line("   Source: " . ($prayerData['source'] ?? '-'));
             $this->line("   Date: {$prayerData['date']}");
-            $this->line("   Fajr: {$prayerData['prayers']['fajr']}");
-            $this->line("   Dhuhr: {$prayerData['prayers']['dhuhr']}");
-            $this->line("   Asr: {$prayerData['prayers']['asr']}");
+            $this->line("   Imsak: {$prayerData['prayers']['imsak']}");
+            $this->line("   Subuh: {$prayerData['prayers']['fajr']}");
+            $this->line("   Terbit: {$prayerData['prayers']['sunrise']}");
+            $this->line("   Duha: {$prayerData['prayers']['dhuha']}");
+            $this->line("   Dzuhur: {$prayerData['prayers']['dhuhr']}");
+            $this->line("   Ashar: {$prayerData['prayers']['asr']}");
             $this->line("   Maghrib: {$prayerData['prayers']['maghrib']}");
-            $this->line("   Isha: {$prayerData['prayers']['isha']}");
+            $this->line("   Isya: {$prayerData['prayers']['isha']}");
             $this->line("   Updated: {$prayerData['updated_at']}");
             $this->info('   ✅ Prayer time service working correctly');
         } catch (\Exception $e) {

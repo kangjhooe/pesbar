@@ -160,7 +160,7 @@
                         <div class="flex items-center">
                             <input type="checkbox" name="is_public" id="is_public" value="1" 
                                    {{ old('is_public', true) ? 'checked' : '' }} 
-                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                   class="h-4 w-4 text-blue-600 focus:ring-news-accent border-gray-300 rounded">
                             <label for="is_public" class="ml-2 block text-sm text-gray-900">
                                 Event Publik (ditampilkan di widget)
                             </label>
@@ -169,7 +169,7 @@
                         <div class="flex items-center">
                             <input type="checkbox" name="is_active" id="is_active" value="1" 
                                    {{ old('is_active', true) ? 'checked' : '' }} 
-                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                   class="h-4 w-4 text-blue-600 focus:ring-news-accent border-gray-300 rounded">
                             <label for="is_active" class="ml-2 block text-sm text-gray-900">
                                 Event Aktif
                             </label>

@@ -13,11 +13,19 @@ class EventController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $events = Event::orderBy('event_date', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
+        $query = Event::query();
+        $query = \App\Helpers\AdminTableHelper::applySort($query, $request, [
+            'title' => 'title',
+            'event_date' => 'event_date',
+            'location' => 'location',
+            'event_type' => 'event_type',
+            'is_active' => 'is_active',
+            'created_at' => 'created_at',
+        ], 'event_date', 'desc');
+
+        $events = $query->paginate(15)->withQueryString();
 
         $stats = [
             'total' => Event::count(),

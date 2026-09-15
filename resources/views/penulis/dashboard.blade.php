@@ -310,8 +310,8 @@
                             {{ $index + 1 }}
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h3 class="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1">
-                                {{ Str::limit($popularArticle->title, 60) }}
+                            <h3 class="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2" title="{{ $popularArticle->title }}">
+                                {{ $popularArticle->title }}
                             </h3>
                             <div class="flex items-center space-x-3 mt-2">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -472,7 +472,7 @@
                     @forelse($articles as $article)
                     <tr class="hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-indigo-50/30 transition-all duration-200 group">
                         <td class="px-6 py-4">
-                            <div class="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">{{ Str::limit($article->title, 50) }}</div>
+                            <div class="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2" title="{{ $article->title }}">{{ $article->title }}</div>
                             @if($article->tags->count() > 0)
                                 <div class="mt-2 flex flex-wrap gap-1.5">
                                     @foreach($article->tags->take(3) as $tag)

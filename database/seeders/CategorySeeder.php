@@ -14,6 +14,20 @@ class CategorySeeder extends Seeder
     {
         $categories = [
             [
+                'name' => 'Berita',
+                'slug' => 'berita',
+                'description' => 'Berita terkini dan laporan peristiwa',
+                'icon' => 'fas fa-newspaper',
+                'color' => '#c0392b',
+            ],
+            [
+                'name' => 'Artikel',
+                'slug' => 'artikel',
+                'description' => 'Artikel mendalam, opini, dan analisis',
+                'icon' => 'fas fa-pen-nib',
+                'color' => '#16a085',
+            ],
+            [
                 'name' => 'Politik',
                 'slug' => 'politik',
                 'description' => 'Berita seputar politik dan pemerintahan',

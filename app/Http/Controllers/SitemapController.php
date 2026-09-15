@@ -185,7 +185,6 @@ class SitemapController extends Controller
         
         // Articles index pages
         if (Route::has('articles.index')) $count++;
-        if (Route::has('articles.artikel')) $count++;
         
         // Categories
         try {
@@ -278,10 +277,6 @@ class SitemapController extends Controller
                 $xml .= $this->urlElement(route('articles.index'), now(), 'daily', 0.9);
                 $urlCount++;
             }
-            if ($urlCount < $targetCount && Route::has('articles.artikel')) {
-                $xml .= $this->urlElement(route('articles.artikel'), now(), 'daily', 0.9);
-                $urlCount++;
-            }
         }
         
         // Categories
@@ -325,7 +320,7 @@ class SitemapController extends Controller
                     if (Route::has('articles.show')) {
                         $images = $this->getArticleImages($article);
                         $xml .= $this->urlElement(
-                            route('articles.show', $article),
+                            $article->publicUrl(),
                             $article->published_at ?? $article->updated_at,
                             'weekly',
                             0.7,
@@ -411,31 +406,13 @@ class SitemapController extends Controller
             $xml .= $this->urlElement(route('articles.index'), now(), 'daily', 0.9);
             
             // Add pagination pages for articles index
-            $beritaCount = Article::published()->berita()->count();
-            $perPage = 12;
-            $totalPages = ceil($beritaCount / $perPage);
+            $articleCount = Article::published()->count();
+            $perPage = \App\Helpers\SettingsHelper::articlesPerPage() ?: 12;
+            $totalPages = ceil($articleCount / $perPage);
             
             for ($page = 2; $page <= $totalPages && $page <= 10; $page++) { // Limit to 10 pages max
                 $xml .= $this->urlElement(
                     route('articles.index', ['page' => $page]),
-                    now(),
-                    'daily',
-                    0.8
-                );
-            }
-        }
-        
-        if (Route::has('articles.artikel')) {
-            $xml .= $this->urlElement(route('articles.artikel'), now(), 'daily', 0.9);
-            
-            // Add pagination pages for artikel index
-            $artikelCount = Article::published()->artikel()->count();
-            $perPage = 12;
-            $totalPages = ceil($artikelCount / $perPage);
-            
-            for ($page = 2; $page <= $totalPages && $page <= 10; $page++) { // Limit to 10 pages max
-                $xml .= $this->urlElement(
-                    route('articles.artikel', ['page' => $page]),
                     now(),
                     'daily',
                     0.8
@@ -485,7 +462,7 @@ class SitemapController extends Controller
                 if (Route::has('articles.show')) {
                     $images = $this->getArticleImages($article);
                     $xml .= $this->urlElement(
-                        route('articles.show', $article),
+                        $article->publicUrl(),
                         $article->published_at ?? $article->updated_at,
                         'weekly',
                         0.7,
@@ -629,7 +606,7 @@ class SitemapController extends Controller
         // Get recent articles (last 2 days for Google News)
         try {
             $articles = Article::published()
-                ->where('type', 'berita') // Only news articles, not regular articles
+                ->with('category')
                 ->where('published_at', '>=', now()->subDays(2))
                 ->orderBy('published_at', 'desc')
                 ->limit(1000) // Google News limit is 1000 articles per sitemap
@@ -638,7 +615,7 @@ class SitemapController extends Controller
             foreach ($articles as $article) {
                 if (Route::has('articles.show')) {
                     $xml .= $this->newsUrlElement(
-                        route('articles.show', $article),
+                        $article->publicUrl(),
                         $article,
                         $publicationName,
                         $publicationLanguage
