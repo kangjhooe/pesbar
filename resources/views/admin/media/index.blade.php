@@ -88,7 +88,7 @@
                                 <button type="submit" 
                                         class="bg-white text-red-600 p-2 rounded-full hover:bg-red-50 transition-colors"
                                         title="Hapus"
-                                        onclick="return confirm('Apakah Anda yakin ingin menghapus file ini?')">
+                                        onclick="event.preventDefault(); const href=this.href; window.pesbarConfirm('Apakah Anda yakin ingin menghapus file ini?', {danger:true}).then(ok=>{ if(ok) location.href=href; }); return false;">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </form>

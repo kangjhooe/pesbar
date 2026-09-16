@@ -8,21 +8,21 @@
     'colspan' => 6,
 ])
 
-<div {{ $attributes->merge(['class' => 'bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden']) }}>
+<div {{ $attributes->merge(['class' => 'bg-white border border-news-line overflow-hidden']) }}>
     @if($bulk)
-        <div id="{{ $bulkId }}-bar" class="hidden px-4 py-3 bg-slate-50 border-b border-gray-200">
+        <div id="{{ $bulkId }}-bar" class="hidden px-4 py-3 bg-news-paper border-b border-news-line">
             {{ $bulkBar ?? '' }}
         </div>
     @endif
 
     <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gradient-to-r from-slate-50 to-gray-50">
+        <table class="min-w-full divide-y divide-news-line">
+            <thead class="bg-news-paper">
                 <tr>
                     {{ $head }}
                 </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-gray-100">
+            <tbody class="bg-white divide-y divide-news-line">
                 {{ $slot }}
             </tbody>
         </table>

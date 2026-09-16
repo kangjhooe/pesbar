@@ -58,7 +58,7 @@
                         <form action="{{ route('comments.destroy', $comment) }}" 
                               method="POST" 
                               class="inline" 
-                              onsubmit="return confirm('Apakah Anda yakin ingin menghapus komentar ini?');">
+                              onsubmit="return window.pesbarConfirmForm(event, 'Apakah Anda yakin ingin menghapus komentar ini?');">
                             @csrf
                             @method('DELETE')
                             <button type="submit" 

@@ -33,7 +33,8 @@
                             type="password"
                             name="password"
                             required autocomplete="new-password"
-                            placeholder="Minimal 8 karakter" />
+                            placeholder="Minimal 8 karakter, campuran huruf & angka" />
+            <p class="mt-1 text-xs text-news-muted">Minimal 8 karakter, huruf besar &amp; kecil, angka, dan simbol.</p>
             <x-input-error :messages="$errors->get('password')" class="mt-1" />
         </div>
 

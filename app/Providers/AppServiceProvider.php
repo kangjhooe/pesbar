@@ -12,6 +12,7 @@ use App\Observers\CategoryObserver;
 use App\Observers\CommentObserver;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -39,6 +40,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Password::defaults(function () {
+            $rule = Password::min(8)
+                ->letters()
+                ->mixedCase()
+                ->numbers()
+                ->symbols();
+
+            // Cek Have I Been Pwned hanya di production (butuh jaringan).
+            return $this->app->isProduction()
+                ? $rule->uncompromised()
+                : $rule;
+        });
+
         // Register model observers
         Article::observe(ArticleObserver::class);
         Category::observe(CategoryObserver::class);

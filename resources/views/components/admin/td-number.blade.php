@@ -9,6 +9,6 @@
     }
 @endphp
 
-<td {{ $attributes->merge(['class' => 'px-4 py-4 whitespace-nowrap text-sm text-gray-500 font-medium tabular-nums w-14']) }}>
+<td {{ $attributes->merge(['class' => 'px-4 py-4 whitespace-nowrap text-sm text-news-muted font-medium tabular-nums w-14']) }}>
     {{ $number }}
 </td>

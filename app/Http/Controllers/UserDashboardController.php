@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Comment;
 use App\Models\Article;
+use App\Models\Bookmark;
+use App\Models\Comment;
+use App\Models\Follow;
+use App\Models\ReadingHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -12,52 +15,44 @@ class UserDashboardController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        
-        // Get user's comments (prefer user_id, fallback to email for old comments)
-        $commentsQuery = Comment::where(function($query) use ($user) {
-                $query->where('user_id', $user->id)
-                      ->orWhere('email', $user->email);
-            })
-            ->with(['article' => function($query) {
+
+        $commentsBase = Comment::where(function ($query) use ($user) {
+            $query->where('user_id', $user->id)
+                ->orWhere('email', $user->email);
+        })->whereHas('article');
+
+        $commentsQuery = (clone $commentsBase)
+            ->with(['article' => function ($query) {
                 $query->select('id', 'title', 'slug', 'category_id')
-                      ->with('category:id,name');
+                    ->with('category:id,name,slug');
             }])
             ->orderBy('created_at', 'desc');
-        
-        // Filter by approval status
-        if ($request->has('status') && $request->status !== '') {
+
+        if ($request->filled('status')) {
             if ($request->status === 'approved') {
                 $commentsQuery->where('is_approved', true);
             } elseif ($request->status === 'pending') {
                 $commentsQuery->where('is_approved', false);
             }
         }
-        
+
         $comments = $commentsQuery->paginate(15)->withQueryString();
-        
-        // Stats
+
         $stats = [
-            'total_comments' => Comment::where(function($query) use ($user) {
-                $query->where('user_id', $user->id)
-                      ->orWhere('email', $user->email);
-            })->count(),
-            'approved_comments' => Comment::where(function($query) use ($user) {
-                $query->where('user_id', $user->id)
-                      ->orWhere('email', $user->email);
-            })->where('is_approved', true)->count(),
-            'pending_comments' => Comment::where(function($query) use ($user) {
-                $query->where('user_id', $user->id)
-                      ->orWhere('email', $user->email);
-            })->where('is_approved', false)->count(),
+            'total_comments' => (clone $commentsBase)->count(),
+            'approved_comments' => (clone $commentsBase)->where('is_approved', true)->count(),
+            'pending_comments' => (clone $commentsBase)->where('is_approved', false)->count(),
+            'bookmarks' => Bookmark::where('user_id', $user->id)->whereHas('article')->count(),
+            'reading_history' => ReadingHistory::where('user_id', $user->id)->whereHas('article')->count(),
+            'following' => Follow::where('follower_id', $user->id)->count(),
         ];
-        
-        // Recent articles (for reference)
+
         $recentArticles = Article::where('status', 'published')
             ->with('category')
             ->latest('published_at')
             ->limit(5)
             ->get();
-        
+
         return view('user.dashboard', compact('comments', 'stats', 'recentArticles'));
     }
 
@@ -75,7 +70,7 @@ class UserDashboardController extends Controller
 
         $comment->update([
             'comment' => $request->comment,
-            'is_approved' => false, // Reset approval status when edited
+            'is_approved' => false,
         ]);
 
         return redirect()->route('user.dashboard')
@@ -109,4 +104,3 @@ class UserDashboardController extends Controller
             && strcasecmp((string) $comment->email, (string) $user->email) === 0;
     }
 }
-

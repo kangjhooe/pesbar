@@ -12,9 +12,9 @@
         <div class="flex flex-col sm:flex-row gap-4">
             <form action="{{ route('admin.backup.create') }}" method="POST" class="inline">
                 @csrf
-                <button type="submit" 
+                <button type="button" 
                         class="bg-news-accent text-white px-6 py-2 rounded-lg hover:bg-red-800 transition-colors flex items-center"
-                        onclick="return confirm('Apakah Anda yakin ingin membuat backup database?')">
+                        onclick="window.pesbarConfirmSubmit(this.form, 'Apakah Anda yakin ingin membuat backup database?')">
                     <i class="fas fa-database mr-2"></i>
                     Buat Backup Database
                 </button>
@@ -202,17 +202,17 @@
 @push('scripts')
 <script>
 function downloadFullBackup() {
-    if (confirm('Apakah Anda yakin ingin mendownload full backup? Ini akan memakan waktu beberapa menit.')) {
-        // Here you would implement the full backup download logic
-        alert('Fitur full backup akan segera tersedia.');
-    }
+    window.pesbarConfirm('Apakah Anda yakin ingin mendownload full backup? Ini akan memakan waktu beberapa menit.').then(function (ok) {
+        if (!ok) return;
+        window.pesbarAlert('Fitur full backup akan segera tersedia.');
+    });
 }
 
 function deleteBackup(filename) {
-    if (confirm('Apakah Anda yakin ingin menghapus backup ini?')) {
-        // Here you would implement the backup deletion logic
-        alert('Fitur hapus backup akan segera tersedia.');
-    }
+    window.pesbarConfirm('Apakah Anda yakin ingin menghapus backup ini?', { danger: true }).then(function (ok) {
+        if (!ok) return;
+        window.pesbarAlert('Fitur hapus backup akan segera tersedia.');
+    });
 }
 
 // Auto refresh backup list every 30 seconds

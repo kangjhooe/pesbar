@@ -5,291 +5,245 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard Penulis - ' . \App\Helpers\SettingsHelper::siteName())</title>
-    
-    <!-- Favicon -->
+
     <link rel="icon" type="image/x-icon" href="{{ \App\Helpers\SettingsHelper::siteFavicon() }}">
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    
-    <!-- Vite CSS -->
+
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=ibm-plex-sans:400,500,600,700|source-serif-4:600,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
-    <!-- Fallback Tailwind CSS CDN for development -->
-    @if(app()->environment('local'))
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
-                            200: '#bfdbfe',
-                            300: '#93c5fd',
-                            400: '#60a5fa',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8',
-                            800: '#1e40af',
-                            900: '#1e3a8a',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    @endif
-    
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
-    <!-- Notification Styles -->
+
     <style>
-        /* Notification Toast Animations */
+        [x-cloak] { display: none !important; }
+        .logo-image {
+            width: 32px; height: 32px;
+            object-fit: contain; object-position: center;
+            flex-shrink: 0; display: block;
+        }
+        @media (min-width: 1024px) {
+            .logo-image { width: 36px; height: 36px; }
+        }
         @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(-12px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        
-        .animate-slide-down {
-            animation: slideDown 0.3s ease-out;
-        }
-        
-        .notification-toast {
-            position: relative;
-            z-index: 50;
-        }
-        
-        .notification-toast button {
-            transition: all 0.2s ease;
-        }
-        
-        .notification-toast button:hover {
-            transform: scale(1.1);
-        }
+        .animate-slide-down { animation: slideDown 0.25s ease-out; }
     </style>
-    
-    <!-- Additional Styles -->
+
     @stack('styles')
 </head>
-<body class="bg-gray-50">
+<body class="font-sans antialiased bg-news-paper text-news-ink">
     <div class="min-h-screen flex flex-col lg:flex-row">
-        <!-- Mobile Menu Overlay -->
-        <div class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden" id="mobile-overlay"></div>
-        
-        <!-- Sidebar -->
-        <aside class="w-full lg:w-64 bg-white shadow-lg fixed lg:fixed inset-y-0 left-0 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col" id="sidebar">
-            <!-- Logo -->
-            <div class="p-4 lg:p-6 border-b border-gray-200 flex-shrink-0">
-                <div class="flex items-center justify-between">
-                    <a href="{{ route('home') }}" class="flex items-center space-x-3 hover:opacity-80 transition-opacity">
-                        <img src="{{ \App\Helpers\SettingsHelper::siteLogo() }}" alt="{{ \App\Helpers\SettingsHelper::siteName() }}" class="w-8 h-8 lg:w-10 lg:h-10 max-w-full object-contain">
-                        <div>
-                            <h1 class="text-base lg:text-lg font-bold text-gray-800">Dashboard Penulis</h1>
-                            <p class="text-xs text-gray-600">{{ \App\Helpers\SettingsHelper::siteName() }}</p>
+        <div class="fixed inset-0 bg-black/40 z-40 lg:hidden hidden" id="mobile-overlay"></div>
+
+        <aside class="w-full lg:w-64 bg-white border-r border-news-line fixed lg:fixed inset-y-0 left-0 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col" id="sidebar">
+            <div class="h-14 sm:h-16 px-3 sm:px-4 border-b-2 border-news-ink flex-shrink-0 flex items-center">
+                <div class="flex items-center justify-between gap-2 w-full min-w-0">
+                    <a href="{{ route('home') }}" class="flex items-center gap-2.5 min-w-0 hover:opacity-90 transition-opacity">
+                        <img src="{{ \App\Helpers\SettingsHelper::siteLogo() }}"
+                             alt="{{ \App\Helpers\SettingsHelper::siteName() }}"
+                             class="logo-image"
+                             width="36"
+                             height="36">
+                        <div class="min-w-0 leading-tight">
+                            <span class="font-display text-base font-bold tracking-tight text-news-ink block truncate">
+                                {{ \App\Helpers\SettingsHelper::siteName() }}
+                            </span>
+                            <span class="text-[11px] text-news-muted uppercase tracking-wider font-semibold">Dashboard Penulis</span>
                         </div>
                     </a>
-                    <!-- Mobile close button -->
-                    <button class="lg:hidden p-2 rounded-lg hover:bg-gray-100 touch-target" onclick="toggleSidebar()" aria-label="Close sidebar">
-                        <i class="fas fa-times text-gray-600"></i>
+                    <button type="button" class="lg:hidden p-2 text-news-muted hover:text-news-ink hover:bg-news-paper touch-target" onclick="toggleSidebar()" aria-label="Tutup menu">
+                        <i class="fas fa-times"></i>
                     </button>
                 </div>
             </div>
 
-            <!-- Navigation -->
             <nav class="flex-1 overflow-y-auto">
-                <div class="px-3 py-4 space-y-1">
-                    <!-- Dashboard -->
-                    <a href="{{ route('penulis.dashboard') }}" class="flex items-center px-3 lg:px-4 py-3 text-gray-700 rounded-lg hover:bg-primary-50 hover:text-primary-600 transition-colors touch-target {{ request()->routeIs('penulis.dashboard') ? 'bg-primary-50 text-primary-600' : '' }}">
-                        <i class="fas fa-tachometer-alt mr-3 text-sm lg:text-base"></i>
-                        <span class="text-sm lg:text-base">Dashboard</span>
+                <div class="px-3 py-4 space-y-0.5">
+                    <a href="{{ route('penulis.dashboard') }}"
+                       class="flex items-center px-3 py-2.5 text-sm font-medium transition-colors touch-target {{ request()->routeIs('penulis.dashboard') ? 'bg-news-paper text-news-accent border-l-2 border-news-accent' : 'text-news-ink hover:bg-news-paper hover:text-news-accent border-l-2 border-transparent' }}">
+                        <i class="fas fa-tachometer-alt mr-3 w-4 text-center text-xs"></i>
+                        Dashboard
                     </a>
 
-                    <!-- Artikel Management -->
-                    <div class="mt-4">
-                        <h3 class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Artikel</h3>
-                        
-                        <a href="{{ route('penulis.dashboard') }}#articles" class="flex items-center px-3 lg:px-4 py-3 text-gray-700 rounded-lg hover:bg-primary-50 hover:text-primary-600 transition-colors touch-target">
-                            <i class="fas fa-newspaper mr-3 text-sm lg:text-base"></i>
-                            <span class="text-sm lg:text-base">Artikel Saya</span>
+                    <div class="mt-5">
+                        <h3 class="px-3 text-[11px] font-bold text-news-muted uppercase tracking-wider mb-1.5">Artikel</h3>
+
+                        <a href="{{ route('penulis.articles.index') }}"
+                           class="flex items-center px-3 py-2.5 text-sm font-medium transition-colors touch-target {{ request()->routeIs('penulis.articles.index') ? 'bg-news-paper text-news-accent border-l-2 border-news-accent' : 'text-news-ink hover:bg-news-paper hover:text-news-accent border-l-2 border-transparent' }}">
+                            <i class="fas fa-newspaper mr-3 w-4 text-center text-xs"></i>
+                            Artikel Saya
                         </a>
-                        
-                        <a href="{{ route('penulis.articles.create') }}" class="flex items-center px-3 lg:px-4 py-3 text-gray-700 rounded-lg hover:bg-primary-50 hover:text-primary-600 transition-colors touch-target {{ request()->routeIs('penulis.articles.create') ? 'bg-primary-50 text-primary-600' : '' }}">
-                            <i class="fas fa-plus-circle mr-3 text-sm lg:text-base"></i>
-                            <span class="text-sm lg:text-base">Buat Artikel Baru</span>
+
+                        <a href="{{ route('penulis.articles.create') }}"
+                           class="flex items-center px-3 py-2.5 text-sm font-medium transition-colors touch-target {{ request()->routeIs('penulis.articles.create') ? 'bg-news-paper text-news-accent border-l-2 border-news-accent' : 'text-news-ink hover:bg-news-paper hover:text-news-accent border-l-2 border-transparent' }}">
+                            <i class="fas fa-plus-circle mr-3 w-4 text-center text-xs"></i>
+                            Buat Artikel Baru
                         </a>
                     </div>
 
-                    <!-- Analytics & Tools -->
-                    <div class="mt-4">
-                        <h3 class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Analytics & Tools</h3>
-                        
-                        <a href="{{ route('penulis.analytics') }}" class="flex items-center px-3 lg:px-4 py-3 text-gray-700 rounded-lg hover:bg-primary-50 hover:text-primary-600 transition-colors touch-target {{ request()->routeIs('penulis.analytics') ? 'bg-primary-50 text-primary-600' : '' }}">
-                            <i class="fas fa-chart-line mr-3 text-sm lg:text-base"></i>
-                            <span class="text-sm lg:text-base">Analytics</span>
+                    <div class="mt-5">
+                        <h3 class="px-3 text-[11px] font-bold text-news-muted uppercase tracking-wider mb-1.5">Tools</h3>
+
+                        <a href="{{ route('penulis.analytics') }}"
+                           class="flex items-center px-3 py-2.5 text-sm font-medium transition-colors touch-target {{ request()->routeIs('penulis.analytics') ? 'bg-news-paper text-news-accent border-l-2 border-news-accent' : 'text-news-ink hover:bg-news-paper hover:text-news-accent border-l-2 border-transparent' }}">
+                            <i class="fas fa-chart-line mr-3 w-4 text-center text-xs"></i>
+                            Analytics
                         </a>
-                        
-                        <a href="{{ route('penulis.media.index') }}" class="flex items-center px-3 lg:px-4 py-3 text-gray-700 rounded-lg hover:bg-primary-50 hover:text-primary-600 transition-colors touch-target {{ request()->routeIs('penulis.media.*') ? 'bg-primary-50 text-primary-600' : '' }}">
-                            <i class="fas fa-images mr-3 text-sm lg:text-base"></i>
-                            <span class="text-sm lg:text-base">Media Library</span>
+
+                        <a href="{{ route('penulis.media.index') }}"
+                           class="flex items-center px-3 py-2.5 text-sm font-medium transition-colors touch-target {{ request()->routeIs('penulis.media.*') ? 'bg-news-paper text-news-accent border-l-2 border-news-accent' : 'text-news-ink hover:bg-news-paper hover:text-news-accent border-l-2 border-transparent' }}">
+                            <i class="fas fa-images mr-3 w-4 text-center text-xs"></i>
+                            Media Library
                         </a>
-                        
-                        <a href="{{ route('penulis.comments.advanced') }}" class="flex items-center px-3 lg:px-4 py-3 text-gray-700 rounded-lg hover:bg-primary-50 hover:text-primary-600 transition-colors touch-target {{ request()->routeIs('penulis.comments.*') ? 'bg-primary-50 text-primary-600' : '' }}">
-                            <i class="fas fa-comments mr-3 text-sm lg:text-base"></i>
-                            <span class="text-sm lg:text-base">Komentar</span>
+
+                        <a href="{{ route('penulis.comments.advanced') }}"
+                           class="flex items-center px-3 py-2.5 text-sm font-medium transition-colors touch-target {{ request()->routeIs('penulis.comments.*') ? 'bg-news-paper text-news-accent border-l-2 border-news-accent' : 'text-news-ink hover:bg-news-paper hover:text-news-accent border-l-2 border-transparent' }}">
+                            <i class="fas fa-comments mr-3 w-4 text-center text-xs"></i>
+                            Komentar
                         </a>
-                        
-                        <a href="{{ route('penulis.seo.index') }}" class="flex items-center px-3 lg:px-4 py-3 text-gray-700 rounded-lg hover:bg-primary-50 hover:text-primary-600 transition-colors touch-target {{ request()->routeIs('penulis.seo.*') ? 'bg-primary-50 text-primary-600' : '' }}">
-                            <i class="fas fa-search mr-3 text-sm lg:text-base"></i>
-                            <span class="text-sm lg:text-base">SEO Tools</span>
+
+                        <a href="{{ route('penulis.seo.index') }}"
+                           class="flex items-center px-3 py-2.5 text-sm font-medium transition-colors touch-target {{ request()->routeIs('penulis.seo.*') ? 'bg-news-paper text-news-accent border-l-2 border-news-accent' : 'text-news-ink hover:bg-news-paper hover:text-news-accent border-l-2 border-transparent' }}">
+                            <i class="fas fa-search mr-3 w-4 text-center text-xs"></i>
+                            SEO Tools
                         </a>
                     </div>
 
-                    <!-- Profil & Pengaturan -->
-                    <div class="mt-4">
-                        <h3 class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Profil</h3>
-                        
-                        <a href="{{ route('penulis.profile') }}" class="flex items-center px-3 lg:px-4 py-3 text-gray-700 rounded-lg hover:bg-primary-50 hover:text-primary-600 transition-colors touch-target {{ request()->routeIs('penulis.profile') ? 'bg-primary-50 text-primary-600' : '' }}">
-                            <i class="fas fa-user mr-3 text-sm lg:text-base"></i>
-                            <span class="text-sm lg:text-base">Profil Saya</span>
+                    <div class="mt-5">
+                        <h3 class="px-3 text-[11px] font-bold text-news-muted uppercase tracking-wider mb-1.5">Profil</h3>
+
+                        <a href="{{ route('penulis.profile') }}"
+                           class="flex items-center px-3 py-2.5 text-sm font-medium transition-colors touch-target {{ request()->routeIs('penulis.profile') ? 'bg-news-paper text-news-accent border-l-2 border-news-accent' : 'text-news-ink hover:bg-news-paper hover:text-news-accent border-l-2 border-transparent' }}">
+                            <i class="fas fa-user mr-3 w-4 text-center text-xs"></i>
+                            Profil Saya
                         </a>
-                        
+
                         @if(auth()->user()->isPenulis() && !auth()->user()->isVerified())
                             @if(auth()->user()->canRequestVerification())
-                                <a href="{{ route('penulis.verification.request') }}" class="flex items-center px-3 lg:px-4 py-3 text-gray-700 rounded-lg hover:bg-primary-50 hover:text-primary-600 transition-colors touch-target {{ request()->routeIs('penulis.verification.*') ? 'bg-primary-50 text-primary-600' : '' }}">
-                                    <i class="fas fa-check-circle mr-3 text-sm lg:text-base"></i>
-                                    <span class="text-sm lg:text-base">Ajukan Verifikasi</span>
+                                <a href="{{ route('penulis.verification.request') }}"
+                                   class="flex items-center px-3 py-2.5 text-sm font-medium transition-colors touch-target {{ request()->routeIs('penulis.verification.*') ? 'bg-news-paper text-news-accent border-l-2 border-news-accent' : 'text-news-ink hover:bg-news-paper hover:text-news-accent border-l-2 border-transparent' }}">
+                                    <i class="fas fa-check-circle mr-3 w-4 text-center text-xs"></i>
+                                    Ajukan Verifikasi
                                 </a>
                             @elseif(auth()->user()->hasPendingVerificationRequest())
-                                <div class="flex items-center px-3 lg:px-4 py-3 text-yellow-600 rounded-lg bg-yellow-50">
-                                    <i class="fas fa-clock mr-3 text-sm lg:text-base"></i>
-                                    <span class="text-sm lg:text-base">Verifikasi Pending</span>
+                                <div class="flex items-center px-3 py-2.5 text-sm font-medium text-news-muted bg-news-paper border-l-2 border-news-ink">
+                                    <i class="fas fa-clock mr-3 w-4 text-center text-xs"></i>
+                                    Verifikasi Pending
                                 </div>
                             @endif
                         @elseif(auth()->user()->isVerified())
-                            <div class="flex items-center px-3 lg:px-4 py-3 text-green-600 rounded-lg bg-green-50">
-                                <i class="fas fa-check-circle mr-3 text-sm lg:text-base"></i>
-                                <span class="text-sm lg:text-base">Terverifikasi</span>
+                            <div class="flex items-center px-3 py-2.5 text-sm font-medium text-news-ink bg-news-paper border-l-2 border-news-ink">
+                                <i class="fas fa-check-circle mr-3 w-4 text-center text-xs"></i>
+                                Terverifikasi
                             </div>
                         @endif
                     </div>
                 </div>
             </nav>
-            
-            <!-- User Info -->
-            <div class="p-4 border-t border-gray-200 flex-shrink-0">
-                <div class="flex items-center space-x-3">
-                    @if(Auth::user()->profile && Auth::user()->profile->avatar)
-                        <img src="{{ asset('storage/' . Auth::user()->profile->avatar) }}" alt="{{ Auth::user()->name }}" class="w-8 h-8 rounded-full object-cover border-2 border-primary-200">
-                    @else
-                        <div class="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                            {{ substr(Auth::user()->name, 0, 1) }}
-                        </div>
-                    @endif
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <p class="text-sm font-medium text-gray-800 truncate">{{ Auth::user()->name }}</p>
-                            <x-user-role-badge :user="Auth::user()" size="xs" />
-                        </div>
-                    </div>
 
-                </div>
-                <div class="mt-3 space-y-2">
-                    <a href="{{ route('home') }}" class="w-full flex items-center justify-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors touch-target">
-                        <i class="fas fa-external-link-alt mr-2"></i>
-                        Lihat Website
+            {{-- A: chip ringkas + menu naik (flow di atas chip, bukan absolute) --}}
+            <div class="border-t border-news-line flex-shrink-0 p-2" x-data="{ open: false }" @click.away="open = false">
+                <div x-show="open"
+                     x-cloak
+                     x-transition:enter="transition ease-out duration-100"
+                     x-transition:enter-start="opacity-0"
+                     x-transition:enter-end="opacity-100"
+                     x-transition:leave="transition ease-in duration-75"
+                     x-transition:leave-start="opacity-100"
+                     x-transition:leave-end="opacity-0"
+                     class="mb-1.5 bg-white border border-news-line py-1"
+                     role="menu">
+                    <a href="{{ route('home') }}"
+                       role="menuitem"
+                       class="flex items-center gap-2.5 px-3 py-2 text-sm text-news-ink hover:bg-news-paper hover:text-news-accent transition-colors">
+                        <i class="fas fa-newspaper text-xs text-news-muted w-4 text-center"></i>
+                        Ke Portal
                     </a>
+                    <div class="border-t border-news-line my-0.5"></div>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="w-full flex items-center justify-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors touch-target">
-                            <i class="fas fa-sign-out-alt mr-2"></i>
+                        <button type="submit"
+                                role="menuitem"
+                                class="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-news-ink hover:bg-news-paper hover:text-news-accent transition-colors text-left">
+                            <i class="fas fa-sign-out-alt text-xs text-news-muted w-4 text-center"></i>
                             Logout
                         </button>
                     </form>
                 </div>
+
+                <button type="button"
+                        @click="open = !open"
+                        class="w-full flex items-center gap-2 px-2 py-1.5 border border-news-line bg-white hover:border-news-ink transition-colors text-left"
+                        aria-haspopup="true"
+                        :aria-expanded="open.toString()"
+                        aria-label="Menu akun">
+                    @if(Auth::user()->profile && Auth::user()->profile->avatar)
+                        <img src="{{ asset('storage/' . Auth::user()->profile->avatar) }}"
+                             alt=""
+                             class="w-6 h-6 rounded-full object-cover border border-news-line shrink-0">
+                    @else
+                        <div class="w-6 h-6 bg-news-ink rounded-full flex items-center justify-center text-white text-[10px] font-semibold shrink-0">
+                            {{ substr(Auth::user()->name, 0, 1) }}
+                        </div>
+                    @endif
+                    <span class="flex-1 min-w-0 text-xs font-semibold text-news-ink truncate">{{ Auth::user()->name }}</span>
+                    <i class="fas fa-chevron-up text-[9px] text-news-muted shrink-0 transition-transform duration-150"
+                       :class="open && 'rotate-180'"></i>
+                </button>
             </div>
         </aside>
 
-        <!-- Main Content -->
-        <div class="flex-1 flex flex-col lg:ml-64 min-w-0 dashboard-main">
-            <!-- Top Bar -->
-            <header class="bg-white shadow-sm border-b border-gray-200 safe-top">
-                <div class="flex items-center justify-between px-4 lg:px-6 py-4">
-                    <div class="flex items-center space-x-4">
-                        <!-- Mobile menu button -->
-                        <button class="lg:hidden p-2 rounded-lg hover:bg-gray-100 touch-target" onclick="toggleSidebar()" aria-label="Open sidebar">
-                            <i class="fas fa-bars text-gray-600"></i>
+        <div class="flex-1 flex flex-col lg:ml-64 min-w-0">
+            <header class="bg-white border-b-2 border-news-ink sticky top-0 z-30">
+                <div class="h-14 sm:h-16 flex items-center justify-between px-3 sm:px-4 lg:px-6 gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <button type="button" class="lg:hidden p-2 text-news-muted hover:text-news-ink hover:bg-news-paper touch-target" onclick="toggleSidebar()" aria-label="Buka menu">
+                            <i class="fas fa-bars"></i>
                         </button>
-                        <div>
-                            <h2 class="text-lg lg:text-xl font-semibold text-gray-800">@yield('page-title', 'Dashboard')</h2>
-                            <p class="text-xs lg:text-sm text-gray-600">@yield('page-subtitle', 'Kelola artikel dan profil Anda')</p>
+                        <div class="min-w-0 leading-tight">
+                            <h2 class="font-display text-base font-bold text-news-ink truncate">@yield('page-title', 'Dashboard')</h2>
+                            <p class="text-[11px] text-news-muted truncate">@yield('page-subtitle', 'Kelola artikel dan profil Anda')</p>
                         </div>
                     </div>
-                    
-                    <div class="flex items-center space-x-2 lg:space-x-4">
-                        <!-- View Website Button -->
-                        <a href="{{ route('home') }}" class="hidden sm:flex items-center px-3 py-2 text-sm text-gray-700 hover:text-primary-600 transition-colors touch-target">
-                            <i class="fas fa-external-link-alt mr-2"></i>
-                            <span>Lihat Website</span>
-                        </a>
-                        
-                        <!-- Mobile View Website Button -->
-                        <a href="{{ route('home') }}" class="sm:hidden p-2 text-gray-700 hover:text-primary-600 transition-colors touch-target" aria-label="View website">
-                            <i class="fas fa-external-link-alt"></i>
-                        </a>
-                    </div>
+
+                    <a href="{{ route('home') }}"
+                       class="inline-flex items-center text-sm font-medium text-news-muted hover:text-news-accent px-2 py-1.5 transition-colors shrink-0">
+                        <i class="fas fa-newspaper mr-1.5 text-xs"></i>
+                        <span class="hidden sm:inline">Ke Portal</span>
+                        <span class="sm:hidden">Portal</span>
+                    </a>
                 </div>
             </header>
 
-            <!-- Page Content -->
-            <main class="flex-1 p-3 sm:p-4 lg:p-6 safe-bottom overflow-y-auto overflow-x-hidden min-w-0">
+            <main class="flex-1 p-3 sm:p-4 lg:p-6 overflow-y-auto overflow-x-hidden min-w-0">
                 @if(session('success'))
-                    <div class="notification-toast notification-success mb-6 animate-slide-down">
-                        <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 rounded-lg shadow-lg p-4">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0">
-                                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-check-circle text-green-600 text-lg"></i>
-                                    </div>
-                                </div>
-                                <div class="ml-4 flex-1">
-                                    <p class="text-sm font-semibold text-green-900">Berhasil!</p>
-                                    <p class="text-sm text-green-700 mt-1">{{ session('success') }}</p>
-                                </div>
-                                <button onclick="this.closest('.notification-toast').remove()" class="ml-4 text-green-600 hover:text-green-800">
-                                    <i class="fas fa-times"></i>
-                                </button>
+                    <div class="notification-toast mb-5 animate-slide-down">
+                        <div class="bg-white border-l-4 border-news-ink border border-news-line p-4 flex items-start gap-3">
+                            <i class="fas fa-check-circle text-news-ink mt-0.5"></i>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-semibold text-news-ink">Berhasil</p>
+                                <p class="text-sm text-news-muted mt-0.5">{{ session('success') }}</p>
                             </div>
+                            <button type="button" onclick="this.closest('.notification-toast').remove()" class="text-news-muted hover:text-news-ink" aria-label="Tutup">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
                     </div>
                 @endif
 
                 @if(session('error'))
-                    <div class="notification-toast notification-error mb-6 animate-slide-down">
-                        <div class="bg-gradient-to-r from-red-50 to-rose-50 border-l-4 border-red-500 rounded-lg shadow-lg p-4">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0">
-                                    <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-exclamation-circle text-red-600 text-lg"></i>
-                                    </div>
-                                </div>
-                                <div class="ml-4 flex-1">
-                                    <p class="text-sm font-semibold text-red-900">Error!</p>
-                                    <p class="text-sm text-red-700 mt-1">{{ session('error') }}</p>
-                                </div>
-                                <button onclick="this.closest('.notification-toast').remove()" class="ml-4 text-red-600 hover:text-red-800">
-                                    <i class="fas fa-times"></i>
-                                </button>
+                    <div class="notification-toast mb-5 animate-slide-down">
+                        <div class="bg-white border-l-4 border-news-accent border border-news-line p-4 flex items-start gap-3">
+                            <i class="fas fa-exclamation-circle text-news-accent mt-0.5"></i>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-semibold text-news-ink">Error</p>
+                                <p class="text-sm text-news-muted mt-0.5">{{ session('error') }}</p>
                             </div>
+                            <button type="button" onclick="this.closest('.notification-toast').remove()" class="text-news-muted hover:text-news-ink" aria-label="Tutup">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
                     </div>
                 @endif
@@ -299,49 +253,41 @@
         </div>
     </div>
 
-    <!-- JavaScript -->
     <script>
-        // Auto-hide notification toasts after 5 seconds with smooth animation
-        document.addEventListener('DOMContentLoaded', function() {
-            const notifications = document.querySelectorAll('.notification-toast');
-            notifications.forEach(function(notification) {
-                setTimeout(function() {
-                    notification.style.transition = 'all 0.5s ease-out';
-                    notification.style.opacity = '0';
-                    notification.style.transform = 'translateY(-20px)';
-                    setTimeout(function() {
-                        notification.remove();
-                    }, 500);
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.notification-toast').forEach(function (el) {
+                setTimeout(function () {
+                    el.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(-8px)';
+                    setTimeout(function () { el.remove(); }, 400);
                 }, 5000);
             });
         });
-        
-        // Toggle sidebar for mobile
+
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('mobile-overlay');
-            
+
             if (sidebar.classList.contains('-translate-x-full')) {
                 sidebar.classList.remove('-translate-x-full');
                 overlay.classList.remove('hidden');
-                document.body.style.overflow = 'hidden'; // Prevent background scrolling
+                document.body.style.overflow = 'hidden';
             } else {
                 sidebar.classList.add('-translate-x-full');
                 overlay.classList.add('hidden');
-                document.body.style.overflow = ''; // Restore scrolling
+                document.body.style.overflow = '';
             }
         }
-        
-        // Close sidebar when clicking overlay
-        document.getElementById('mobile-overlay').addEventListener('click', function() {
+
+        document.getElementById('mobile-overlay').addEventListener('click', function () {
             toggleSidebar();
         });
-        
-        // Handle window resize — open on desktop, force-close on smaller screens
-        window.addEventListener('resize', function() {
+
+        window.addEventListener('resize', function () {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('mobile-overlay');
-            
+
             if (window.innerWidth >= 1024) {
                 sidebar.classList.remove('-translate-x-full');
                 overlay.classList.add('hidden');
@@ -352,22 +298,18 @@
                 document.body.style.overflow = '';
             }
         });
-        
-        // Close sidebar when clicking on navigation links on mobile
-        document.querySelectorAll('aside nav a').forEach(function(link) {
-            link.addEventListener('click', function() {
+
+        document.querySelectorAll('aside nav a').forEach(function (link) {
+            link.addEventListener('click', function () {
                 if (window.innerWidth < 1024) {
                     toggleSidebar();
                 }
             });
         });
     </script>
-    
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
+    <x-confirm-dialog />
+
     @stack('scripts')
 </body>
 </html>
-
-

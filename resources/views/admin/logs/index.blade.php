@@ -22,7 +22,7 @@
                 
                 <a href="{{ route('admin.logs.clear') }}" 
                    class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center"
-                   onclick="return confirm('Apakah Anda yakin ingin menghapus semua log?')">
+                   onclick="event.preventDefault(); const href=this.href; window.pesbarConfirm('Apakah Anda yakin ingin menghapus semua log?', {danger:true}).then(ok=>{ if(ok) location.href=href; }); return false;">
                     <i class="fas fa-trash mr-2"></i>
                     Hapus Log
                 </a>

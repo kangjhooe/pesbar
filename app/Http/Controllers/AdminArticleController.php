@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Helpers\CacheHelper;
 use App\Helpers\ActivityLogHelper;
+use App\Helpers\UploadValidation;
 
 class AdminArticleController extends Controller
 {
@@ -94,7 +95,7 @@ class AdminArticleController extends Controller
             'excerpt' => 'required|string|max:500',
             'content' => 'required|string',
             'category_id' => 'required|exists:categories,id',
-            'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'featured_image' => UploadValidation::image(false, 2048),
             'status' => 'required|in:draft,pending_review,published,rejected,archived',
             'is_featured' => 'boolean',
             'is_breaking' => 'boolean',
@@ -187,7 +188,7 @@ class AdminArticleController extends Controller
             'excerpt' => 'required|string|max:500',
             'content' => 'required|string',
             'category_id' => 'required|exists:categories,id',
-            'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'featured_image' => UploadValidation::image(false, 2048),
             'status' => 'required|in:draft,pending_review,published,rejected,archived',
             'is_featured' => 'boolean',
             'is_breaking' => 'boolean',

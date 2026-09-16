@@ -137,7 +137,7 @@
                         
                         <a href="{{ route('admin.verification-requests') }}" class="flex items-center px-3 lg:px-4 py-3 text-gray-700 rounded-lg hover:bg-primary-50 hover:text-primary-600 transition-colors touch-target {{ request()->routeIs('admin.verification-requests*') ? 'bg-primary-50 text-primary-600' : '' }}">
                             <i class="fas fa-user-check mr-3 text-sm lg:text-base"></i>
-                            <span class="text-sm lg:text-base">Permintaan Verifikasi</span>
+                            <span class="text-sm lg:text-base">Upgrade & Verifikasi</span>
                             @php
                                 $pendingCount = \App\Models\User::where('role', 'penulis')
                                     ->where('verification_request_status', 'pending')
@@ -421,6 +421,8 @@
     /></noscript>
     @endif
     
+    <x-confirm-dialog />
+
     @stack('scripts')
 </body>
 </html>

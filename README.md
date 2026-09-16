@@ -279,7 +279,7 @@ php artisan view:cache
   - `.git/`
   - `tests/`
   - `.env.example`
-  - `README.md` (atau file dokumentasi lainnya)
+  - `README.md`
 
 #### 3. Konfigurasi di Server
 
@@ -695,7 +695,6 @@ Setelah menjalankan seeder (`php artisan db:seed`), Anda dapat login dengan:
 > - Segera ubah password default setelah pertama kali login!
 > - Email admin default dari `DatabaseSeeder` adalah `admin@pesisirbarat.id`
 > - Untuk mendapatkan user tambahan (editor, penulis, dll), jalankan: `php artisan db:seed --class=AdminUserSeeder`
-> - Detail lengkap login tersedia di [LOGIN_DATA.md](LOGIN_DATA.md)
 
 ## 🔒 Keamanan
 
@@ -705,14 +704,6 @@ Setelah menjalankan seeder (`php artisan db:seed`), Anda dapat login dengan:
 - Update dependencies secara berkala
 - Gunakan password yang kuat untuk database
 - Setup firewall untuk membatasi akses
-
-## 📚 Dokumentasi Tambahan
-
-- [Panduan Autentikasi](AUTHENTICATION_GUIDE.md)
-- [Panduan Event Popup](EVENT_POPUP_GUIDE.md)
-- [Panduan Widget](WIDGET_IMPLEMENTATION.md)
-- [Panduan Redis](REDIS_SETUP.md)
-- [Fitur Implementasi](FEATURES_IMPLEMENTATION.md)
 
 ## 🤝 Kontribusi
 

@@ -1,8 +1,8 @@
 @extends('layouts.admin-simple')
 
-@section('title', 'Permintaan Verifikasi Penulis')
-@section('page-title', 'Permintaan Verifikasi Penulis')
-@section('page-subtitle', 'Tinjau dan setujui permintaan verifikasi dari penulis')
+@section('title', 'Permintaan Upgrade & Verifikasi')
+@section('page-title', 'Permintaan Upgrade & Verifikasi')
+@section('page-subtitle', 'Tinjau upgrade user ke penulis dan verifikasi penulis')
 
 @section('content')
 <div class="space-y-6">
@@ -18,7 +18,8 @@
         <x-slot:head>
             <x-admin.checkbox all bulk-id="verification-bulk" />
             <x-admin.th :sortable="false" label="#" align="center" class="w-14" />
-            <x-admin.th column="name" label="Penulis" />
+            <x-admin.th column="name" label="Pemohon" />
+            <x-admin.th column="role" label="Jenis" />
             <x-admin.th :sortable="false" label="Email" />
             <x-admin.th column="verification_type" label="Tipe" />
             <x-admin.th :sortable="false" label="Dokumen" />
@@ -47,6 +48,17 @@
                             @endif
                         </div>
                     </div>
+                </td>
+                <td class="px-4 py-4 whitespace-nowrap text-sm">
+                    @if($user->role === 'user')
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                            Upgrade ke penulis
+                        </span>
+                    @else
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            Verifikasi penulis
+                        </span>
+                    @endif
                 </td>
                 <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
                     {{ $user->email }}
@@ -89,36 +101,38 @@
                     {{ $user->verification_requested_at ? $user->verification_requested_at->format('d-m-Y H:i') : '—' }}
                 </td>
                 <x-admin.actions>
-                    <x-admin.action-icon
-                        :href="route('penulis.public-profile', $user->username)"
-                        icon="fas fa-eye"
-                        color="blue"
-                        title="Lihat Profil"
-                        target="_blank"
-                    />
+                    @if($user->role === 'penulis' && $user->username)
+                        <x-admin.action-icon
+                            :href="route('penulis.public-profile', $user->username)"
+                            icon="fas fa-eye"
+                            color="blue"
+                            title="Lihat Profil"
+                            target="_blank"
+                        />
+                    @endif
                     <x-admin.action-icon
                         :href="route('admin.verification-requests.approve', $user)"
                         method="POST"
                         icon="fas fa-check"
                         color="green"
-                        title="Setujui Verifikasi"
-                        confirm="Setujui verifikasi untuk {{ $user->name }}? Artikel pending akan otomatis dipublish."
+                        title="{{ $user->role === 'user' ? 'Setujui Upgrade' : 'Setujui Verifikasi' }}"
+                        confirm="{{ $user->role === 'user' ? 'Setujui upgrade '.$user->name.' menjadi penulis terverifikasi?' : 'Setujui verifikasi untuk '.$user->name.'? Artikel pending akan otomatis dipublish.' }}"
                     />
                     <x-admin.action-icon
                         type="button"
                         icon="fas fa-times"
                         color="red"
-                        title="Tolak Verifikasi"
-                        onclick="showRejectModal({{ $user->id }}, {{ json_encode($user->name) }})"
+                        title="{{ $user->role === 'user' ? 'Tolak Upgrade' : 'Tolak Verifikasi' }}"
+                        onclick="showRejectModal({{ $user->id }}, {{ json_encode($user->name) }}, {{ json_encode($user->role === 'user' ? 'upgrade' : 'verifikasi') }})"
                     />
                 </x-admin.actions>
             </tr>
         @empty
             <tr>
-                <td colspan="9" class="px-4 py-12 text-center text-gray-500">
+                <td colspan="10" class="px-4 py-12 text-center text-gray-500">
                     <i class="fas fa-inbox text-4xl mb-4 text-gray-300"></i>
-                    <p class="text-lg font-medium text-gray-700">Tidak ada permintaan verifikasi</p>
-                    <p class="text-sm">Semua permintaan verifikasi telah ditinjau.</p>
+                    <p class="text-lg font-medium text-gray-700">Tidak ada permintaan</p>
+                    <p class="text-sm">Semua permintaan upgrade/verifikasi telah ditinjau.</p>
                 </td>
             </tr>
         @endforelse
@@ -129,12 +143,12 @@
 <div id="rejectModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
     <div class="flex items-center justify-center min-h-screen p-4">
         <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Tolak Permintaan Verifikasi</h3>
+            <h3 id="rejectModalTitle" class="text-lg font-semibold text-gray-900 mb-4">Tolak Permintaan</h3>
             <form id="rejectModalForm" method="POST">
                 @csrf
                 <div class="mb-4">
                     <label for="reason" class="block text-sm font-medium text-gray-700 mb-2">
-                        Alasan Penolakan <span class="text-gray-500">(Opsional)</span>
+                        Alasan Penolakan <span class="text-gray-500">(Opsional, akan dilihat pemohon)</span>
                     </label>
                     <textarea
                         id="reason"
@@ -158,10 +172,14 @@
 
 @push('scripts')
 <script>
-function showRejectModal(userId, userName) {
+function showRejectModal(userId, userName, kind) {
     const modal = document.getElementById('rejectModal');
     const form = document.getElementById('rejectModalForm');
+    const title = document.getElementById('rejectModalTitle');
     form.action = '{{ route("admin.verification-requests.reject", ":id") }}'.replace(':id', userId);
+    title.textContent = kind === 'upgrade'
+        ? 'Tolak Upgrade: ' + userName
+        : 'Tolak Verifikasi: ' + userName;
     modal.classList.remove('hidden');
 }
 

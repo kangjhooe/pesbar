@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Setting;
+use App\Helpers\UploadValidation;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 
@@ -79,12 +80,13 @@ class AdminSettingsController extends Controller
             ]);
 
             $request->validate([
-                'site_logo' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
-                'site_favicon' => 'nullable|file|mimes:jpeg,png,jpg,gif,ico,svg|max:512',
+                'site_logo' => UploadValidation::logo(),
+                'site_favicon' => UploadValidation::favicon(),
             ], [
-                'site_logo.mimes' => 'Logo harus berupa file gambar dengan format: JPEG, PNG, JPG, GIF, SVG, atau WebP',
+                'site_logo.image' => 'Logo harus berupa file gambar yang valid.',
+                'site_logo.mimes' => 'Logo harus berformat: JPEG, PNG, JPG, atau WebP',
                 'site_logo.max' => 'Ukuran logo maksimal 2MB',
-                'site_favicon.mimes' => 'Favicon harus berupa file gambar dengan format: JPEG, PNG, JPG, GIF, ICO, atau SVG',
+                'site_favicon.mimes' => 'Favicon harus berformat: JPEG, PNG, JPG, ICO, atau WebP',
                 'site_favicon.max' => 'Ukuran favicon maksimal 512KB',
             ]);
 
@@ -156,7 +158,7 @@ class AdminSettingsController extends Controller
         $request->validate([
             'about_title' => 'required|string|max:255',
             'about_content' => 'required|string',
-            'about_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'about_image' => UploadValidation::image(false, 2048),
             'mission_title' => 'nullable|string|max:255',
             'mission_content' => 'nullable|string',
             'vision_title' => 'nullable|string|max:255',

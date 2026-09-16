@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Helpers\UploadValidation;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ArticleRequest extends FormRequest
@@ -28,7 +29,7 @@ class ArticleRequest extends FormRequest
             'content' => 'required|string|min:100',
             'excerpt' => 'nullable|string|max:500',
             'category_id' => 'required|exists:categories,id',
-            'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB max
+            'featured_image' => UploadValidation::image(false, 5120),
             'tags' => 'nullable|string|max:1000',
             'is_featured' => 'boolean',
             'is_breaking' => 'boolean',

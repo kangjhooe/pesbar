@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\UploadValidation;
 use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -62,7 +63,7 @@ class EventController extends Controller
             'priority' => 'required|in:low,medium,high',
             'is_public' => 'boolean',
             'is_active' => 'boolean',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => UploadValidation::image(false, 2048),
             'contact_info' => 'nullable|string'
         ]);
 
@@ -116,7 +117,7 @@ class EventController extends Controller
             'priority' => 'required|in:low,medium,high',
             'is_public' => 'boolean',
             'is_active' => 'boolean',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => UploadValidation::image(false, 2048),
             'contact_info' => 'nullable|string'
         ]);
 

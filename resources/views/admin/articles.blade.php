@@ -109,7 +109,7 @@
                                 </a>
                                 <form action="{{ route('admin.articles.destroy', $article) }}" 
                                       method="POST" class="inline" 
-                                      onsubmit="return confirm('Apakah Anda yakin ingin menghapus artikel ini?')">
+                                      onsubmit="return window.pesbarConfirmForm(event, 'Apakah Anda yakin ingin menghapus artikel ini?')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="text-red-600 hover:text-red-900" title="Hapus">

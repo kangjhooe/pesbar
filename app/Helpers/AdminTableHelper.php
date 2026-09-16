@@ -3,6 +3,7 @@
 namespace App\Helpers;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 
 class AdminTableHelper
@@ -13,12 +14,16 @@ class AdminTableHelper
      * @param  array<string, string>  $allowed  map of request key => db column / expression
      */
     public static function applySort(
-        Builder $query,
+        Builder|Relation $query,
         Request $request,
         array $allowed,
         string $defaultSort = 'created_at',
         string $defaultDirection = 'desc'
     ): Builder {
+        if ($query instanceof Relation) {
+            $query = $query->getQuery();
+        }
+
         $sort = $request->get('sort', $defaultSort);
         $direction = strtolower((string) $request->get('direction', $defaultDirection)) === 'asc' ? 'asc' : 'desc';
 

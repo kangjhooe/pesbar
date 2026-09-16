@@ -205,7 +205,7 @@
                         <i class="fas fa-edit mr-1"></i>Edit
                     </a>
                     <form action="{{ route('admin.events.destroy', $event) }}" method="POST" class="inline" 
-                          onsubmit="return confirm('Apakah Anda yakin ingin menghapus event ini? Tindakan ini tidak dapat dibatalkan.')">
+                          onsubmit="return window.pesbarConfirmForm(event, 'Apakah Anda yakin ingin menghapus event ini? Tindakan ini tidak dapat dibatalkan.')">
                         @csrf
                         @method('DELETE')
                         <button type="submit" 

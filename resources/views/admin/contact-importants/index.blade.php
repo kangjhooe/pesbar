@@ -266,10 +266,11 @@ function getSelectedContactIds() {
         .map(cb => cb.value);
 }
 
-function bulkRequest(url, confirmMsg) {
+async function bulkRequest(url, confirmMsg) {
     const contactIds = getSelectedContactIds();
     if (contactIds.length === 0) return;
-    if (!confirm(confirmMsg.replace('{n}', contactIds.length))) return;
+    const ok = await window.pesbarConfirm(confirmMsg.replace('{n}', contactIds.length), { danger: true });
+    if (!ok) return;
 
     fetch(url, {
         method: 'POST',

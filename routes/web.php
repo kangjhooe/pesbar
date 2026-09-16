@@ -108,7 +108,7 @@ Route::get('/dashboard', function () {
     } elseif ($user->isPenulis()) {
         return redirect()->route('penulis.dashboard');
     } else {
-        return redirect()->route('home');
+        return redirect()->route('user.dashboard');
     }
 })->middleware(['auth'])->name('dashboard');
 
@@ -142,8 +142,10 @@ Route::middleware(['auth', 'role:penulis'])->prefix('penulis')->name('penulis.')
     Route::post('/verification/request', [PenulisDashboardController::class, 'submitVerificationRequest'])->name('verification.submit');
     
     // Article management
+    Route::get('/articles', [PenulisDashboardController::class, 'articles'])->name('articles.index');
     Route::get('/articles/create', [PenulisDashboardController::class, 'create'])->name('articles.create');
     Route::post('/articles', [PenulisDashboardController::class, 'store'])->name('articles.store');
+    Route::post('/articles/bulk', [PenulisDashboardController::class, 'bulkArticles'])->name('articles.bulk');
     Route::post('/articles/save-draft', [PenulisDashboardController::class, 'saveDraft'])->name('articles.save-draft-create');
     Route::get('/articles/{article}', [PenulisDashboardController::class, 'show'])->name('articles.show');
     Route::get('/articles/{article}/edit', [PenulisDashboardController::class, 'edit'])->name('articles.edit');

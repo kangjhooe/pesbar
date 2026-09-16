@@ -49,6 +49,12 @@ class RegisteredUserController extends Controller
             'email.unique' => 'Email ini sudah terdaftar.',
             'password.required' => 'Kata sandi wajib diisi.',
             'password.confirmed' => 'Konfirmasi kata sandi tidak cocok.',
+            'password.min' => 'Kata sandi minimal 8 karakter.',
+            'password.letters' => 'Kata sandi harus mengandung huruf.',
+            'password.mixed' => 'Kata sandi harus mengandung huruf besar dan huruf kecil.',
+            'password.numbers' => 'Kata sandi harus mengandung angka.',
+            'password.symbols' => 'Kata sandi harus mengandung simbol (mis. !@#$).',
+            'password.uncompromised' => 'Kata sandi ini terlalu umum atau pernah bocor. Gunakan kata sandi lain.',
             'terms.required' => 'Anda harus menyetujui Syarat dan Ketentuan serta Kebijakan Privasi.',
             'terms.accepted' => 'Anda harus menyetujui Syarat dan Ketentuan serta Kebijakan Privasi.',
         ]);

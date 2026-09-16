@@ -17,12 +17,12 @@
         type="checkbox"
         @if($all)
             id="{{ $bulkId }}-select-all"
-            class="admin-select-all w-4 h-4 text-news-accent bg-white border-gray-300 rounded focus:ring-news-accent cursor-pointer"
+            class="admin-select-all w-4 h-4 text-news-accent bg-white border-news-line rounded focus:ring-news-accent cursor-pointer"
             data-bulk-id="{{ $bulkId }}"
         @else
             name="{{ $name }}"
             value="{{ $value }}"
-            class="admin-row-checkbox w-4 h-4 text-news-accent bg-white border-gray-300 rounded focus:ring-news-accent cursor-pointer"
+            class="admin-row-checkbox w-4 h-4 text-news-accent bg-white border-news-line rounded focus:ring-news-accent cursor-pointer"
             data-bulk-id="{{ $bulkId }}"
         @endif
     >

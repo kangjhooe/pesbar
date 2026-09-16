@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Helpers\ActivityLogHelper;
 use App\Helpers\AdminTableHelper;
 use App\Helpers\CacheHelper;
+use App\Helpers\UploadValidation;
 use App\Services\BackupService;
 use App\Services\AnalyticsService;
 use Illuminate\Http\Request;
@@ -38,8 +39,8 @@ class AdminDashboardController extends Controller
             'articles_today' => Article::whereDate('created_at', today())->count(),
             'reads_today' => ReadingHistory::whereDate('read_at', today())->count(),
             'comments_today' => Comment::whereDate('created_at', today())->count(),
-            'pending_verification_requests' => User::where('role', 'penulis')
-                ->where('verification_request_status', 'pending')
+            'pending_verification_requests' => User::where('verification_request_status', 'pending')
+                ->whereIn('role', ['user', 'penulis'])
                 ->count(),
             'verified_penulis' => User::where('role', 'penulis')
                 ->where('verified', true)
@@ -172,13 +173,14 @@ class AdminDashboardController extends Controller
 
     public function verificationRequests(Request $request)
     {
-        $query = User::where('role', 'penulis')
-            ->where('verification_request_status', 'pending')
+        $query = User::where('verification_request_status', 'pending')
+            ->whereIn('role', ['user', 'penulis'])
             ->with('profile')
             ->withCount('articles');
 
         $query = AdminTableHelper::applySort($query, $request, [
             'name' => 'name',
+            'role' => 'role',
             'verification_type' => 'verification_type',
             'articles_count' => 'articles_count',
             'verification_requested_at' => 'verification_requested_at',
@@ -195,95 +197,133 @@ class AdminDashboardController extends Controller
             'action' => 'required|in:approve,reject',
             'ids' => 'required|array|min:1',
             'ids.*' => 'integer|exists:users,id',
+            'reason' => 'nullable|string|max:1000',
         ]);
 
         $users = User::whereIn('id', $request->ids)
-            ->where('role', 'penulis')
+            ->whereIn('role', ['user', 'penulis'])
             ->where('verification_request_status', 'pending')
             ->get();
 
         $count = 0;
         foreach ($users as $user) {
             if ($request->action === 'approve') {
-                $user->update([
-                    'verified' => true,
-                    'verification_request_status' => 'approved',
-                ]);
-                $user->articles()
-                    ->where('status', 'pending_review')
-                    ->update([
-                        'status' => 'published',
-                        'published_at' => now(),
-                    ]);
+                $this->applyVerificationApproval($user);
             } else {
-                $user->update([
-                    'verification_request_status' => 'rejected',
-                ]);
+                $this->applyVerificationRejection($user, $request->reason);
             }
             $count++;
         }
 
         $label = $request->action === 'approve' ? 'disetujui' : 'ditolak';
-        return redirect()->back()->with('success', "{$count} permintaan verifikasi berhasil {$label}.");
+        return redirect()->back()->with('success', "{$count} permintaan berhasil {$label}.");
     }
 
     public function approveVerification(User $user)
     {
         try {
-            // Validasi: hanya penulis dengan pending request yang bisa di-approve
-            if ($user->role !== 'penulis' || $user->verification_request_status !== 'pending') {
-                return redirect()->back()->with('error', 'Permintaan verifikasi tidak valid!');
+            if (!in_array($user->role, ['user', 'penulis'], true) || $user->verification_request_status !== 'pending') {
+                return redirect()->back()->with('error', 'Permintaan tidak valid!');
             }
 
-            $user->update([
-                'verified' => true,
-                'verification_request_status' => 'approved',
-            ]);
+            $wasUpgrade = $user->role === 'user';
+            $this->applyVerificationApproval($user);
 
-            // Auto-publish artikel pending_review milik penulis ini
-            $user->articles()
-                ->where('status', 'pending_review')
-                ->update([
-                    'status' => 'published',
-                    'published_at' => now(),
-                ]);
+            $message = $wasUpgrade
+                ? 'Upgrade ke penulis berhasil disetujui. User sekarang penulis terverifikasi.'
+                : 'Verifikasi penulis berhasil disetujui!';
 
-            ActivityLogHelper::logUser('verification.approved', $user, "Verifikasi penulis {$user->name} disetujui");
-            ActivityLogHelper::logSecurity('verification.approved', 'Verifikasi penulis disetujui', ['user_id' => $user->id]);
-
-            // TODO: Kirim notifikasi ke penulis
-
-            return redirect()->back()->with('success', 'Verifikasi penulis berhasil disetujui!');
+            return redirect()->back()->with('success', $message);
         } catch (\Exception $e) {
             \Log::error('Approve Verification Error: ' . $e->getMessage());
             ActivityLogHelper::logSecurity('verification.approve.failed', 'Gagal approve verifikasi', ['user_id' => $user->id, 'error' => $e->getMessage()]);
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat menyetujui verifikasi.');
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat menyetujui permintaan.');
         }
     }
 
     public function rejectVerification(Request $request, User $user)
     {
         try {
-            // Validasi: hanya penulis dengan pending request yang bisa di-reject
-            if ($user->role !== 'penulis' || $user->verification_request_status !== 'pending') {
-                return redirect()->back()->with('error', 'Permintaan verifikasi tidak valid!');
+            if (!in_array($user->role, ['user', 'penulis'], true) || $user->verification_request_status !== 'pending') {
+                return redirect()->back()->with('error', 'Permintaan tidak valid!');
             }
 
-            $user->update([
-                'verification_request_status' => 'rejected',
+            $request->validate([
+                'reason' => 'nullable|string|max:1000',
             ]);
 
-            ActivityLogHelper::logUser('verification.rejected', $user, "Verifikasi penulis {$user->name} ditolak" . ($request->reason ? ". Alasan: {$request->reason}" : ""));
-            ActivityLogHelper::logSecurity('verification.rejected', 'Verifikasi penulis ditolak', ['user_id' => $user->id, 'reason' => $request->reason ?? null]);
+            $wasUpgrade = $user->role === 'user';
+            $this->applyVerificationRejection($user, $request->reason);
 
-            // TODO: Kirim notifikasi ke penulis
+            $message = $wasUpgrade
+                ? 'Permintaan upgrade ke penulis ditolak. User tetap sebagai pembaca.'
+                : 'Permintaan verifikasi ditolak.';
 
-            return redirect()->back()->with('success', 'Permintaan verifikasi ditolak.');
+            return redirect()->back()->with('success', $message);
         } catch (\Exception $e) {
             \Log::error('Reject Verification Error: ' . $e->getMessage());
             ActivityLogHelper::logSecurity('verification.reject.failed', 'Gagal reject verifikasi', ['user_id' => $user->id, 'error' => $e->getMessage()]);
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat menolak verifikasi.');
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat menolak permintaan.');
         }
+    }
+
+    /**
+     * Setujui upgrade (user→penulis verified) atau verifikasi penulis.
+     */
+    private function applyVerificationApproval(User $user): void
+    {
+        $wasUpgrade = $user->role === 'user';
+
+        $user->update([
+            'role' => 'penulis',
+            'verified' => true,
+            'verification_request_status' => 'approved',
+            'verification_rejection_reason' => null,
+        ]);
+
+        $user->articles()
+            ->where('status', 'pending_review')
+            ->update([
+                'status' => 'published',
+                'published_at' => now(),
+            ]);
+
+        $logMessage = $wasUpgrade
+            ? "Upgrade user {$user->name} ke penulis terverifikasi disetujui"
+            : "Verifikasi penulis {$user->name} disetujui";
+
+        ActivityLogHelper::logUser($wasUpgrade ? 'upgrade.approved' : 'verification.approved', $user, $logMessage);
+        ActivityLogHelper::logSecurity(
+            $wasUpgrade ? 'upgrade.approved' : 'verification.approved',
+            $logMessage,
+            ['user_id' => $user->id]
+        );
+    }
+
+    /**
+     * Tolak permintaan. User biasa tetap role user; penulis tetap penulis (belum verified).
+     */
+    private function applyVerificationRejection(User $user, ?string $reason = null): void
+    {
+        $wasUpgrade = $user->role === 'user';
+        $reason = $reason ? trim($reason) : null;
+
+        $user->update([
+            'verification_request_status' => 'rejected',
+            'verification_rejection_reason' => $reason ?: null,
+            'verified' => false,
+        ]);
+
+        $logMessage = $wasUpgrade
+            ? "Upgrade user {$user->name} ditolak" . ($reason ? ". Alasan: {$reason}" : '')
+            : "Verifikasi penulis {$user->name} ditolak" . ($reason ? ". Alasan: {$reason}" : '');
+
+        ActivityLogHelper::logUser($wasUpgrade ? 'upgrade.rejected' : 'verification.rejected', $user, $logMessage);
+        ActivityLogHelper::logSecurity(
+            $wasUpgrade ? 'upgrade.rejected' : 'verification.rejected',
+            $logMessage,
+            ['user_id' => $user->id, 'reason' => $reason]
+        );
     }
 
     public function toggleVerified(User $user)
@@ -304,6 +344,7 @@ class AdminDashboardController extends Controller
                     'verified' => false,
                     'role' => 'user',
                     'verification_request_status' => null, // Reset status verifikasi request
+                    'verification_rejection_reason' => null,
                 ]);
                 
                 // Refresh user model dari database
@@ -846,6 +887,7 @@ class AdminDashboardController extends Controller
                     'role' => 'user',
                     'verified' => false,
                     'verification_request_status' => null,
+                    'verification_rejection_reason' => null,
                 ]);
                 $count++;
             }
@@ -871,6 +913,7 @@ class AdminDashboardController extends Controller
                 'role' => 'user',
                 'verified' => false, // Reset verified status saat diturunkan
                 'verification_request_status' => null, // Reset status verifikasi request
+                'verification_rejection_reason' => null,
             ]);
 
             // Refresh user model dari database
@@ -976,12 +1019,7 @@ class AdminDashboardController extends Controller
     public function uploadMedia(Request $request)
     {
         $request->validate([
-            'file' => [
-                'required',
-                'file',
-                'max:10240', // 10MB max
-                'mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx,mp4,avi,mov,wmv,mp3,wav,ogg',
-            ],
+            'file' => UploadValidation::adminMedia(),
         ]);
 
         $file = $request->file('file');

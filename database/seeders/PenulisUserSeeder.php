@@ -75,12 +75,12 @@ class PenulisUserSeeder extends Seeder
                     'avatar' => null,
                     'website' => null,
                     'location' => 'Kabupaten Pesisir Barat, Lampung',
-                    'social_links' => json_encode([
+                    'social_links' => [
                         'facebook' => null,
                         'twitter' => null,
                         'instagram' => null,
                         'linkedin' => null,
-                    ]),
+                    ],
                 ]);
             }
 

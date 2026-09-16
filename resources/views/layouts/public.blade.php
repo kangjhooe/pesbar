@@ -165,11 +165,15 @@
                                 <span class="hidden lg:inline-flex"><x-user-role-badge :user="Auth::user()" size="xs" /></span>
                                 <i class="fas fa-chevron-down text-xs hidden sm:inline"></i>
                             </button>
-                            <div x-show="open" @click.away="open = false" x-transition class="absolute right-0 mt-2 w-48 bg-white shadow-lg py-1 z-50 border border-news-line">
-                                @if(auth()->user()->role !== 'user')
+                            <div x-show="open" @click.away="open = false" x-transition class="absolute right-0 mt-2 w-52 bg-white shadow-lg py-1 z-50 border border-news-line">
+                                @if(auth()->user()->role === 'user')
+                                    <a href="{{ route('user.dashboard') }}" class="block px-4 py-2 text-sm text-news-ink hover:bg-news-paper">Akun saya</a>
+                                    <a href="{{ route('user.bookmarks') }}" class="block px-4 py-2 text-sm text-news-ink hover:bg-news-paper">Bookmark</a>
+                                    <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-news-ink hover:bg-news-paper">Profil</a>
+                                @else
                                     <a href="{{ route('dashboard') }}" class="block px-4 py-2 text-sm text-news-ink hover:bg-news-paper">Dashboard</a>
+                                    <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-news-ink hover:bg-news-paper">Profil</a>
                                 @endif
-                                <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-news-ink hover:bg-news-paper">Profil</a>
                                 <hr class="my-1 border-news-line">
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
@@ -228,10 +232,14 @@
                 @endif
                 @auth
                     <hr class="my-2 border-news-line">
-                    @if(auth()->user()->role !== 'user')
+                    @if(auth()->user()->role === 'user')
+                        <a href="{{ route('user.dashboard') }}" @click="mobileMenuOpen = false" class="block px-3 py-3 text-sm font-semibold text-news-ink touch-target">Akun saya</a>
+                        <a href="{{ route('user.bookmarks') }}" @click="mobileMenuOpen = false" class="block px-3 py-3 text-sm font-semibold text-news-ink touch-target">Bookmark</a>
+                        <a href="{{ route('profile.edit') }}" @click="mobileMenuOpen = false" class="block px-3 py-3 text-sm font-semibold text-news-ink touch-target">Profil</a>
+                    @else
                         <a href="{{ route('dashboard') }}" @click="mobileMenuOpen = false" class="block px-3 py-3 text-sm font-semibold text-news-ink touch-target">Dashboard</a>
+                        <a href="{{ route('profile.edit') }}" @click="mobileMenuOpen = false" class="block px-3 py-3 text-sm font-semibold text-news-ink touch-target">Profil</a>
                     @endif
-                    <a href="{{ route('profile.edit') }}" @click="mobileMenuOpen = false" class="block px-3 py-3 text-sm font-semibold text-news-ink touch-target">Profil</a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit" @click="mobileMenuOpen = false" class="block w-full text-left px-3 py-3 text-sm font-semibold text-news-ink touch-target">Logout</button>
@@ -389,6 +397,9 @@
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     @yield('structured-data')
+
+    <x-confirm-dialog />
+
     @stack('scripts')
 
     @if(\App\Helpers\SettingsHelper::googleAnalytics())

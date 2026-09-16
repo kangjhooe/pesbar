@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\UserProfile;
 use App\Helpers\ActivityLogHelper;
+use App\Helpers\UploadValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -26,7 +27,7 @@ class UserProfileController extends Controller
             ->where('status', 'published')
             ->with('category')
             ->latest()
-            ->paginate(10);
+            ->paginate(12);
 
         // Get statistics
         $stats = [
@@ -44,34 +45,29 @@ class UserProfileController extends Controller
     public function upgradeRequest()
     {
         $user = Auth::user();
-        
-        // Cek jika user sudah menjadi penulis terverifikasi
+
         if ($user->role === 'penulis' && $user->verified) {
             return redirect()->route('penulis.dashboard')
                 ->with('info', 'Anda sudah menjadi penulis terverifikasi.');
         }
 
-        // Cek jika user sudah penulis tapi belum verified (bisa dari upgrade request atau manual)
-        if ($user->role === 'penulis' && !$user->verified) {
-            // Jika sudah ada pending request, redirect ke dashboard
+        // Penulis (mis. hasil promote manual) ajukan verifikasi dari dashboard penulis
+        if ($user->role === 'penulis') {
             if ($user->verification_request_status === 'pending') {
                 return redirect()->route('penulis.dashboard')
                     ->with('info', 'Permintaan verifikasi Anda sedang ditinjau. Mohon tunggu konfirmasi dari admin.');
             }
-            // Jika sudah di-reject atau belum pernah request, redirect ke penulis dashboard
-            // (bisa request verification dari penulis dashboard)
+
             return redirect()->route('penulis.dashboard')
-                ->with('info', 'Anda sudah menjadi penulis. Silakan ajukan verifikasi untuk mendapatkan badge terverifikasi.');
+                ->with('info', 'Anda sudah menjadi penulis. Silakan ajukan verifikasi untuk publish artikel langsung.');
         }
 
-        // Cek jika user masih role 'user' tapi sudah memiliki pending upgrade request
-        if ($user->role === 'user' && $user->verification_request_status === 'pending') {
+        if ($user->hasPendingUpgradeRequest()) {
             return redirect()->route('user.dashboard')
                 ->with('info', 'Anda sudah memiliki permintaan upgrade yang sedang ditinjau. Mohon tunggu konfirmasi dari admin.');
         }
 
-        // Hanya user dengan role 'user' yang bisa akses form upgrade request
-        if ($user->role !== 'user') {
+        if (!$user->canRequestUpgrade()) {
             return redirect()->back()->with('error', 'Anda sudah memiliki role yang lebih tinggi!');
         }
 
@@ -83,51 +79,46 @@ class UserProfileController extends Controller
         try {
             $request->validate([
                 'verification_type' => 'required|in:perorangan,lembaga',
-                'verification_document' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120', // Max 5MB
+                'verification_document' => UploadValidation::verificationDocument(true, 5120),
                 'bio' => 'required|string|max:1000',
-                'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'avatar' => UploadValidation::image(false, 2048),
                 'website' => 'nullable|url',
                 'location' => 'nullable|string|max:255',
                 'social_links' => 'nullable|array',
             ]);
 
             $user = Auth::user();
-            
-            // Validasi: hanya user dengan role 'user' yang bisa submit upgrade request
+
             if ($user->role !== 'user') {
                 return redirect()->back()
                     ->withInput()
                     ->with('error', 'Anda sudah memiliki role yang lebih tinggi!');
             }
 
-            // Validasi: cek jika user sudah memiliki pending request
             if ($user->verification_request_status === 'pending') {
                 return redirect()->route('user.dashboard')
                     ->with('info', 'Anda sudah memiliki permintaan upgrade yang sedang ditinjau. Mohon tunggu konfirmasi dari admin.');
             }
 
-            // Handle verification document upload
             $verificationDocumentPath = null;
             if ($request->hasFile('verification_document')) {
-                // Delete old document if exists
                 if ($user->verification_document && Storage::disk('public')->exists($user->verification_document)) {
                     Storage::disk('public')->delete($user->verification_document);
                 }
-                
+
                 $verificationDocumentPath = $request->file('verification_document')->store('upgrade-documents', 'public');
             }
 
-            // Update user: upgrade role ke penulis, set verification request status, dan simpan dokumen
+            // Gate ketat: role tetap 'user' sampai admin menyetujui
             $user->update([
-                'role' => 'penulis', // Upgrade role dari 'user' ke 'penulis'
                 'verification_type' => $request->verification_type,
                 'verification_document' => $verificationDocumentPath,
-                'verification_requested_at' => now(), // Set timestamp request
-                'verification_request_status' => 'pending', // Set status ke pending
-                'verified' => false, // Pastikan verified masih false sampai admin approve
+                'verification_requested_at' => now(),
+                'verification_request_status' => 'pending',
+                'verification_rejection_reason' => null,
+                'verified' => false,
             ]);
 
-            // Update or create profile
             $data = [
                 'user_id' => $user->id,
                 'bio' => $request->bio,
@@ -149,16 +140,15 @@ class UserProfileController extends Controller
                 UserProfile::create($data);
             }
 
-            // Log activity
             ActivityLogHelper::logUser('upgrade.requested', $user, "User {$user->name} mengajukan permintaan upgrade ke penulis");
             ActivityLogHelper::logSecurity('upgrade.requested', 'Permintaan upgrade ke penulis', [
                 'user_id' => $user->id,
                 'verification_type' => $request->verification_type
             ]);
 
-            return redirect()->route('dashboard')
-                ->with('success', 'Permintaan upgrade ke penulis berhasil dikirim! Admin akan meninjau permintaan Anda.');
-                
+            return redirect()->route('user.dashboard')
+                ->with('success', 'Permintaan upgrade ke penulis berhasil dikirim. Akun Anda tetap sebagai pembaca sampai admin menyetujui.');
+
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->back()
                 ->withErrors($e->errors())
@@ -169,12 +159,12 @@ class UserProfileController extends Controller
                 'exception' => $e,
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             ActivityLogHelper::logSecurity('upgrade.request.failed', 'Gagal submit upgrade request', [
                 'user_id' => Auth::id(),
                 'error' => $e->getMessage()
             ]);
-            
+
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Terjadi kesalahan saat mengirim permintaan upgrade. Silakan coba lagi.');

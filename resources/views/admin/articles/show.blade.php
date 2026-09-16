@@ -275,7 +275,7 @@
                     @endcan
                     @if($article->status !== 'archived')
                     <form action="{{ route('admin.articles.archive', $article) }}" method="POST" class="inline" 
-                          onsubmit="return confirm('Apakah Anda yakin ingin mengarsipkan artikel ini? Penulis akan diberi kesempatan untuk mereview kembali tulisannya.')">
+                          onsubmit="return window.pesbarConfirmForm(event, 'Apakah Anda yakin ingin mengarsipkan artikel ini? Penulis akan diberi kesempatan untuk mereview kembali tulisannya.')">
                         @csrf
                         <button type="submit" 
                                 class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
@@ -284,7 +284,7 @@
                     </form>
                     @endif
                     <form action="{{ route('admin.articles.destroy', $article) }}" method="POST" class="inline" 
-                          onsubmit="return confirm('Apakah Anda yakin ingin menghapus artikel ini? Tindakan ini tidak dapat dibatalkan.')">
+                          onsubmit="return window.pesbarConfirmForm(event, 'Apakah Anda yakin ingin menghapus artikel ini? Tindakan ini tidak dapat dibatalkan.')">
                         @csrf
                         @method('DELETE')
                         <button type="submit" 

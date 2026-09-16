@@ -7,6 +7,7 @@ use App\Models\Comment;
 use App\Models\User;
 use App\Models\UserProfile;
 use App\Helpers\ActivityLogHelper;
+use App\Helpers\UploadValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -43,43 +44,10 @@ class PenulisDashboardController extends Controller
         });
     }
 
-    public function index(Request $request)
+    public function index()
     {
         $user = Auth::user();
-        
-        // Build query with filters
-        $query = $user->articles()->with(['category', 'tags'])->withCount('comments');
-        
-        // Filter by status
-        if ($request->has('status') && $request->status !== '') {
-            $query->where('status', $request->status);
-        }
-        
-        // Search by title
-        if ($request->has('search') && $request->search !== '') {
-            $query->where('title', 'like', '%' . $request->search . '%');
-        }
-        
-        // Filter by category
-        if ($request->has('category') && $request->category !== '') {
-            $query->where('category_id', $request->category);
-        }
-        
-        // Sorting
-        $sortBy = $request->get('sort_by', 'created_at');
-        $sortOrder = $request->get('sort_order', 'desc');
-        
-        if ($sortBy === 'views') {
-            $query->orderBy('views', $sortOrder);
-        } elseif ($sortBy === 'title') {
-            $query->orderBy('title', $sortOrder);
-        } else {
-            $query->orderBy('created_at', $sortOrder);
-        }
-        
-        $articles = $query->paginate(15)->withQueryString();
-        
-        // Enhanced stats
+
         $stats = [
             'total_articles' => $user->articles()->count(),
             'published_articles' => $user->articles()->where('status', 'published')->count(),
@@ -90,11 +58,7 @@ class PenulisDashboardController extends Controller
             'total_comments' => $user->articles()->withCount('comments')->get()->sum('comments_count'),
             'avg_views' => $user->articles()->where('status', 'published')->avg('views') ?? 0,
         ];
-        
-        // Get categories for filter
-        $categories = \App\Models\Category::where('is_active', true)->get();
-        
-        // Get popular articles
+
         $popularArticles = $user->articles()
             ->with('category')
             ->where('status', 'published')
@@ -102,7 +66,44 @@ class PenulisDashboardController extends Controller
             ->limit(5)
             ->get();
 
-        return view('penulis.dashboard', compact('articles', 'stats', 'categories', 'popularArticles'));
+        $recentArticles = $user->articles()
+            ->with('category')
+            ->latest()
+            ->limit(5)
+            ->get();
+
+        return view('penulis.dashboard', compact('stats', 'popularArticles', 'recentArticles'));
+    }
+
+    public function articles(Request $request)
+    {
+        $user = Auth::user();
+
+        $query = $user->articles()->with(['category', 'tags'])->withCount('comments');
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('search')) {
+            $query->where('title', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->category);
+        }
+
+        $articles = \App\Helpers\AdminTableHelper::applySort($query, $request, [
+            'title' => 'title',
+            'status' => 'status',
+            'views' => 'views',
+            'comments_count' => 'comments_count',
+            'created_at' => 'created_at',
+        ], 'created_at', 'desc')->paginate(15)->withQueryString();
+
+        $categories = \App\Models\Category::where('is_active', true)->get();
+
+        return view('penulis.articles.index', compact('articles', 'categories'));
     }
 
     public function create()
@@ -121,7 +122,7 @@ class PenulisDashboardController extends Controller
             'content' => 'nullable|string',
             'content_html' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
-            'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'featured_image' => UploadValidation::image(false, 2048),
             'tags' => 'array',
             'tags.*' => 'exists:tags,id',
             'meta_description' => 'nullable|string|max:500',
@@ -173,7 +174,7 @@ class PenulisDashboardController extends Controller
         }
 
         $message = $status === 'draft' ? 'Draft artikel berhasil disimpan!' : 'Artikel berhasil dibuat!';
-        return redirect()->route('penulis.dashboard')->with('success', $message);
+        return redirect()->route('penulis.articles.index')->with('success', $message);
     }
 
     public function edit(Article $article)
@@ -195,7 +196,7 @@ class PenulisDashboardController extends Controller
             'content' => 'nullable|string',
             'content_html' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
-            'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'featured_image' => UploadValidation::image(false, 2048),
             'tags' => 'array',
             'tags.*' => 'exists:tags,id',
             'meta_description' => 'nullable|string|max:500',
@@ -266,7 +267,7 @@ class PenulisDashboardController extends Controller
         }
 
         $message = $status === 'draft' ? 'Draft artikel berhasil diperbarui!' : 'Artikel berhasil diperbarui!';
-        return redirect()->route('penulis.dashboard')->with('success', $message);
+        return redirect()->route('penulis.articles.index')->with('success', $message);
     }
 
     public function destroy(Article $article)
@@ -278,7 +279,72 @@ class PenulisDashboardController extends Controller
         }
         
         $article->delete();
-        return redirect()->route('penulis.dashboard')->with('success', 'Artikel berhasil dihapus!');
+        return redirect()->route('penulis.articles.index')->with('success', 'Artikel berhasil dihapus!');
+    }
+
+    public function bulkArticles(Request $request)
+    {
+        $request->validate([
+            'action' => 'required|in:draft,submit,delete',
+            'articles' => 'required|array|min:1',
+            'articles.*' => 'integer|exists:articles,id',
+        ]);
+
+        $user = Auth::user();
+        $articles = Article::whereIn('id', $request->articles)
+            ->where('author_id', $user->id)
+            ->get();
+
+        if ($articles->isEmpty()) {
+            return back()->with('error', 'Tidak ada artikel yang dapat diproses.');
+        }
+
+        $count = 0;
+
+        switch ($request->action) {
+            case 'draft':
+                foreach ($articles as $article) {
+                    $this->authorize('update', $article);
+                    $article->update(['status' => 'draft']);
+                    $count++;
+                }
+                $message = "{$count} artikel diubah ke draft.";
+                break;
+
+            case 'submit':
+                $status = $user->isVerified() ? 'published' : 'pending_review';
+                foreach ($articles as $article) {
+                    $this->authorize('update', $article);
+                    $article->update(['status' => $status]);
+                    $count++;
+                }
+                $message = $status === 'published'
+                    ? "{$count} artikel diterbitkan."
+                    : "{$count} artikel diajukan untuk review.";
+                break;
+
+            case 'delete':
+                foreach ($articles as $article) {
+                    $this->authorize('delete', $article);
+                    if ($article->featured_image) {
+                        try {
+                            Storage::disk('public')->delete($article->featured_image);
+                        } catch (\Exception $e) {
+                            // continue deleting even if image cleanup fails
+                        }
+                    }
+                    $article->tags()->detach();
+                    $article->delete();
+                    $count++;
+                }
+                $message = "{$count} artikel dihapus.";
+                break;
+
+            default:
+                return back()->with('error', 'Aksi tidak valid.');
+        }
+
+        return redirect()->route('penulis.articles.index')->with('success', $message);
     }
 
     public function profile()
@@ -310,7 +376,7 @@ class PenulisDashboardController extends Controller
                 Rule::unique(User::class)->ignore($user->id),
             ],
             'bio' => 'nullable|string|max:1000',
-            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'avatar' => UploadValidation::image(false, 2048),
             'website' => 'nullable|url',
             'location' => 'nullable|string|max:255',
             'social_links' => 'nullable|array',
@@ -377,13 +443,14 @@ class PenulisDashboardController extends Controller
         $request->validate([
             'reason' => 'nullable|string|max:1000',
             'verification_type' => 'required|in:perorangan,lembaga',
-            'verification_document' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120', // Max 5MB
+            'verification_document' => UploadValidation::verificationDocument(true, 5120),
         ]);
 
         $updateData = [
             'verification_requested_at' => now(),
             'verification_request_status' => 'pending',
             'verification_type' => $request->verification_type,
+            'verification_rejection_reason' => null,
         ];
 
         // Handle file upload
@@ -466,7 +533,7 @@ class PenulisDashboardController extends Controller
             'excerpt' => 'nullable|string|max:500',
             'content' => 'nullable|string',
             'category_id' => 'nullable|exists:categories,id',
-            'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'featured_image' => UploadValidation::image(false, 2048),
             'tags' => 'array',
             'tags.*' => 'exists:tags,id',
             'slug' => 'nullable|string|max:255',
@@ -736,7 +803,7 @@ class PenulisDashboardController extends Controller
     public function uploadMedia(Request $request)
     {
         $request->validate([
-            'file' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB max
+            'file' => UploadValidation::image(true, 5120),
         ]);
         
         $file = $request->file('file');

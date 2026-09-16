@@ -33,6 +33,7 @@ class User extends Authenticatable
         'verification_request_status',
         'verification_type',
         'verification_document',
+        'verification_rejection_reason',
     ];
 
     /**
@@ -239,12 +240,30 @@ class User extends Authenticatable
     }
 
     /**
+     * User biasa menunggu keputusan upgrade ke penulis.
+     */
+    public function hasPendingUpgradeRequest(): bool
+    {
+        return $this->role === 'user'
+            && $this->verification_request_status === 'pending';
+    }
+
+    /**
      * Check if user can request verification.
      */
     public function canRequestVerification(): bool
     {
         return $this->role === 'penulis' 
             && !$this->verified 
+            && $this->verification_request_status !== 'pending';
+    }
+
+    /**
+     * User biasa boleh (ulang) mengajukan upgrade ke penulis.
+     */
+    public function canRequestUpgrade(): bool
+    {
+        return $this->role === 'user'
             && $this->verification_request_status !== 'pending';
     }
 }

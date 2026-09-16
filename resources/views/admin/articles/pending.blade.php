@@ -282,16 +282,18 @@ document.addEventListener('change', function(e) {
 
 document.getElementById('bulkApproveBtn')?.addEventListener('click', function() {
     const articleIds = pendingCheckedIds();
-    if (articleIds.length && confirm(`Setujui ${articleIds.length} artikel terpilih?`)) {
-        bulkAction('approve', articleIds);
-    }
+    if (!articleIds.length) return;
+    window.pesbarConfirm(`Setujui ${articleIds.length} artikel terpilih?`).then(function (ok) {
+        if (ok) bulkAction('approve', articleIds);
+    });
 });
 
 document.getElementById('bulkRejectBtn')?.addEventListener('click', function() {
     const articleIds = pendingCheckedIds();
-    if (articleIds.length && confirm(`Tolak ${articleIds.length} artikel terpilih?`)) {
-        bulkAction('reject', articleIds);
-    }
+    if (!articleIds.length) return;
+    window.pesbarConfirm(`Tolak ${articleIds.length} artikel terpilih?`, { danger: true }).then(function (ok) {
+        if (ok) bulkAction('reject', articleIds);
+    });
 });
 
 function bulkAction(action, articleIds) {

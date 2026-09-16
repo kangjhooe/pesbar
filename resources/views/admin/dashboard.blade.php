@@ -40,7 +40,7 @@
             <a href="{{ route('admin.verification-requests') }}"
                class="group flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-4 hover:border-sky-300 hover:bg-sky-50/40 transition-colors">
                 <div>
-                    <p class="text-xs font-medium text-gray-500">Verifikasi penulis</p>
+                    <p class="text-xs font-medium text-gray-500">Upgrade / verifikasi</p>
                     <p class="mt-1 text-2xl font-semibold tabular-nums text-gray-900">{{ $stats['pending_verification_requests'] }}</p>
                 </div>
                 <span class="inline-flex items-center text-xs font-medium text-sky-700 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -121,7 +121,7 @@
                     <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-50 text-sky-700">
                         <i class="fas fa-user-check text-xs"></i>
                     </span>
-                    Verifikasi penulis
+                    Verifikasi & upgrade
                 </a>
             </div>
         </div>

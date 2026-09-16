@@ -181,11 +181,11 @@
                     <div>
                         <label for="site_logo" class="block text-sm font-medium text-gray-700 mb-2">Logo Website</label>
                         <div class="file-input-container">
-                            <input type="file" id="site_logo" name="site_logo" accept="image/*" 
+                            <input type="file" id="site_logo" name="site_logo" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" 
                                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-news-accent hover:file:bg-blue-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('site_logo') border-red-500 @enderror"
                                    onchange="previewImage(this, 'logo-preview')">
                         </div>
-                        <p class="mt-1 text-sm text-gray-500">Format: JPG, PNG, GIF, SVG, WebP. Maksimal 2MB</p>
+                        <p class="mt-1 text-sm text-gray-500">Format: JPG, PNG, WebP. Maksimal 2MB (tanpa SVG)</p>
                         @error('site_logo')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -205,11 +205,11 @@
                     <div>
                         <label for="site_favicon" class="block text-sm font-medium text-gray-700 mb-2">Favicon</label>
                         <div class="file-input-container">
-                            <input type="file" id="site_favicon" name="site_favicon" accept="image/*" 
+                            <input type="file" id="site_favicon" name="site_favicon" accept="image/jpeg,image/png,image/webp,image/x-icon,.jpg,.jpeg,.png,.webp,.ico" 
                                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-news-accent hover:file:bg-blue-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('site_favicon') border-red-500 @enderror"
                                    onchange="previewImage(this, 'favicon-preview')">
                         </div>
-                        <p class="mt-1 text-sm text-gray-500">Format: JPG, PNG, GIF, ICO, SVG. Maksimal 512KB</p>
+                        <p class="mt-1 text-sm text-gray-500">Format: JPG, PNG, ICO, WebP. Maksimal 512KB (tanpa SVG)</p>
                         @error('site_favicon')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -510,7 +510,7 @@
                 <div class="mt-6 flex justify-between">
                     <a href="{{ route('admin.settings.clear-cache') }}" 
                        class="bg-yellow-600 text-white px-6 py-2 rounded-lg hover:bg-yellow-700 transition-colors"
-                       onclick="return confirm('Apakah Anda yakin ingin membersihkan cache?')">
+                       onclick="event.preventDefault(); const href=this.href; window.pesbarConfirm('Apakah Anda yakin ingin membersihkan cache?', {danger:true}).then(ok=>{ if(ok) location.href=href; }); return false;">
                         <i class="fas fa-broom mr-2"></i>Bersihkan Cache
                     </a>
                     <button type="submit" class="bg-news-accent text-white px-6 py-2 rounded-lg hover:bg-red-800 transition-colors">

@@ -10,19 +10,19 @@
 
 @php
     $colors = [
-        'accent' => 'text-news-accent hover:bg-red-50 hover:text-red-800',
-        'blue' => 'text-news-accent hover:bg-red-50 hover:text-red-800',
-        'indigo' => 'text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700',
-        'yellow' => 'text-amber-600 hover:bg-amber-50 hover:text-amber-700',
-        'amber' => 'text-amber-600 hover:bg-amber-50 hover:text-amber-700',
-        'green' => 'text-green-600 hover:bg-green-50 hover:text-green-700',
-        'red' => 'text-red-600 hover:bg-red-50 hover:text-red-700',
-        'orange' => 'text-orange-600 hover:bg-orange-50 hover:text-orange-700',
-        'gray' => 'text-gray-600 hover:bg-gray-50 hover:text-gray-700',
-        'purple' => 'text-purple-600 hover:bg-purple-50 hover:text-purple-700',
+        'accent' => 'text-news-accent hover:bg-news-paper hover:text-news-ink',
+        'blue' => 'text-news-accent hover:bg-news-paper hover:text-news-ink',
+        'indigo' => 'text-news-muted hover:bg-news-paper hover:text-news-accent',
+        'yellow' => 'text-news-muted hover:bg-news-paper hover:text-news-ink',
+        'amber' => 'text-news-muted hover:bg-news-paper hover:text-news-ink',
+        'green' => 'text-news-ink hover:bg-news-paper hover:text-news-accent',
+        'red' => 'text-news-accent hover:bg-red-50 hover:text-red-800',
+        'orange' => 'text-news-muted hover:bg-news-paper hover:text-news-accent',
+        'gray' => 'text-news-muted hover:bg-news-paper hover:text-news-ink',
+        'purple' => 'text-news-muted hover:bg-news-paper hover:text-news-accent',
     ];
     $colorClass = $colors[$color] ?? $colors['accent'];
-    $btnClass = "inline-flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-150 {$colorClass}";
+    $btnClass = "inline-flex items-center justify-center w-8 h-8 transition-colors duration-150 {$colorClass}";
     $iconClass = str_starts_with($icon, 'fa') ? $icon : "fas {$icon}";
 @endphp
 
@@ -31,15 +31,22 @@
         <i class="{{ $iconClass }} text-sm"></i>
     </a>
 @elseif($href && $method)
-    <form action="{{ $href }}" method="POST" class="inline"
-          @if($confirm) onsubmit="return confirm(@js($confirm))" @endif>
+    <form action="{{ $href }}" method="POST" class="inline">
         @csrf
         @if(strtoupper($method) !== 'POST')
             @method($method)
         @endif
-        <button type="submit" {{ $attributes->merge(['class' => $btnClass, 'title' => $title]) }}>
-            <i class="{{ $iconClass }} text-sm"></i>
-        </button>
+        @if($confirm)
+            <button type="button"
+                    onclick="window.pesbarConfirmSubmit(this.form, @js($confirm))"
+                    {{ $attributes->merge(['class' => $btnClass, 'title' => $title]) }}>
+                <i class="{{ $iconClass }} text-sm"></i>
+            </button>
+        @else
+            <button type="submit" {{ $attributes->merge(['class' => $btnClass, 'title' => $title]) }}>
+                <i class="{{ $iconClass }} text-sm"></i>
+            </button>
+        @endif
     </form>
 @else
     <button type="{{ $type === 'submit' ? 'submit' : 'button' }}" {{ $attributes->merge(['class' => $btnClass, 'title' => $title]) }}>

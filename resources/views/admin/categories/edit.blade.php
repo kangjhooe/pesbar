@@ -116,7 +116,7 @@
                 </a>
                 <div class="flex items-center space-x-3">
                     <button type="button" 
-                            onclick="if(confirm('Hapus kategori ini? Artikel terkait akan dialihkan ke kategori lain.')) { document.getElementById('delete-form').submit(); }"
+                            onclick="window.pesbarConfirm('Hapus kategori ini? Artikel terkait akan dialihkan ke kategori lain.', {danger:true}).then(ok=>{ if(ok) document.getElementById('delete-form').submit(); })"
                             class="px-4 py-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
                         <i class="fas fa-trash mr-2"></i>
                         Hapus
