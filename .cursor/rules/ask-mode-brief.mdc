@@ -1,0 +1,10 @@
+---
+description: Di Ask mode, jawab singkat
+alwaysApply: true
+---
+
+# Ask Mode: Jawab Singkat
+
+- Kalau sedang Ask mode, jawab singkat. Jangan esai, jangan panduan implementasi panjang.
+- Cukup fakta/kesimpulan yang ditanya. Detail hanya jika user minta.
+- Jangan dump kode, daftar file, atau langkah implementasi kecuali diminta.

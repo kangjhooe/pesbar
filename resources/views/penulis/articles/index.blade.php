@@ -54,8 +54,7 @@
                 >
                     <option value="">Semua Status</option>
                     <option value="published" {{ request('status') == 'published' ? 'selected' : '' }}>Terbit</option>
-                    <option value="pending_review" {{ request('status') == 'pending_review' ? 'selected' : '' }}>Menunggu Review</option>
-                    <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Ditolak</option>
+                    <option value="suspended" {{ request('status') == 'suspended' ? 'selected' : '' }}>Ditangguhkan</option>
                     <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>Draft</option>
                 </select>
             </div>
@@ -147,21 +146,10 @@
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-news-paper text-news-ink">
                             Terbit
                         </span>
-                    @elseif($article->status === 'pending_review')
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-news-paper text-news-ink">
-                            Pending
+                    @elseif($article->status === 'suspended')
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-50 text-orange-800">
+                            Ditangguhkan
                         </span>
-                    @elseif($article->status === 'rejected')
-                        <div>
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-50 text-news-ink">
-                                Ditolak
-                            </span>
-                            @if($article->rejection_reason)
-                                <p class="mt-1 text-xs text-news-accent" title="{{ $article->rejection_reason }}">
-                                    {{ Str::limit($article->rejection_reason, 40) }}
-                                </p>
-                            @endif
-                        </div>
                     @elseif($article->status === 'draft')
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-news-paper text-news-ink">
                             Draft

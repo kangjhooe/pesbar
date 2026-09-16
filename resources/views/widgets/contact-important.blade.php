@@ -3,7 +3,7 @@
 @endphp
 
 @if($contacts->count() > 0)
-<div class="border border-news-line">
+<div class="public-widget border border-news-line">
     <div class="bg-news-ink text-white px-4 py-2.5">
         <h2 class="text-xs font-bold uppercase tracking-[0.15em]">Kontak Penting</h2>
     </div>

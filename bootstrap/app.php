@@ -17,6 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'rate.limit.api' => \App\Http\Middleware\RateLimitApi::class,
             'rate.limit.auth' => \App\Http\Middleware\RateLimitAuth::class,
         ]);
+
+        $middleware->appendToGroup('web', [
+            \App\Http\Middleware\CheckMaintenanceMode::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

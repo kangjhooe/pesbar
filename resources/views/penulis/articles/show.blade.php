@@ -57,26 +57,16 @@
  <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-news-paper text-news-ink">
  Terbit
  </span>
- @elseif($article->status === 'pending_review')
- <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-news-paper text-news-ink">
- Menunggu Review
+ @elseif($article->status === 'suspended')
+ <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-50 text-orange-800">
+ Ditangguhkan
  </span>
- @elseif($article->status === 'rejected')
- <div>
- <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-50 text-news-ink">
- <i class="fas fa-times-circle mr-1"></i>
- Ditolak
- </span>
- @if($article->rejection_reason)
- <div class="mt-3 p-3 bg-red-50 border border-news-line rounded-lg">
- <p class="text-sm font-semibold text-news-ink mb-1">
- <i class="fas fa-exclamation-triangle mr-1"></i>
- Alasan Penolakan:
- </p>
- <p class="text-sm text-news-accent">{{ $article->rejection_reason }}</p>
+ @if($article->suspension_reason)
+ <div class="mt-3 p-3 bg-orange-50 border border-news-line rounded-lg">
+ <p class="text-sm font-semibold text-news-ink mb-1">Alasan penangguhan:</p>
+ <p class="text-sm text-orange-800">{{ $article->suspension_reason }}</p>
  </div>
  @endif
- </div>
  @elseif($article->status === 'draft')
  <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-news-paper text-news-ink">
  Draft

@@ -11,16 +11,16 @@
         @method('PUT')
         
         <!-- Basic Information -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Informasi Dasar</h3>
+        <div class="bg-white border border-news-line p-6">
+            <h3 class="text-lg font-semibold text-news-ink mb-4">Informasi Dasar</h3>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="md:col-span-2">
-                    <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
+                    <label for="title" class="block text-sm font-medium text-news-ink mb-2">
                         Judul Artikel <span class="text-red-500">*</span>
                     </label>
                     <input type="text" id="title" name="title" value="{{ old('title', $article->title) }}" 
-                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('title') border-red-500 @enderror"
+                           class="w-full border border-news-line rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('title') border-red-500 @enderror"
                            placeholder="Masukkan judul artikel" required>
                     @error('title')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -28,11 +28,11 @@
                 </div>
 
                 <div>
-                    <label for="category_id" class="block text-sm font-medium text-gray-700 mb-2">
+                    <label for="category_id" class="block text-sm font-medium text-news-ink mb-2">
                         Kategori <span class="text-red-500">*</span>
                     </label>
                     <select id="category_id" name="category_id" 
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('category_id') border-red-500 @enderror" required>
+                            class="w-full border border-news-line rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('category_id') border-red-500 @enderror" required>
                         <option value="">Pilih Kategori</option>
                         @forelse($categories as $category)
                             <option value="{{ $category->id }}" data-slug="{{ $category->slug }}" {{ old('category_id', $article->category_id) == $category->id ? 'selected' : '' }}>
@@ -48,13 +48,15 @@
                 </div>
 
                 <div>
-                    <label for="status" class="block text-sm font-medium text-gray-700 mb-2">
+                    <label for="status" class="block text-sm font-medium text-news-ink mb-2">
                         Status <span class="text-red-500">*</span>
                     </label>
                     <select id="status" name="status" 
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('status') border-red-500 @enderror" required>
+                            class="w-full border border-news-line rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('status') border-red-500 @enderror" required>
                         <option value="draft" {{ old('status', $article->status) == 'draft' ? 'selected' : '' }}>Draft</option>
                         <option value="published" {{ old('status', $article->status) == 'published' ? 'selected' : '' }}>Dipublikasi</option>
+                        <option value="suspended" {{ old('status', $article->status) == 'suspended' ? 'selected' : '' }}>Ditangguhkan</option>
+                        <option value="archived" {{ old('status', $article->status) == 'archived' ? 'selected' : '' }}>Diarsipkan</option>
                     </select>
                     @error('status')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -62,12 +64,12 @@
                 </div>
 
                 <div>
-                    <label for="published_at" class="block text-sm font-medium text-gray-700 mb-2">
+                    <label for="published_at" class="block text-sm font-medium text-news-ink mb-2">
                         Tanggal Publikasi
                     </label>
                     <input type="datetime-local" id="published_at" name="published_at" 
                            value="{{ old('published_at', $article->published_at ? $article->published_at->format('Y-m-d\TH:i') : '') }}" 
-                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('published_at') border-red-500 @enderror">
+                           class="w-full border border-news-line rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('published_at') border-red-500 @enderror">
                     @error('published_at')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -75,11 +77,11 @@
             </div>
 
             <div class="mt-6">
-                <label for="excerpt" class="block text-sm font-medium text-gray-700 mb-2">
+                <label for="excerpt" class="block text-sm font-medium text-news-ink mb-2">
                     Ringkasan <span class="text-red-500">*</span>
                 </label>
                 <textarea id="excerpt" name="excerpt" rows="3" 
-                          class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('excerpt') border-red-500 @enderror"
+                          class="w-full border border-news-line rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('excerpt') border-red-500 @enderror"
                           placeholder="Ringkasan singkat artikel" required>{{ old('excerpt', $article->excerpt ?? '') }}</textarea>
                 @error('excerpt')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -88,54 +90,54 @@
         </div>
 
         <!-- Featured Image -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Gambar Utama</h3>
+        <div class="bg-white border border-news-line p-6">
+            <h3 class="text-lg font-semibold text-news-ink mb-4">Gambar Utama</h3>
             
             <div class="space-y-4">
                 @if($article->featured_image && file_exists(public_path('storage/' . $article->featured_image)))
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Gambar Saat Ini</label>
+                    <label class="block text-sm font-medium text-news-ink mb-2">Gambar Saat Ini</label>
                     <img src="{{ asset('storage/' . $article->featured_image) }}" alt="Current image" 
                          class="max-w-xs h-48 object-cover rounded-lg border">
                 </div>
                 @elseif($article->featured_image)
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Gambar Saat Ini</label>
-                    <div class="max-w-xs h-48 bg-gray-200 rounded-lg border flex items-center justify-center">
-                        <span class="text-gray-500 text-sm">Gambar tidak ditemukan</span>
+                    <label class="block text-sm font-medium text-news-ink mb-2">Gambar Saat Ini</label>
+                    <div class="max-w-xs h-48 bg-news-paper rounded-lg border flex items-center justify-center">
+                        <span class="text-news-muted text-sm">Gambar tidak ditemukan</span>
                     </div>
                 </div>
                 @endif
                 
                 <div>
-                    <label for="featured_image" class="block text-sm font-medium text-gray-700 mb-2">
+                    <label for="featured_image" class="block text-sm font-medium text-news-ink mb-2">
                         Upload Gambar Baru
                     </label>
                     <input type="file" id="featured_image" name="featured_image" accept="image/*"
-                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('featured_image') border-red-500 @enderror"
+                           class="w-full border border-news-line rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('featured_image') border-red-500 @enderror"
                            onchange="previewImage(this)">
                     @error('featured_image')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
-                    <p class="mt-1 text-sm text-gray-500">Kosongkan jika tidak ingin mengubah gambar</p>
+                    <p class="mt-1 text-sm text-news-muted">Kosongkan jika tidak ingin mengubah gambar</p>
                 </div>
                 
                 <div id="image-preview" class="hidden">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Preview Gambar Baru</label>
+                    <label class="block text-sm font-medium text-news-ink mb-2">Preview Gambar Baru</label>
                     <img id="preview" src="" alt="Preview" class="max-w-xs h-48 object-cover rounded-lg border">
                 </div>
             </div>
         </div>
 
         <!-- Content -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Konten Artikel</h3>
+        <div class="bg-white border border-news-line p-6">
+            <h3 class="text-lg font-semibold text-news-ink mb-4">Konten Artikel</h3>
             
             <div>
-                <label for="content" class="block text-sm font-medium text-gray-700 mb-2">
+                <label for="content" class="block text-sm font-medium text-news-ink mb-2">
                     Isi Artikel <span class="text-red-500">*</span>
                 </label>
-                <div id="editor" class="min-h-[300px] border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 @error('content') border-red-500 @enderror"></div>
+                <div id="editor" class="min-h-[300px] border border-news-line rounded-lg focus-within:ring-2 focus-within:ring-news-accent focus-within:border-news-accent @error('content') border-red-500 @enderror"></div>
                 <textarea id="content" name="content" style="display: none;" required>{{ old('content', $article->content) }}</textarea>
                 @error('content')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -144,35 +146,75 @@
         </div>
 
         <!-- Tags -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Tags</h3>
+        <div class="bg-white border border-news-line p-6">
+            <h3 class="text-lg font-semibold text-news-ink mb-4">Tags</h3>
             
             @if($tags->count() > 0)
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                     @foreach($tags as $tag)
                     <label class="flex items-center">
                         <input type="checkbox" name="tags[]" value="{{ $tag->id }}" 
-                               class="rounded border-gray-300 text-blue-600 focus:ring-news-accent"
+                               class="rounded border-news-line text-news-accent focus:ring-news-accent"
                                {{ in_array($tag->id, old('tags', $article->tags->pluck('id')->toArray())) ? 'checked' : '' }}>
-                        <span class="ml-2 text-sm text-gray-700">{{ $tag->name }}</span>
+                        <span class="ml-2 text-sm text-news-ink">{{ $tag->name }}</span>
                     </label>
                     @endforeach
                 </div>
             @else
-                <div class="text-center py-8 text-gray-500">
-                    <i class="fas fa-tags text-4xl mb-4"></i>
-                    <p>Belum ada tags tersedia. Silakan tambahkan tags terlebih dahulu.</p>
-                </div>
+                <p class="text-sm text-news-muted mb-4">Belum ada tag. Tambahkan di bawah.</p>
             @endif
+
+            <div class="{{ $tags->count() > 0 ? 'mt-4' : '' }}">
+                <label for="new_tags" class="block text-sm font-medium text-news-ink mb-2">
+                    Tambah tag baru
+                </label>
+                <input
+                    type="text"
+                    id="new_tags"
+                    name="new_tags"
+                    value="{{ old('new_tags') }}"
+                    class="w-full border border-news-line rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('new_tags') border-red-500 @enderror"
+                    placeholder="Pisahkan dengan koma, mis. Wisata, UMKM, Festival"
+                >
+                <p class="mt-1 text-xs text-news-muted">Tag yang belum ada akan dibuat otomatis dan dipasang ke artikel ini.</p>
+                @error('new_tags')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+        </div>
+
+        <!-- Koreksi / Klarifikasi -->
+        <div class="bg-white border border-news-line p-6">
+            <h3 class="text-lg font-semibold text-news-ink mb-2">Koreksi / Klarifikasi</h3>
+            <p class="text-sm text-news-muted mb-4">Tampilkan catatan jika artikel sudah terbit tetapi ada perbaikan fakta. Kosongkan untuk menghapus catatan.</p>
+            <div>
+                <label for="correction_notice" class="block text-sm font-medium text-news-ink mb-2">
+                    Catatan koreksi (tampil di halaman publik)
+                </label>
+                <textarea
+                    id="correction_notice"
+                    name="correction_notice"
+                    rows="3"
+                    maxlength="2000"
+                    class="w-full border border-news-line rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('correction_notice') border-red-500 @enderror"
+                    placeholder="Contoh: Pada paragraf 2, angka korban dikoreksi dari 5 menjadi 3 berdasarkan data resmi."
+                >{{ old('correction_notice', $article->correction_notice) }}</textarea>
+                @error('correction_notice')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+                @if($article->corrected_at)
+                    <p class="mt-1 text-sm text-news-muted">Terakhir dikoreksi: {{ $article->corrected_at->format('d M Y, H:i') }} WIB</p>
+                @endif
+            </div>
         </div>
 
         <!-- SEO Fields -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">SEO Settings</h3>
+        <div class="bg-white border border-news-line p-6">
+            <h3 class="text-lg font-semibold text-news-ink mb-4">SEO Settings</h3>
             
             <div class="space-y-4">
                 <div>
-                    <label for="slug" class="block text-sm font-medium text-gray-700 mb-2">
+                    <label for="slug" class="block text-sm font-medium text-news-ink mb-2">
                         Custom Slug (URL)
                     </label>
                     <input 
@@ -180,17 +222,17 @@
                         id="slug" 
                         name="slug" 
                         value="{{ old('slug', $article->slug) }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('slug') border-red-500 @enderror"
+                        class="w-full border border-news-line rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('slug') border-red-500 @enderror"
                         placeholder="Akan otomatis dibuat dari judul jika kosong"
                     >
                     @error('slug')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
-                    <p class="mt-1 text-sm text-gray-500">URL artikel: {{ url('/') }}/<span id="category-slug-preview">{{ $article->category->slug ?? 'kategori' }}</span>/<span id="slug-preview">{{ $article->slug }}</span></p>
+                    <p class="mt-1 text-sm text-news-muted">URL artikel: {{ url('/') }}/<span id="category-slug-preview">{{ $article->category->slug ?? 'kategori' }}</span>/<span id="slug-preview">{{ $article->slug }}</span></p>
                 </div>
 
                 <div>
-                    <label for="meta_description" class="block text-sm font-medium text-gray-700 mb-2">
+                    <label for="meta_description" class="block text-sm font-medium text-news-ink mb-2">
                         Meta Description
                     </label>
                     <textarea 
@@ -198,17 +240,17 @@
                         name="meta_description" 
                         rows="3" 
                         maxlength="500"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('meta_description') border-red-500 @enderror"
+                        class="w-full border border-news-line rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('meta_description') border-red-500 @enderror"
                         placeholder="Deskripsi singkat untuk SEO (maksimal 500 karakter)"
                     >{{ old('meta_description', $article->meta_description) }}</textarea>
-                    <p class="mt-1 text-sm text-gray-500"><span id="meta-desc-count">{{ strlen($article->meta_description ?? '') }}</span>/500 karakter</p>
+                    <p class="mt-1 text-sm text-news-muted"><span id="meta-desc-count">{{ strlen($article->meta_description ?? '') }}</span>/500 karakter</p>
                     @error('meta_description')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div>
-                    <label for="meta_keywords" class="block text-sm font-medium text-gray-700 mb-2">
+                    <label for="meta_keywords" class="block text-sm font-medium text-news-ink mb-2">
                         Meta Keywords
                     </label>
                     <input 
@@ -216,34 +258,34 @@
                         id="meta_keywords" 
                         name="meta_keywords" 
                         value="{{ old('meta_keywords', $article->meta_keywords) }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('meta_keywords') border-red-500 @enderror"
+                        class="w-full border border-news-line rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent @error('meta_keywords') border-red-500 @enderror"
                         placeholder="Kata kunci dipisahkan koma, contoh: berita, pesisir barat, lampung"
                     >
                     @error('meta_keywords')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
-                    <p class="mt-1 text-sm text-gray-500">Pisahkan dengan koma untuk optimasi SEO</p>
+                    <p class="mt-1 text-sm text-news-muted">Pisahkan dengan koma untuk optimasi SEO</p>
                 </div>
             </div>
         </div>
 
         <!-- Options -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Opsi Tambahan</h3>
+        <div class="bg-white border border-news-line p-6">
+            <h3 class="text-lg font-semibold text-news-ink mb-4">Opsi Tambahan</h3>
             
             <div class="space-y-4">
                 <label class="flex items-center">
                     <input type="checkbox" name="is_featured" value="1" 
-                           class="rounded border-gray-300 text-blue-600 focus:ring-news-accent"
+                           class="rounded border-news-line text-news-accent focus:ring-news-accent"
                            {{ old('is_featured', $article->is_featured) ? 'checked' : '' }}>
-                    <span class="ml-2 text-sm text-gray-700">Tandai sebagai Featured</span>
+                    <span class="ml-2 text-sm text-news-ink">Tandai sebagai Featured</span>
                 </label>
                 
                 <label class="flex items-center">
                     <input type="checkbox" name="is_breaking" value="1" 
-                           class="rounded border-gray-300 text-blue-600 focus:ring-news-accent"
+                           class="rounded border-news-line text-news-accent focus:ring-news-accent"
                            {{ old('is_breaking', $article->is_breaking) ? 'checked' : '' }}>
-                    <span class="ml-2 text-sm text-gray-700">Tandai sebagai Breaking News</span>
+                    <span class="ml-2 text-sm text-news-ink">Tandai sebagai Breaking News</span>
                 </label>
             </div>
         </div>
@@ -251,11 +293,11 @@
         <!-- Actions -->
         <div class="flex justify-end space-x-4">
             <a href="{{ route('admin.articles.index') }}" 
-               class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+               class="bg-news-ink text-white px-6 py-2 rounded-lg hover:bg-news-accent transition-colors">
                 Batal
             </a>
             <button type="submit" 
-                    class="bg-news-accent text-white px-6 py-2 rounded-lg hover:bg-red-800 transition-colors">
+                    class="bg-news-accent text-white px-6 py-2 rounded-lg hover:bg-news-ink transition-colors">
                 Update Artikel
             </button>
         </div>

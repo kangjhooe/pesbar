@@ -149,16 +149,55 @@ body {
     @apply w-full overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0;
 }
 
+/* Hide secondary admin table columns below md to shorten horizontal scroll */
+.admin-col-optional {
+    @apply hidden md:table-cell;
+}
+
+/* Quill toolbar: wrap on narrow screens instead of overflowing */
+.ql-toolbar.ql-snow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    max-width: 100%;
+}
+
+.ql-toolbar.ql-snow .ql-formats {
+    margin-right: 0.5rem !important;
+}
+
+@media (max-width: 640px) {
+    .ql-toolbar.ql-snow {
+        padding: 0.35rem;
+    }
+
+    .ql-toolbar.ql-snow button,
+    .ql-toolbar.ql-snow .ql-picker-label {
+        width: 1.75rem;
+        height: 1.75rem;
+    }
+}
+
+/* Horizontal scroll strip for admin settings / filter tabs */
+.admin-tabs-scroll {
+    @apply flex overflow-x-auto nav-scroll -mb-px gap-4 sm:gap-6 px-4 sm:px-6;
+    scrollbar-width: thin;
+}
+
+.admin-tabs-scroll > * {
+    @apply shrink-0 whitespace-nowrap;
+}
+
 .article-content {
     display: flex;
     flex-direction: column;
-    gap: 1.5em;
+    gap: 1.15em;
     overflow-x: auto;
     max-width: 100%;
     word-wrap: break-word;
     overflow-wrap: anywhere;
-    font-size: 1.0625rem;
-    line-height: 1.8;
+    font-size: 0.9375rem;
+    line-height: 1.7;
     color: #0a0a0a;
 }
 
@@ -194,15 +233,15 @@ body {
 }
 
 .article-content h2 {
-    font-size: 1.375rem;
+    font-size: 1.125rem;
 }
 
 .article-content h3 {
-    font-size: 1.2rem;
+    font-size: 1.05rem;
 }
 
 .article-content h4 {
-    font-size: 1.05rem;
+    font-size: 1rem;
 }
 
 .article-content a {
@@ -396,11 +435,39 @@ body {
     width: 100%;
 }
 
-@media (max-width: 639px) {
+@media (min-width: 640px) {
     .article-content {
         font-size: 1rem;
+        line-height: 1.75;
+        gap: 1.25em;
     }
 
+    .article-content h2 {
+        font-size: 1.2rem;
+    }
+
+    .article-content h3 {
+        font-size: 1.1rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .article-content {
+        font-size: 1.0625rem;
+        line-height: 1.8;
+        gap: 1.35em;
+    }
+
+    .article-content h2 {
+        font-size: 1.3rem;
+    }
+
+    .article-content h3 {
+        font-size: 1.15rem;
+    }
+}
+
+@media (max-width: 639px) {
     .article-content img,
     .article-content figure,
     .article-content iframe,
@@ -457,9 +524,32 @@ body {
 
 @media (max-width: 639px) {
     .prose,
+    .prose-sm,
     .prose-lg {
-        font-size: 1rem;
+        font-size: 0.9375rem;
     }
+}
+
+/* Utility widgets: card-sized and centered on small screens */
+.public-widget {
+    width: 100%;
+}
+
+@media (max-width: 1023px) {
+    .public-widget {
+        width: 86%;
+        max-width: 20.5rem;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+/* Quill/editor inline sizes should follow article scale, not desktop paste sizes */
+.article-content [style*="font-size"],
+.article-content .ql-size-small,
+.article-content .ql-size-large,
+.article-content .ql-size-huge {
+    font-size: inherit !important;
 }
 
 /* Responsive typography improvements */
@@ -480,24 +570,58 @@ body {
 /* Admin form / button utilities (Vite Tailwind — no Bootstrap) */
 @layer components {
     .form-input {
-        @apply w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-news-accent focus:outline-none focus:ring-2 focus:ring-news-accent/30;
+        @apply w-full border border-news-line px-3 py-2 text-sm text-news-ink bg-white focus:border-news-accent focus:outline-none focus:ring-2 focus:ring-news-accent/30;
     }
 
     .btn-primary {
-        @apply inline-flex items-center justify-center rounded-lg bg-news-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-news-accent/40 disabled:cursor-not-allowed disabled:opacity-50;
+        @apply inline-flex items-center justify-center bg-news-accent px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-news-ink focus:outline-none focus:ring-2 focus:ring-news-accent/40 disabled:cursor-not-allowed disabled:opacity-50;
     }
 
     .btn-secondary {
-        @apply inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:cursor-not-allowed disabled:opacity-50;
+        @apply inline-flex items-center justify-center border border-news-line bg-white px-4 py-2 text-sm font-medium text-news-ink transition-colors hover:bg-news-paper hover:border-news-ink focus:outline-none focus:ring-2 focus:ring-news-accent/30 disabled:cursor-not-allowed disabled:opacity-50;
     }
 
     .btn-sm {
-        @apply inline-flex items-center justify-center rounded-md px-3 py-1.5 text-xs font-medium transition-colors;
+        @apply inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium transition-colors;
     }
 
     .btn-sm.btn-primary {
-        @apply bg-news-accent text-white hover:bg-red-800;
+        @apply bg-news-accent text-white hover:bg-news-ink;
     }
+}
+
+.admin-table-pagination p {
+    display: none !important;
+}
+
+.admin-table-pagination a {
+    color: #0a0a0a !important;
+    border-color: #e5e5e5 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+}
+
+.admin-table-pagination a:hover {
+    background: #fafafa !important;
+    color: #b91c1c !important;
+    border-color: #0a0a0a !important;
+}
+
+.admin-table-pagination [aria-current="page"] span {
+    background: #0a0a0a !important;
+    color: #fff !important;
+    border-color: #0a0a0a !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+.admin-table-pagination [aria-disabled="true"] span {
+    color: #5c5c5c !important;
+    background: #fff !important;
+    border-color: #e5e5e5 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
 }
 
 /* Ensure images are responsive */

@@ -1,0 +1,10 @@
+---
+description: Jangan buka browser / automation tanpa izin eksplisit
+alwaysApply: true
+---
+
+# No Browser Without Explicit Ask
+
+- Jangan membuka, mengontrol, atau menguji lewat browser (MCP browser, Playwright, Selenium, dll.) kecuali user **secara eksplisit** meminta.
+- Verifikasi UI cukup lewat kode, artisan, atau instruksi manual ke user — jangan “cek sendiri di browser”.
+- Larangan ini tetap berlaku meski tugas berisi “uji”, “tampilkan”, atau “cek popup/halaman”.

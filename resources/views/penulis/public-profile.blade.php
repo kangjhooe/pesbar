@@ -33,29 +33,41 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
                 <div class="border border-news-line bg-white px-3 py-2.5">
                     <p class="text-[11px] uppercase tracking-wider text-news-muted mb-1">Status</p>
-                    @if($user->isVerified())
-                        <p class="text-sm font-semibold text-news-ink">Terverifikasi</p>
-                    @elseif($user->verification_request_status === 'pending')
-                        <p class="text-sm font-semibold text-news-accent">Menunggu verifikasi</p>
+                    @if($user->isPenulis() && $user->isVerified())
+                        <p class="text-sm font-semibold text-news-ink">Penulis terverifikasi</p>
+                    @elseif($user->role === 'user' && $user->verification_request_status === 'pending')
+                        <p class="text-sm font-semibold text-news-accent">Menunggu upgrade</p>
                     @elseif($user->verification_request_status === 'rejected')
-                        <p class="text-sm font-semibold text-news-accent">Ditolak</p>
+                        <p class="text-sm font-semibold text-news-accent">Upgrade ditolak</p>
                     @else
-                        <p class="text-sm font-semibold text-news-muted">Belum mengajukan</p>
+                        <p class="text-sm font-semibold text-news-muted">{{ $user->role }}</p>
                     @endif
                 </div>
                 <div class="border border-news-line bg-white px-3 py-2.5">
                     <p class="text-[11px] uppercase tracking-wider text-news-muted mb-1">Tipe</p>
                     <p class="text-sm font-semibold text-news-ink">
-                        {{ $user->verification_type === 'lembaga' ? 'Lembaga' : ($user->verification_type === 'perorangan' ? 'Perorangan' : '—') }}
+                        @if($user->verification_type === 'lembaga')
+                            Lembaga
+                        @elseif($user->verification_type === 'perorangan')
+                            Perorangan
+                        @else
+                            <span class="text-news-muted font-normal">Belum ada pengajuan</span>
+                        @endif
                     </p>
                 </div>
                 <div class="border border-news-line bg-white px-3 py-2.5">
                     <p class="text-[11px] uppercase tracking-wider text-news-muted mb-1">Tanggal request</p>
                     <p class="text-sm font-semibold text-news-ink">
-                        {{ $user->verification_requested_at?->format('d M Y, H:i') ?? '—' }}
+                        {{ $user->verification_requested_at?->format('d M Y, H:i') ?? 'Belum ada pengajuan' }}
                     </p>
                 </div>
             </div>
+
+            @if($user->role === 'user' && $user->verification_request_status === 'pending')
+                <p class="mb-4 text-sm text-news-muted border border-dashed border-news-line bg-white px-3 py-2.5">
+                    Pengajuan upgrade menunggu keputusan admin.
+                </p>
+            @endif
 
             @if($user->verification_document)
                 @php
@@ -79,14 +91,14 @@
             @endif
 
             <div class="flex flex-wrap gap-2">
-                @if($user->verification_request_status === 'pending')
+                @if($user->role === 'user' && $user->verification_request_status === 'pending')
                     <form method="POST" action="{{ route('admin.verification-requests.approve', $user) }}" class="inline">
                         @csrf
                         <button type="button"
                             class="inline-flex items-center gap-2 px-4 py-2 bg-news-ink text-white text-sm font-semibold hover:bg-news-accent transition-colors"
-                            onclick="window.pesbarConfirmSubmit(this.form, 'Setujui verifikasi untuk {{ addslashes($user->name) }}? Artikel pending akan otomatis dipublish.')">
+                            onclick="window.pesbarConfirmSubmit(this.form, 'Setujui upgrade {{ addslashes($user->name) }} menjadi penulis terverifikasi?')">
                             <i class="fas fa-check"></i>
-                            Setujui
+                            Setujui upgrade
                         </button>
                     </form>
                     <button type="button"
@@ -95,14 +107,14 @@
                         <i class="fas fa-times"></i>
                         Tolak
                     </button>
-                @elseif($user->isVerified())
-                    <form method="POST" action="{{ route('admin.users.toggle-verified', $user) }}" class="inline">
+                @elseif($user->isPenulis() && $user->isVerified())
+                    <form method="POST" action="{{ route('admin.penulis.revoke-verified', $user) }}" class="inline">
                         @csrf
                         <button type="button"
                             class="inline-flex items-center gap-2 px-4 py-2 border border-news-ink text-news-ink text-sm font-semibold hover:bg-news-ink hover:text-white transition-colors"
-                            onclick="window.pesbarConfirmSubmit(this.form, 'Cabut verifikasi untuk {{ addslashes($user->name) }}?')">
+                            onclick="window.pesbarConfirmSubmit(this.form, 'Cabut status penulis {{ addslashes($user->name) }} (turun ke user)?')">
                             <i class="fas fa-user-slash"></i>
-                            Cabut verifikasi
+                            Cabut → User
                         </button>
                     </form>
                 @endif
@@ -110,11 +122,11 @@
         </div>
     </section>
 
-    @if($user->verification_request_status === 'pending')
+    @if($user->role === 'user' && $user->verification_request_status === 'pending')
     <div id="rejectModal" class="fixed inset-0 z-50 hidden bg-news-ink/50" role="dialog" aria-modal="true" aria-labelledby="rejectModalTitle">
         <div class="min-h-full flex items-center justify-center p-4" onclick="if(event.target===this) document.getElementById('rejectModal').classList.add('hidden')">
             <div class="w-full max-w-md bg-white border border-news-line p-5">
-                <h3 id="rejectModalTitle" class="font-display text-lg font-bold text-news-ink mb-3">Tolak verifikasi</h3>
+                <h3 id="rejectModalTitle" class="font-display text-lg font-bold text-news-ink mb-3">Tolak upgrade</h3>
                 <form method="POST" action="{{ route('admin.verification-requests.reject', $user) }}">
                     @csrf
                     <label for="reason" class="block text-sm font-medium text-news-ink mb-1.5">Alasan penolakan (opsional)</label>
@@ -172,33 +184,37 @@
                             <p class="mt-1 text-sm text-news-muted">{{ '@' . $user->username }}</p>
                         </div>
 
-                        @if($hasSocial)
-                        <div class="flex items-center gap-1.5">
-                            @if($user->profile?->website)
-                                <a href="{{ $user->profile->website }}" target="_blank" rel="noopener noreferrer"
-                                   class="w-9 h-9 border border-news-line text-news-muted flex items-center justify-center hover:border-news-ink hover:text-news-ink transition-colors touch-target"
-                                   title="Website" aria-label="Website">
-                                    <i class="fas fa-globe"></i>
-                                </a>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <x-follow-button :user="$user" />
+
+                            @if($hasSocial)
+                            <div class="flex items-center gap-1.5">
+                                @if($user->profile?->website)
+                                    <a href="{{ $user->profile->website }}" target="_blank" rel="noopener noreferrer"
+                                       class="w-9 h-9 border border-news-line text-news-muted flex items-center justify-center hover:border-news-ink hover:text-news-ink transition-colors touch-target"
+                                       title="Website" aria-label="Website">
+                                        <i class="fas fa-globe"></i>
+                                    </a>
+                                @endif
+                                @foreach($socialLinks as $platform => $url)
+                                    @php
+                                        $icons = [
+                                            'facebook' => 'fab fa-facebook-f',
+                                            'twitter' => 'fab fa-twitter',
+                                            'instagram' => 'fab fa-instagram',
+                                            'linkedin' => 'fab fa-linkedin-in',
+                                        ];
+                                        $icon = $icons[$platform] ?? 'fas fa-link';
+                                    @endphp
+                                    <a href="{{ $url }}" target="_blank" rel="noopener noreferrer"
+                                       class="w-9 h-9 border border-news-line text-news-muted flex items-center justify-center hover:border-news-ink hover:text-news-ink transition-colors touch-target"
+                                       title="{{ ucfirst($platform) }}" aria-label="{{ ucfirst($platform) }}">
+                                        <i class="{{ $icon }}"></i>
+                                    </a>
+                                @endforeach
+                            </div>
                             @endif
-                            @foreach($socialLinks as $platform => $url)
-                                @php
-                                    $icons = [
-                                        'facebook' => 'fab fa-facebook-f',
-                                        'twitter' => 'fab fa-twitter',
-                                        'instagram' => 'fab fa-instagram',
-                                        'linkedin' => 'fab fa-linkedin-in',
-                                    ];
-                                    $icon = $icons[$platform] ?? 'fas fa-link';
-                                @endphp
-                                <a href="{{ $url }}" target="_blank" rel="noopener noreferrer"
-                                   class="w-9 h-9 border border-news-line text-news-muted flex items-center justify-center hover:border-news-ink hover:text-news-ink transition-colors touch-target"
-                                   title="{{ ucfirst($platform) }}" aria-label="{{ ucfirst($platform) }}">
-                                    <i class="{{ $icon }}"></i>
-                                </a>
-                            @endforeach
                         </div>
-                        @endif
                     </div>
 
                     @if($user->profile?->bio)

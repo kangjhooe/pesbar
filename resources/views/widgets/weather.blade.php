@@ -2,7 +2,7 @@
     $weatherData = $weatherData ?? [];
 @endphp
 
-<div class="border border-news-line" id="home-weather-widget">
+<div class="public-widget border border-news-line" id="home-weather-widget">
     <div class="bg-news-ink text-white px-4 py-2.5 flex items-center justify-between gap-2">
         <h2 class="text-xs font-bold uppercase tracking-[0.15em] flex items-center gap-2 min-w-0">
             <i class="home-weather-icon {{ $weatherData['icon'] ?? 'fas fa-cloud-sun' }} text-news-accent shrink-0"></i>

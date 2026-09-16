@@ -36,6 +36,7 @@
     </style>
 </head>
 <body class="font-sans antialiased bg-news-paper text-news-ink">
+    <x-impersonation-banner />
     <nav class="bg-white border-b-2 border-news-ink sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-14 sm:h-16 gap-2 min-w-0">

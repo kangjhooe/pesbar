@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Article;
+use App\Models\ArticleReport;
 use App\Models\Comment;
 use App\Models\ReadingHistory;
 use App\Models\User;
@@ -20,27 +21,30 @@ class AdminDashboardController extends Controller
 {
     public function index()
     {
+        // Live queries only â€” admin overview must not use dashboard_stats cache
         $pendingCommentsCount = Comment::where('is_approved', false)->count();
-        $pendingArticlesCount = Article::where('status', 'pending_review')->count();
+        $suspendedArticlesCount = Article::where('status', 'suspended')->count();
 
         $stats = [
             'total_users' => User::count(),
             'total_penulis' => User::where('role', 'penulis')->count(),
             'total_articles' => Article::count(),
-            'pending_articles' => $pendingArticlesCount,
-            'published_articles' => Article::where('status', 'published')->count(),
+            'suspended_articles' => $suspendedArticlesCount,
+            'published_articles' => Article::published()->count(),
             'draft_articles' => Article::where('status', 'draft')->count(),
-            'rejected_articles' => Article::where('status', 'rejected')->count(),
             'total_views' => (int) Article::sum('views'),
             'total_categories' => \App\Models\Category::count(),
             'total_comments' => Comment::count(),
             'pending_comments' => $pendingCommentsCount,
-            'newsletter_subscribers' => \App\Models\NewsletterSubscriber::count(),
+            'newsletter_subscribers' => \App\Models\NewsletterSubscriber::where('is_active', true)->count(),
             'articles_today' => Article::whereDate('created_at', today())->count(),
+            'published_today' => Article::published()
+                ->whereDate('published_at', today())
+                ->count(),
             'reads_today' => ReadingHistory::whereDate('read_at', today())->count(),
             'comments_today' => Comment::whereDate('created_at', today())->count(),
             'pending_verification_requests' => User::where('verification_request_status', 'pending')
-                ->whereIn('role', ['user', 'penulis'])
+                ->where('role', 'user')
                 ->count(),
             'verified_penulis' => User::where('role', 'penulis')
                 ->where('verified', true)
@@ -56,13 +60,29 @@ class AdminDashboardController extends Controller
                 ->count(),
         ];
 
+        $startDate = now()->subDays(6)->startOfDay();
+        $endDate = now()->endOfDay();
+
+        $articlesByDay = Article::query()
+            ->selectRaw('DATE(created_at) as day, COUNT(*) as total')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->groupBy('day')
+            ->pluck('total', 'day');
+
+        $commentsByDay = Comment::query()
+            ->selectRaw('DATE(created_at) as day, COUNT(*) as total')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->groupBy('day')
+            ->pluck('total', 'day');
+
         $chartData = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i);
+            $dayKey = $date->toDateString();
             $chartData[] = [
                 'date' => $date->format('d/m'),
-                'articles' => Article::whereDate('created_at', $date)->count(),
-                'comments' => Comment::whereDate('created_at', $date)->count(),
+                'articles' => (int) ($articlesByDay[$dayKey] ?? 0),
+                'comments' => (int) ($commentsByDay[$dayKey] ?? 0),
             ];
         }
 
@@ -79,13 +99,16 @@ class AdminDashboardController extends Controller
         $recent_activity = collect();
 
         $recent_articles->take(5)->each(function ($article) use ($recent_activity) {
+            $isPublished = $article->status === 'published';
             $recent_activity->push([
                 'type' => 'article',
-                'action' => $article->status === 'published' ? 'menerbitkan artikel' : 'membuat artikel',
+                'action' => $isPublished ? 'menerbitkan artikel' : 'membuat artikel',
                 'title' => $article->title,
                 'user' => $article->author->name ?? 'Sistem',
-                'time' => $article->created_at,
-                'color' => $article->status === 'published' ? 'green' : ($article->status === 'pending_review' ? 'yellow' : 'gray'),
+                'time' => $isPublished && $article->published_at
+                    ? $article->published_at
+                    : $article->created_at,
+                'color' => $isPublished ? 'green' : ($article->status === 'suspended' ? 'yellow' : 'gray'),
             ]);
         });
 
@@ -109,7 +132,7 @@ class AdminDashboardController extends Controller
             'recent_articles',
             'recent_activity',
             'pendingCommentsCount',
-            'pendingArticlesCount'
+            'suspendedArticlesCount'
         ));
     }
 
@@ -130,7 +153,7 @@ class AdminDashboardController extends Controller
     public function bulkUsers(Request $request)
     {
         $request->validate([
-            'action' => 'required|in:verify,unverify,upgrade',
+            'action' => 'required|in:unverify',
             'ids' => 'required|array|min:1',
             'ids.*' => 'integer|exists:users,id',
         ]);
@@ -139,42 +162,32 @@ class AdminDashboardController extends Controller
         $count = 0;
 
         foreach ($users as $user) {
-            if ($request->action === 'verify' && !$user->verified) {
-                $user->update(['verified' => true]);
-                $count++;
-            } elseif ($request->action === 'unverify' && $user->verified) {
-                $user->update(['verified' => false]);
-                $count++;
-            } elseif ($request->action === 'upgrade' && $user->role === 'user') {
-                $user->update(['role' => 'penulis']);
-                $count++;
+            // Never mutate admin/editor via bulk user tools
+            if (in_array($user->role, ['admin', 'editor'], true)) {
+                continue;
+            }
+
+            if ($request->action === 'unverify') {
+                if ($user->role === 'penulis' && $user->verified && !$user->is_internal) {
+                    $user->revokeVerifiedToUser();
+                    $count++;
+                }
             }
         }
+
+        ActivityLogHelper::log('user.bulk', "{$count} pengguna diproses (action: {$request->action})", [
+            'action' => $request->action,
+            'count' => $count,
+            'ids' => $request->ids,
+        ]);
 
         return redirect()->back()->with('success', "{$count} pengguna berhasil diproses.");
-    }
-
-    public function upgradeUser(User $user)
-    {
-        try {
-            if ($user->role === 'user') {
-                $user->update(['role' => 'penulis']);
-                ActivityLogHelper::logUser('user.upgraded', $user, "User {$user->name} diupgrade menjadi penulis");
-                return redirect()->back()->with('success', 'User berhasil diupgrade menjadi penulis!');
-            }
-            
-            return redirect()->back()->with('error', 'User sudah memiliki role yang lebih tinggi!');
-        } catch (\Exception $e) {
-            \Log::error('Upgrade User Error: ' . $e->getMessage());
-            ActivityLogHelper::logSecurity('user.upgrade.failed', 'Gagal upgrade user', ['user_id' => $user->id, 'error' => $e->getMessage()]);
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat mengupgrade user.');
-        }
     }
 
     public function verificationRequests(Request $request)
     {
         $query = User::where('verification_request_status', 'pending')
-            ->whereIn('role', ['user', 'penulis'])
+            ->where('role', 'user')
             ->with('profile')
             ->withCount('articles');
 
@@ -201,7 +214,7 @@ class AdminDashboardController extends Controller
         ]);
 
         $users = User::whereIn('id', $request->ids)
-            ->whereIn('role', ['user', 'penulis'])
+            ->where('role', 'user')
             ->where('verification_request_status', 'pending')
             ->get();
 
@@ -222,18 +235,16 @@ class AdminDashboardController extends Controller
     public function approveVerification(User $user)
     {
         try {
-            if (!in_array($user->role, ['user', 'penulis'], true) || $user->verification_request_status !== 'pending') {
+            if ($user->role !== 'user' || $user->verification_request_status !== 'pending') {
                 return redirect()->back()->with('error', 'Permintaan tidak valid!');
             }
 
-            $wasUpgrade = $user->role === 'user';
             $this->applyVerificationApproval($user);
 
-            $message = $wasUpgrade
-                ? 'Upgrade ke penulis berhasil disetujui. User sekarang penulis terverifikasi.'
-                : 'Verifikasi penulis berhasil disetujui!';
-
-            return redirect()->back()->with('success', $message);
+            return redirect()->back()->with(
+                'success',
+                'Upgrade ke penulis berhasil disetujui. User sekarang penulis terverifikasi.'
+            );
         } catch (\Exception $e) {
             \Log::error('Approve Verification Error: ' . $e->getMessage());
             ActivityLogHelper::logSecurity('verification.approve.failed', 'Gagal approve verifikasi', ['user_id' => $user->id, 'error' => $e->getMessage()]);
@@ -244,7 +255,7 @@ class AdminDashboardController extends Controller
     public function rejectVerification(Request $request, User $user)
     {
         try {
-            if (!in_array($user->role, ['user', 'penulis'], true) || $user->verification_request_status !== 'pending') {
+            if ($user->role !== 'user' || $user->verification_request_status !== 'pending') {
                 return redirect()->back()->with('error', 'Permintaan tidak valid!');
             }
 
@@ -252,14 +263,12 @@ class AdminDashboardController extends Controller
                 'reason' => 'nullable|string|max:1000',
             ]);
 
-            $wasUpgrade = $user->role === 'user';
             $this->applyVerificationRejection($user, $request->reason);
 
-            $message = $wasUpgrade
-                ? 'Permintaan upgrade ke penulis ditolak. User tetap sebagai pembaca.'
-                : 'Permintaan verifikasi ditolak.';
-
-            return redirect()->back()->with('success', $message);
+            return redirect()->back()->with(
+                'success',
+                'Permintaan upgrade ke penulis ditolak. User tetap sebagai pembaca.'
+            );
         } catch (\Exception $e) {
             \Log::error('Reject Verification Error: ' . $e->getMessage());
             ActivityLogHelper::logSecurity('verification.reject.failed', 'Gagal reject verifikasi', ['user_id' => $user->id, 'error' => $e->getMessage()]);
@@ -268,11 +277,21 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Setujui upgrade (user→penulis verified) atau verifikasi penulis.
+     * Setujui upgrade user â†’ penulis terverifikasi.
      */
     private function applyVerificationApproval(User $user): void
     {
-        $wasUpgrade = $user->role === 'user';
+        if ($user->role !== 'user') {
+            throw new \RuntimeException('Hanya user yang dapat di-upgrade menjadi penulis.');
+        }
+
+        if ($user->verification_request_status !== 'pending') {
+            throw new \RuntimeException('Hanya permintaan berstatus pending yang dapat disetujui.');
+        }
+
+        if (!in_array($user->verification_type, ['perorangan', 'lembaga'], true)) {
+            throw new \RuntimeException('Pengajuan tidak lengkap: tipe verifikasi wajib diisi.');
+        }
 
         $user->update([
             'role' => 'penulis',
@@ -281,354 +300,146 @@ class AdminDashboardController extends Controller
             'verification_rejection_reason' => null,
         ]);
 
+        // Draft milik user (jika ada) tidak di-auto-publish; penulis publish sendiri setelah upgrade.
         $user->articles()
             ->where('status', 'pending_review')
             ->update([
-                'status' => 'published',
-                'published_at' => now(),
+                'status' => 'draft',
+                'rejection_reason' => null,
             ]);
 
-        $logMessage = $wasUpgrade
-            ? "Upgrade user {$user->name} ke penulis terverifikasi disetujui"
-            : "Verifikasi penulis {$user->name} disetujui";
+        $logMessage = "Upgrade user {$user->name} ke penulis terverifikasi disetujui";
 
-        ActivityLogHelper::logUser($wasUpgrade ? 'upgrade.approved' : 'verification.approved', $user, $logMessage);
-        ActivityLogHelper::logSecurity(
-            $wasUpgrade ? 'upgrade.approved' : 'verification.approved',
-            $logMessage,
-            ['user_id' => $user->id]
-        );
+        ActivityLogHelper::logUser('upgrade.approved', $user, $logMessage);
+        ActivityLogHelper::logSecurity('upgrade.approved', $logMessage, ['user_id' => $user->id]);
     }
 
     /**
-     * Tolak permintaan. User biasa tetap role user; penulis tetap penulis (belum verified).
+     * Tolak permintaan upgrade. User tetap role user.
      */
     private function applyVerificationRejection(User $user, ?string $reason = null): void
     {
-        $wasUpgrade = $user->role === 'user';
         $reason = $reason ? trim($reason) : null;
 
         $user->update([
+            'role' => 'user',
             'verification_request_status' => 'rejected',
             'verification_rejection_reason' => $reason ?: null,
             'verified' => false,
         ]);
 
-        $logMessage = $wasUpgrade
-            ? "Upgrade user {$user->name} ditolak" . ($reason ? ". Alasan: {$reason}" : '')
-            : "Verifikasi penulis {$user->name} ditolak" . ($reason ? ". Alasan: {$reason}" : '');
+        $logMessage = "Upgrade user {$user->name} ditolak" . ($reason ? ". Alasan: {$reason}" : '');
 
-        ActivityLogHelper::logUser($wasUpgrade ? 'upgrade.rejected' : 'verification.rejected', $user, $logMessage);
-        ActivityLogHelper::logSecurity(
-            $wasUpgrade ? 'upgrade.rejected' : 'verification.rejected',
-            $logMessage,
-            ['user_id' => $user->id, 'reason' => $reason]
-        );
+        ActivityLogHelper::logUser('upgrade.rejected', $user, $logMessage);
+        ActivityLogHelper::logSecurity('upgrade.rejected', $logMessage, ['user_id' => $user->id, 'reason' => $reason]);
     }
 
     public function toggleVerified(User $user)
     {
-        // Method ini tetap ada untuk backward compatibility, tapi sekarang hanya untuk penulis yang sudah verified
-        // Untuk request baru, gunakan approveVerification/rejectVerification
         try {
-            if ($user->role !== 'penulis') {
-                return redirect()->back()->with('error', 'Hanya penulis yang bisa diverifikasi!');
+            if (in_array($user->role, ['admin', 'editor'], true)) {
+                return redirect()->back()->with('error', 'Tidak dapat mengubah verifikasi admin atau editor.');
             }
 
-            $wasVerified = $user->verified;
-            $newVerifiedStatus = !$wasVerified;
-            
-            // Jika membatalkan verifikasi (dari verified ke tidak verified), kembalikan role ke user
-            if ($wasVerified && !$newVerifiedStatus) {
-                $user->update([
-                    'verified' => false,
-                    'role' => 'user',
-                    'verification_request_status' => null, // Reset status verifikasi request
-                    'verification_rejection_reason' => null,
-                ]);
-                
-                // Refresh user model dari database
-                $user->refresh();
-                
-                $status = 'tidak diverifikasi dan role dikembalikan ke user biasa';
-                ActivityLogHelper::logUser('user.verification.toggled', $user, "User {$user->name} {$status}");
-                
-                // Jika user yang sedang login adalah user yang role-nya berubah, redirect ke user dashboard
-                if (Auth::check() && Auth::id() === $user->id) {
-                    // Refresh session untuk memastikan data terbaru
-                    Auth::user()->refresh();
-                    return redirect()->route('user.dashboard')->with('success', "Verifikasi Anda telah dibatalkan. Anda sekarang adalah user biasa.");
-                }
-                
-                return redirect()->back()->with('success', "Verifikasi berhasil dibatalkan dan user dikembalikan menjadi user biasa!");
-            } 
-            // Jika memberikan verifikasi (dari tidak verified ke verified)
-            else {
-                $user->update(['verified' => true]);
-                $status = 'diverifikasi';
-                ActivityLogHelper::logUser('user.verification.toggled', $user, "User {$user->name} {$status}");
-                return redirect()->back()->with('success', "User berhasil {$status}!");
+            if ($user->role !== 'penulis') {
+                return redirect()->back()->with('error', 'Hanya penulis yang relevan untuk aksi ini.');
             }
+
+            if ($user->is_internal) {
+                return redirect()->back()->with(
+                    'error',
+                    'Tidak dapat mencabut verified penulis Redaksi. Cabut status Redaksi terlebih dahulu.'
+                );
+            }
+
+            $user->revokeVerifiedToUser();
+            ActivityLogHelper::logUser('user.verification.revoked_to_user', $user, "Verified {$user->name} dicabut; diturunkan ke user");
+
+            return redirect()->back()->with(
+                'success',
+                'Status verified dicabut. Akun diturunkan menjadi user biasa; harus ajukan upgrade lagi untuk menulis.'
+            );
         } catch (\Exception $e) {
             \Log::error('Toggle Verified Error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Terjadi kesalahan saat mengubah status verifikasi.');
         }
     }
 
-    public function approveArticle(Request $request, Article $article)
-    {
-        // Authorization check
-        if (!Auth::user()->isAdmin() && !Auth::user()->isEditor()) {
-            abort(403, 'Anda tidak memiliki izin untuk menyetujui artikel.');
-        }
-        
-        try {
-            $article->update([
-                'status' => 'published',
-                'published_at' => $article->published_at ?? now()
-            ]);
-            ActivityLogHelper::logArticle('article.approved', $article, "Artikel '{$article->title}' disetujui dan dipublikasikan");
-            
-            if ($request->expectsJson()) {
-                return response()->json(['success' => true, 'message' => 'Artikel berhasil disetujui!']);
-            }
-            
-            return redirect()->back()->with('success', 'Artikel berhasil disetujui!');
-        } catch (\Exception $e) {
-            \Log::error('Approve Article Error: ' . $e->getMessage());
-            ActivityLogHelper::logSecurity('article.approve.failed', 'Gagal approve artikel', ['article_id' => $article->id, 'error' => $e->getMessage()]);
-            
-            if ($request->expectsJson()) {
-                return response()->json(['success' => false, 'message' => 'Terjadi kesalahan saat menyetujui artikel.'], 500);
-            }
-            
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat menyetujui artikel.');
-        }
-    }
-
-    public function rejectArticle(Request $request, Article $article)
-    {
-        // Authorization check
-        if (!Auth::user()->isAdmin() && !Auth::user()->isEditor()) {
-            abort(403, 'Anda tidak memiliki izin untuk menolak artikel.');
-        }
-        
-        try {
-            $request->validate([
-                'reason' => 'nullable|string|max:1000'
-            ]);
-            
-            $article->update([
-                'status' => 'rejected',
-                'rejection_reason' => $request->reason
-            ]);
-            
-            ActivityLogHelper::logArticle('article.rejected', $article, "Artikel '{$article->title}' ditolak. Alasan: " . ($request->reason ?? 'Tidak ada alasan'));
-            
-            if ($request->expectsJson()) {
-                return response()->json(['success' => true, 'message' => 'Artikel berhasil ditolak!']);
-            }
-            
-            return redirect()->back()->with('success', 'Artikel berhasil ditolak!');
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            if ($request->expectsJson()) {
-                return response()->json(['success' => false, 'errors' => $e->errors()], 422);
-            }
-            return redirect()->back()->withErrors($e->errors());
-        } catch (\Exception $e) {
-            \Log::error('Reject Article Error: ' . $e->getMessage());
-            ActivityLogHelper::logSecurity('article.reject.failed', 'Gagal reject artikel', ['article_id' => $article->id, 'error' => $e->getMessage()]);
-            
-            if ($request->expectsJson()) {
-                return response()->json(['success' => false, 'message' => 'Terjadi kesalahan saat menolak artikel.'], 500);
-            }
-            
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat menolak artikel.');
-        }
-    }
-    
     public function articleDetail(Article $article)
     {
         $article->load(['author.profile', 'category', 'tags']);
-        
+
         return view('admin.articles.detail', compact('article'));
     }
-    
-    public function bulkApprove(Request $request)
-    {
-        // Authorization check
-        if (!Auth::user()->isAdmin() && !Auth::user()->isEditor()) {
-            abort(403, 'Anda tidak memiliki izin untuk menyetujui artikel secara massal.');
-        }
-        
-        try {
-            // Handle both array and JSON string formats
-            $articleIds = $request->article_ids;
-            if (is_string($articleIds)) {
-                $articleIds = json_decode($articleIds, true);
-            }
-            
-            // Validate that article_ids is an array and contains only integers
-            $request->validate([
-                'article_ids' => 'required|array',
-                'article_ids.*' => 'required|integer|exists:articles,id',
-            ]);
-            
-            // Additional validation: ensure article_ids is an array after decoding
-            if (!is_array($articleIds)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'article_ids must be an array'
-                ], 422);
-            }
-            
-            // Filter to only pending articles
-            $validIds = Article::whereIn('id', $articleIds)
-                ->where('status', 'pending_review')
-                ->pluck('id')
-                ->toArray();
-            
-            if (empty($validIds)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Tidak ada artikel pending yang dapat disetujui'
-                ], 422);
-            }
-            
-            $updated = Article::whereIn('id', $validIds)
-                   ->update(['status' => 'published', 'published_at' => now()]);
-            
-            ActivityLogHelper::log('article', 'bulk_approved', count($validIds) . ' artikel disetujui secara massal');
-            
-            return response()->json([
-                'success' => true,
-                'message' => count($validIds) . ' artikel berhasil disetujui!'
-            ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validasi gagal',
-                'errors' => $e->errors()
-            ], 422);
-        } catch (\Exception $e) {
-            \Log::error('Bulk Approve Error: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-    
-    public function bulkReject(Request $request)
-    {
-        // Authorization check
-        if (!Auth::user()->isAdmin() && !Auth::user()->isEditor()) {
-            abort(403, 'Anda tidak memiliki izin untuk menolak artikel secara massal.');
-        }
-        
-        try {
-            // Handle both array and JSON string formats
-            $articleIds = $request->article_ids;
-            if (is_string($articleIds)) {
-                $articleIds = json_decode($articleIds, true);
-            }
-            
-            // Validate that article_ids is an array and contains only integers
-            $request->validate([
-                'article_ids' => 'required|array',
-                'article_ids.*' => 'required|integer|exists:articles,id',
-            ]);
-            
-            // Additional validation: ensure article_ids is an array after decoding
-            if (!is_array($articleIds)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'article_ids must be an array'
-                ], 422);
-            }
-            
-            // Filter to only pending articles
-            $validIds = Article::whereIn('id', $articleIds)
-                ->where('status', 'pending_review')
-                ->pluck('id')
-                ->toArray();
-            
-            if (empty($validIds)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Tidak ada artikel pending yang dapat ditolak'
-                ], 422);
-            }
-            
-            $updated = Article::whereIn('id', $validIds)
-                   ->update(['status' => 'rejected']);
-            
-            ActivityLogHelper::log('article', 'bulk_rejected', count($validIds) . ' artikel ditolak secara massal');
-            
-            return response()->json([
-                'success' => true,
-                'message' => count($validIds) . ' artikel berhasil ditolak!'
-            ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validasi gagal',
-                'errors' => $e->errors()
-            ], 422);
-        } catch (\Exception $e) {
-            \Log::error('Bulk Reject Error: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-            ], 500);
-        }
-    }
 
-    public function pendingArticles(Request $request)
+    public function suspendedArticles(Request $request)
     {
-        $query = Article::with(['author', 'category', 'tags'])
-            ->where('status', 'pending_review');
-            
-        // Search functionality
+        $query = Article::with(['author', 'category', 'tags', 'suspendedBy'])
+            ->where('status', 'suspended');
+
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
                   ->orWhere('content', 'like', "%{$search}%")
-                  ->orWhereHas('author', function($authorQuery) use ($search) {
+                  ->orWhereHas('author', function ($authorQuery) use ($search) {
                       $authorQuery->where('name', 'like', "%{$search}%")
                                  ->orWhere('email', 'like', "%{$search}%");
                   });
             });
         }
-        
-        // Category filter
+
         if ($request->filled('category')) {
             $query->where('category_id', $request->category);
         }
-        
-        // Date filters
+
         if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
+            $query->whereDate('suspended_at', '>=', $request->date_from);
         }
-        
+
         if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
+            $query->whereDate('suspended_at', '<=', $request->date_to);
         }
-        
+
         $articles = AdminTableHelper::applySort($query, $request, [
             'title' => 'title',
+            'suspended_at' => 'suspended_at',
             'created_at' => 'created_at',
-        ], 'created_at', 'desc')->paginate(15)->withQueryString();
-        
-        // Pass data for sidebar
-        $pendingArticlesCount = Article::where('status', 'pending_review')->count();
-        $pendingCommentsCount = \App\Models\Comment::where('is_approved', false)->count();
-        
-        return view('admin.articles.pending', compact('articles', 'pendingArticlesCount', 'pendingCommentsCount'));
+        ], 'suspended_at', 'desc')->paginate(15)->withQueryString();
+
+        return view('admin.articles.suspended', compact('articles'));
     }
 
-    // Categories Management
+    /**
+     * Cari artikel tayang untuk ditangguhkan (admin & editor) — tanpa menunggu laporan.
+     */
+    public function moderateArticles(Request $request)
+    {
+        $query = Article::with(['author', 'category'])
+            ->where('status', 'published')
+            ->whereNotNull('published_at');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('slug', 'like', "%{$search}%")
+                  ->orWhereHas('author', function ($authorQuery) use ($search) {
+                      $authorQuery->where('name', 'like', "%{$search}%")
+                                 ->orWhere('email', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $articles = AdminTableHelper::applySort($query, $request, [
+            'title' => 'title',
+            'published_at' => 'published_at',
+            'created_at' => 'created_at',
+        ], 'published_at', 'desc')->paginate(20)->withQueryString();
+
+        return view('admin.articles.moderate', compact('articles'));
+    }
+
     public function categories(Request $request)
     {
         $query = \App\Models\Category::withCount('articles');
@@ -644,6 +455,8 @@ class AdminDashboardController extends Controller
 
     public function editCategory(\App\Models\Category $category)
     {
+        $category->loadCount('articles');
+
         return view('admin.categories.edit', compact('category'));
     }
 
@@ -653,9 +466,16 @@ class AdminDashboardController extends Controller
             'name' => 'required|string|max:255|unique:categories',
             'description' => 'nullable|string|max:500',
             'color' => 'nullable|string|max:7',
+            'is_active' => 'nullable|boolean',
         ]);
 
-        \App\Models\Category::create($request->all());
+        \App\Models\Category::create([
+            'name' => $request->name,
+            'description' => $request->description,
+            'color' => $request->color,
+            'is_active' => $request->boolean('is_active', true),
+        ]);
+
         return redirect()->back()->with('success', 'Kategori berhasil ditambahkan!');
     }
 
@@ -665,9 +485,18 @@ class AdminDashboardController extends Controller
             'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
             'description' => 'nullable|string|max:500',
             'color' => 'nullable|string|max:7',
+            'is_active' => 'nullable|boolean',
         ]);
 
-        $category->update($request->all());
+        $category->update([
+            'name' => $request->name,
+            'description' => $request->description,
+            'color' => $request->color,
+            // Preserve when quick-edit modal omits the field
+            'is_active' => $request->has('is_active')
+                ? $request->boolean('is_active')
+                : $category->is_active,
+        ]);
         
         // Check if the request came from the edit page or modal
         if ($request->header('Referer') && str_contains($request->header('Referer'), '/edit')) {
@@ -691,10 +520,23 @@ class AdminDashboardController extends Controller
     public function bulkCategories(Request $request)
     {
         $request->validate([
-            'action' => 'required|in:delete',
+            'action' => 'required|in:delete,activate,deactivate',
             'ids' => 'required|array|min:1',
             'ids.*' => 'integer|exists:categories,id',
         ]);
+
+        if ($request->action === 'activate' || $request->action === 'deactivate') {
+            $active = $request->action === 'activate';
+            $count = \App\Models\Category::whereIn('id', $request->ids)
+                ->update(['is_active' => $active]);
+
+            return redirect()->back()->with(
+                'success',
+                $active
+                    ? "{$count} kategori diaktifkan."
+                    : "{$count} kategori dinonaktifkan."
+            );
+        }
 
         $categories = \App\Models\Category::whereIn('id', $request->ids)->get();
         $deleted = 0;
@@ -722,6 +564,10 @@ class AdminDashboardController extends Controller
         $message = "{$deleted} kategori berhasil dihapus.";
         if ($movedArticles > 0) {
             $message .= " {$movedArticles} artikel dialihkan ke kategori lain.";
+        }
+        if (!empty($errors)) {
+            $message .= ' Sebagian gagal: ' . implode(' ', array_slice($errors, 0, 3));
+            return redirect()->back()->with('warning', $message);
         }
 
         return redirect()->back()->with('success', $message);
@@ -787,7 +633,7 @@ class AdminDashboardController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('content', 'like', "%{$search}%")
+                $q->where('comment', 'like', "%{$search}%")
                     ->orWhere('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%");
             });
@@ -800,7 +646,14 @@ class AdminDashboardController extends Controller
         ], 'created_at', 'desc');
 
         $comments = $query->paginate(15)->withQueryString();
-        return view('admin.comments.index', compact('comments'));
+
+        $commentStats = [
+            'total' => \App\Models\Comment::count(),
+            'approved' => \App\Models\Comment::where('is_approved', true)->count(),
+            'pending' => \App\Models\Comment::where('is_approved', false)->count(),
+        ];
+
+        return view('admin.comments.index', compact('comments', 'commentStats'));
     }
 
     public function bulkComments(Request $request)
@@ -850,13 +703,16 @@ class AdminDashboardController extends Controller
     {
         $query = User::where('role', 'penulis')
             ->with('profile')
-            ->withCount('articles')
+            ->withCount([
+                'articles',
+                'articles as published_articles_count' => fn ($q) => $q->published(),
+            ])
             ->withSum('articles', 'views');
 
         $query = AdminTableHelper::applySort($query, $request, [
             'name' => 'name',
             'verified' => 'verified',
-            'articles_count' => 'articles_count',
+            'articles_count' => 'published_articles_count',
             'created_at' => 'created_at',
         ], 'created_at', 'desc');
 
@@ -867,7 +723,7 @@ class AdminDashboardController extends Controller
     public function bulkPenulis(Request $request)
     {
         $request->validate([
-            'action' => 'required|in:verify,unverify,demote',
+            'action' => 'required|in:unverify,demote',
             'ids' => 'required|array|min:1',
             'ids.*' => 'integer|exists:users,id',
         ]);
@@ -876,45 +732,53 @@ class AdminDashboardController extends Controller
         $count = 0;
 
         foreach ($users as $user) {
-            if ($request->action === 'verify') {
-                $user->update(['verified' => true]);
-                $count++;
-            } elseif ($request->action === 'unverify') {
-                $user->update(['verified' => false]);
-                $count++;
+            if ($user->is_internal) {
+                continue;
+            }
+
+            if ($request->action === 'unverify') {
+                if ($user->verified) {
+                    $user->revokeVerifiedToUser();
+                    $count++;
+                }
             } elseif ($request->action === 'demote') {
-                $user->update([
-                    'role' => 'user',
-                    'verified' => false,
-                    'verification_request_status' => null,
-                    'verification_rejection_reason' => null,
-                ]);
+                $user->demoteToUser();
                 $count++;
             }
         }
 
-        return redirect()->back()->with('success', "{$count} penulis berhasil diproses.");
-    }
+        ActivityLogHelper::log('penulis.bulk', "{$count} penulis diproses (action: {$request->action})", [
+            'action' => $request->action,
+            'count' => $count,
+            'ids' => $request->ids,
+        ]);
 
-    public function promoteToPenulis(User $user)
-    {
-        $user->update(['role' => 'penulis']);
-        return redirect()->back()->with('success', 'User berhasil dipromosikan menjadi penulis!');
+        return redirect()->back()->with('success', "{$count} penulis berhasil diproses.");
     }
 
     public function demoteFromPenulis(User $user)
     {
         try {
+            if (in_array($user->role, ['admin', 'editor'], true)) {
+                ActivityLogHelper::logSecurity('user.demote.blocked', 'Percobaan demote admin/editor diblokir', [
+                    'target_user_id' => $user->id,
+                    'target_role' => $user->role,
+                ]);
+                return redirect()->back()->with('error', 'Tidak dapat menurunkan role admin atau editor.');
+            }
+
             if ($user->role !== 'penulis') {
                 return redirect()->back()->with('error', 'User ini bukan penulis!');
             }
 
-            $user->update([
-                'role' => 'user',
-                'verified' => false, // Reset verified status saat diturunkan
-                'verification_request_status' => null, // Reset status verifikasi request
-                'verification_rejection_reason' => null,
-            ]);
+            if ($user->is_internal) {
+                return redirect()->back()->with(
+                    'error',
+                    'Cabut status Redaksi terlebih dahulu sebelum menurunkan ke user.'
+                );
+            }
+
+            $user->demoteToUser();
 
             // Refresh user model dari database
             $user->refresh();
@@ -928,12 +792,247 @@ class AdminDashboardController extends Controller
                 return redirect()->route('user.dashboard')->with('success', 'Role Anda telah diturunkan menjadi user biasa.');
             }
             
-            return redirect()->back()->with('success', 'Penulis berhasil diturunkan menjadi user!');
+            return redirect()->back()->with('success', 'Penulis berhasil diturunkan menjadi user! Artikel yang sudah ada tetap tersimpan atas nama penulis ini.');
         } catch (\Exception $e) {
             \Log::error('Demote From Penulis Error: ' . $e->getMessage());
             ActivityLogHelper::logSecurity('user.demote.failed', 'Gagal demote penulis', ['user_id' => $user->id, 'error' => $e->getMessage()]);
             return redirect()->back()->with('error', 'Terjadi kesalahan saat menurunkan penulis.');
         }
+    }
+
+    /**
+     * Jadikan user/penulis sebagai staf redaksi (verified, tanpa pengajuan publik).
+     */
+    public function markAsRedaksi(User $user)
+    {
+        try {
+            if (in_array($user->role, ['admin', 'editor'], true)) {
+                return redirect()->back()->with('error', 'Tidak dapat mengubah role admin atau editor.');
+            }
+
+            if (!in_array($user->role, ['user', 'penulis'], true)) {
+                return redirect()->back()->with('error', 'Hanya user atau penulis yang dapat dijadikan Redaksi.');
+            }
+
+            if ($user->isRedaksi()) {
+                return redirect()->back()->with('info', 'Akun ini sudah berstatus Redaksi.');
+            }
+
+            $user->markAsRedaksi();
+            ActivityLogHelper::logUser('user.marked_redaksi', $user, "{$user->name} dijadikan penulis Redaksi");
+
+            return redirect()->back()->with('success', "{$user->name} sekarang penulis Redaksi (terverifikasi).");
+        } catch (\Exception $e) {
+            \Log::error('Mark As Redaksi Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat menandai Redaksi.');
+        }
+    }
+
+    /**
+     * Cabut status Redaksi; tetap penulis terverifikasi.
+     */
+    public function unmarkRedaksi(User $user)
+    {
+        try {
+            if (!$user->isRedaksi()) {
+                return redirect()->back()->with('error', 'Akun ini bukan penulis Redaksi.');
+            }
+
+            $user->unmarkRedaksi();
+            ActivityLogHelper::logUser('user.unmarked_redaksi', $user, "Status Redaksi {$user->name} dicabut");
+
+            return redirect()->back()->with(
+                'success',
+                "Status Redaksi dicabut. {$user->name} tetap penulis terverifikasi."
+            );
+        } catch (\Exception $e) {
+            \Log::error('Unmark Redaksi Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat mencabut status Redaksi.');
+        }
+    }
+
+    /**
+     * Sanksi konten: demote ke user + ban 7 / 30 / 365 hari (tercatat).
+     */
+    public function warnPenulis(Request $request, User $user)
+    {
+        try {
+            if ($user->isRedaksi()) {
+                return redirect()->back()->with('error', 'Cabut status Redaksi terlebih dahulu sebelum memberi sanksi.');
+            }
+
+            if ($user->role !== 'penulis') {
+                return redirect()->back()->with('error', 'Hanya penulis yang dapat diberi sanksi konten.');
+            }
+
+            $request->validate([
+                'reason' => 'nullable|string|max:1000',
+            ]);
+
+            $actions = $user->issueSanction($request->input('reason'), Auth::user());
+
+            ActivityLogHelper::logUser(
+                'user.content_sanction',
+                $user,
+                "Sanksi #{$actions['level']} untuk {$user->name}: ban {$actions['days']} hari s/d {$actions['banned_until']->format('d/m/Y H:i')}"
+            );
+
+            return redirect()->route('admin.users')
+                ->with(
+                    'success',
+                    "Sanksi #{$actions['level']}: {$user->name} diturunkan ke user dan dibanned {$actions['days']} hari (sampai {$actions['banned_until']->format('d/m/Y H:i')})."
+                );
+        } catch (\RuntimeException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        } catch (\Exception $e) {
+            \Log::error('Sanction Penulis Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat memberi sanksi.');
+        }
+    }
+
+    /**
+     * Buka ban lebih awal.
+     */
+    public function liftBan(Request $request, User $user)
+    {
+        try {
+            if (!$user->isBanned()) {
+                return redirect()->back()->with('error', 'Pengguna ini tidak sedang dibanned.');
+            }
+
+            $request->validate([
+                'note' => 'nullable|string|max:1000',
+            ]);
+
+            $user->liftBan(Auth::user(), $request->input('note'));
+            ActivityLogHelper::logUser('user.ban_lifted', $user, "Ban {$user->name} dibuka oleh admin");
+
+            return redirect()->back()->with(
+                'success',
+                "Ban {$user->name} dibuka. Akun tetap user; mereka dapat mengajukan upgrade lagi."
+            );
+        } catch (\Exception $e) {
+            \Log::error('Lift Ban Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat membuka ban.');
+        }
+    }
+
+    public function banAppeals(Request $request)
+    {
+        $query = User::where('ban_appeal_status', 'pending')
+            ->whereNotNull('banned_until')
+            ->where('banned_until', '>', now())
+            ->with(['profile', 'contentSanctions' => fn ($q) => $q->latest()->limit(5)])
+            ->withCount('contentSanctions');
+
+        $query = AdminTableHelper::applySort($query, $request, [
+            'name' => 'name',
+            'banned_until' => 'banned_until',
+            'ban_appeal_at' => 'ban_appeal_at',
+            'content_warning_count' => 'content_warning_count',
+        ], 'ban_appeal_at', 'desc');
+
+        $appeals = $query->paginate(15)->withQueryString();
+
+        return view('admin.ban-appeals', compact('appeals'));
+    }
+
+    public function approveBanAppeal(User $user)
+    {
+        try {
+            if ($user->ban_appeal_status !== 'pending') {
+                return redirect()->back()->with('error', 'Tidak ada banding pending untuk akun ini.');
+            }
+
+            $user->liftBan(Auth::user(), 'Banding disetujui');
+            ActivityLogHelper::logUser('user.ban_appeal.approved', $user, "Banding ban {$user->name} disetujui");
+
+            return redirect()->back()->with('success', "Banding disetujui. Ban {$user->name} dibuka.");
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal menyetujui banding.');
+        }
+    }
+
+    public function rejectBanAppeal(Request $request, User $user)
+    {
+        try {
+            if ($user->ban_appeal_status !== 'pending') {
+                return redirect()->back()->with('error', 'Tidak ada banding pending untuk akun ini.');
+            }
+
+            $request->validate([
+                'reason' => 'nullable|string|max:1000',
+            ]);
+
+            $user->rejectBanAppeal($request->input('reason'));
+            ActivityLogHelper::logUser('user.ban_appeal.rejected', $user, "Banding ban {$user->name} ditolak");
+
+            return redirect()->back()->with('success', "Banding {$user->name} ditolak. Masa ban tetap berlaku.");
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal menolak banding.');
+        }
+    }
+
+    /**
+     * Batasi publish langsung penulis selama N hari (default 7).
+     */
+    public function restrictPenulisPublish(Request $request, User $user)
+    {
+        if ($user->role !== 'penulis') {
+            return redirect()->back()->with('error', 'Hanya penulis yang dapat dibatasi publish.');
+        }
+
+        $days = (int) ($request->input('days', 7));
+        $days = max(1, min($days, 90));
+
+        $user->update([
+            'publish_restricted_until' => now()->addDays($days),
+        ]);
+
+        ActivityLogHelper::logUser(
+            'user.publish_restricted',
+            $user,
+            "Publish langsung {$user->name} dibatasi {$days} hari"
+        );
+
+        return redirect()->back()->with('success', "Publish langsung {$user->name} dibatasi {$days} hari. Artikel baru wajib lewat review.");
+    }
+
+    public function clearPenulisPublishRestriction(User $user)
+    {
+        if ($user->role !== 'penulis') {
+            return redirect()->back()->with('error', 'Hanya penulis yang relevan.');
+        }
+
+        $user->clearPublishRestriction();
+        ActivityLogHelper::logUser('user.publish_restriction_cleared', $user, "Pembatasan publish {$user->name} dicabut");
+
+        return redirect()->back()->with('success', "Pembatasan publish untuk {$user->name} telah dicabut.");
+    }
+
+    /**
+     * Cabut verified = turunkan ke user biasa.
+     */
+    public function revokePenulisVerified(User $user)
+    {
+        if ($user->role !== 'penulis') {
+            return redirect()->back()->with('error', 'Hanya penulis yang dapat dicabut verified-nya.');
+        }
+
+        if ($user->is_internal) {
+            return redirect()->back()->with(
+                'error',
+                'Tidak dapat mencabut verified penulis Redaksi. Cabut status Redaksi terlebih dahulu.'
+            );
+        }
+
+        $user->revokeVerifiedToUser();
+        ActivityLogHelper::logUser('user.verified_revoked', $user, "Verified {$user->name} dicabut; diturunkan ke user");
+
+        return redirect()->back()->with(
+            'success',
+            "{$user->name} diturunkan menjadi user biasa. Harus ajukan upgrade lagi untuk menulis."
+        );
     }
 
     // Newsletter Management
@@ -947,7 +1046,46 @@ class AdminDashboardController extends Controller
         ], 'created_at', 'desc');
 
         $subscribers = $query->paginate(15)->withQueryString();
-        return view('admin.newsletter.index', compact('subscribers'));
+        $activeSubscriberCount = \App\Models\NewsletterSubscriber::where('is_active', true)->count();
+
+        return view('admin.newsletter.index', compact('subscribers', 'activeSubscriberCount'));
+    }
+
+    public function exportNewsletter(Request $request)
+    {
+        $query = \App\Models\NewsletterSubscriber::query()->orderBy('id');
+
+        if ($request->filled('status') && in_array($request->input('status'), ['0', '1'], true)) {
+            $query->where('is_active', $request->input('status') === '1');
+        }
+
+        $filename = 'newsletter_subscribers_' . date('Y-m-d_His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function () use ($query) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF");
+            fputcsv($out, ['ID', 'Email', 'Nama', 'Aktif', 'Subscribed At']);
+            $query->chunk(200, function ($rows) use ($out) {
+                foreach ($rows as $sub) {
+                    fputcsv($out, [
+                        $sub->id,
+                        $sub->email,
+                        $sub->name,
+                        $sub->is_active ? 'yes' : 'no',
+                        optional($sub->created_at)->format('Y-m-d H:i:s'),
+                    ]);
+                }
+            });
+            fclose($out);
+        };
+
+        ActivityLogHelper::log('newsletter.export', 'Export subscriber newsletter');
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function bulkNewsletter(Request $request)
@@ -981,9 +1119,45 @@ class AdminDashboardController extends Controller
             'content' => 'required|string',
         ]);
 
-        // Here you would implement the newsletter sending logic
-        // For now, just return success
-        return redirect()->back()->with('success', 'Newsletter berhasil dikirim!');
+        $subscribers = \App\Models\NewsletterSubscriber::where('is_active', true)->get();
+
+        if ($subscribers->isEmpty()) {
+            return redirect()->back()->with('error', 'Tidak ada subscriber aktif untuk dikirimi newsletter.');
+        }
+
+        $sent = 0;
+        $failed = 0;
+
+        foreach ($subscribers as $subscriber) {
+            try {
+                \Illuminate\Support\Facades\Mail::to($subscriber->email)
+                    ->send(new \App\Mail\NewsletterBroadcast($request->subject, $request->content));
+                $sent++;
+            } catch (\Throwable $e) {
+                $failed++;
+                \Log::warning('Newsletter send failed', [
+                    'email' => $subscriber->email,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        ActivityLogHelper::log('newsletter.sent', "Newsletter dikirim ke {$sent} subscriber" . ($failed ? " ({$failed} gagal)" : ''), [
+            'subject' => $request->subject,
+            'sent' => $sent,
+            'failed' => $failed,
+        ]);
+
+        if ($sent === 0) {
+            return redirect()->back()->with('error', 'Gagal mengirim newsletter. Periksa konfigurasi email.');
+        }
+
+        $message = "Newsletter berhasil dikirim ke {$sent} subscriber aktif.";
+        if ($failed > 0) {
+            $message .= " {$failed} gagal terkirim.";
+        }
+
+        return redirect()->back()->with('success', $message);
     }
 
     public function removeSubscriber(\App\Models\NewsletterSubscriber $subscriber)
@@ -992,26 +1166,62 @@ class AdminDashboardController extends Controller
         return redirect()->back()->with('success', 'Subscriber berhasil dihapus!');
     }
 
-    // Media Library
+    // Media Library (admin-owned only â€” never mass-delete penulis/article media)
     public function media()
     {
-        // Get all files from storage/app/public
-        $mediaFiles = collect();
-        $storagePath = storage_path('app/public');
-        
-        if (is_dir($storagePath)) {
-            $files = glob($storagePath . '/*');
-            foreach ($files as $file) {
-                if (is_file($file)) {
-                    $mediaFiles->push([
-                        'name' => basename($file),
-                        'size' => filesize($file),
-                        'modified' => filemtime($file),
-                        'type' => mime_content_type($file),
-                    ]);
-                }
-            }
+        $disk = \Illuminate\Support\Facades\Storage::disk('public');
+        $adminDir = 'media/admin';
+
+        if (!$disk->exists($adminDir)) {
+            $disk->makeDirectory($adminDir);
         }
+
+        $mediaFiles = collect();
+
+        foreach ($disk->files($adminDir) as $path) {
+            $fullPath = storage_path('app/public/' . $path);
+            if (!is_file($fullPath)) {
+                continue;
+            }
+
+            $mediaFiles->push([
+                'path' => $path,
+                'name' => basename($path),
+                'size' => filesize($fullPath),
+                'modified' => filemtime($fullPath),
+                'type' => mime_content_type($fullPath) ?: 'application/octet-stream',
+                'url' => $disk->url($path),
+                'scope' => 'admin',
+            ]);
+        }
+
+        // Legacy flat uploads in storage root (not under articles/ or media/penulis/)
+        foreach ($disk->files('') as $path) {
+            if (str_contains($path, '/') || str_contains($path, '\\')) {
+                continue;
+            }
+            // Skip non-media clutter
+            if (in_array($path, ['.gitignore', 'index.php'], true)) {
+                continue;
+            }
+
+            $fullPath = storage_path('app/public/' . $path);
+            if (!is_file($fullPath)) {
+                continue;
+            }
+
+            $mediaFiles->push([
+                'path' => $path,
+                'name' => basename($path),
+                'size' => filesize($fullPath),
+                'modified' => filemtime($fullPath),
+                'type' => mime_content_type($fullPath) ?: 'application/octet-stream',
+                'url' => $disk->url($path),
+                'scope' => 'legacy',
+            ]);
+        }
+
+        $mediaFiles = $mediaFiles->sortByDesc('modified')->values();
 
         return view('admin.media.index', compact('mediaFiles'));
     }
@@ -1023,50 +1233,228 @@ class AdminDashboardController extends Controller
         ]);
 
         $file = $request->file('file');
-        
-        // Sanitize filename
+
         $originalName = $file->getClientOriginalName();
         $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', $originalName);
-        
-        $file->storeAs('public', $filename);
-        
-        ActivityLogHelper::log('media', 'uploaded', 'File diupload: ' . $filename);
+
+        $path = $file->storeAs('media/admin', $filename, 'public');
+
+        ActivityLogHelper::log('media.uploaded', 'File diupload: ' . $path);
 
         return redirect()->back()->with('success', 'File berhasil diupload!');
     }
 
     public function deleteMedia(Request $request)
     {
-        $filename = $request->input('filename');
-        $filePath = storage_path('app/public/' . $filename);
-        
-        if (file_exists($filePath)) {
-            unlink($filePath);
-            return redirect()->back()->with('success', 'File berhasil dihapus!');
+        $request->validate([
+            'path' => 'required|string|max:500',
+        ]);
+
+        $path = str_replace('\\', '/', (string) $request->input('path'));
+
+        if (
+            $path === ''
+            || str_contains($path, '..')
+            || str_contains($path, "\0")
+            || str_starts_with($path, '/')
+            || preg_match('#^[a-zA-Z]:#', $path)
+        ) {
+            return redirect()->back()->with('error', 'Path file tidak valid.');
         }
 
-        return redirect()->back()->with('error', 'File tidak ditemukan!');
+        // Block penulis libraries and article featured images from admin media UI
+        if (
+            str_starts_with($path, 'media/penulis/')
+            || str_starts_with($path, 'articles/')
+        ) {
+            ActivityLogHelper::logSecurity('media.delete.blocked', 'Admin diblok menghapus media penulis/artikel lewat media library', [
+                'path' => $path,
+            ]);
+
+            return redirect()->back()->with(
+                'error',
+                'Media penulis atau gambar artikel tidak dapat dihapus dari Media Library. Kelola lewat modul Artikel / Penulis.'
+            );
+        }
+
+        // Allow only admin library + legacy root files
+        $allowed = str_starts_with($path, 'media/admin/')
+            || !str_contains($path, '/');
+
+        if (!$allowed) {
+            return redirect()->back()->with('error', 'File di luar ruang media admin tidak dapat dihapus di sini.');
+        }
+
+        $disk = \Illuminate\Support\Facades\Storage::disk('public');
+
+        if (!$disk->exists($path)) {
+            return redirect()->back()->with('error', 'File tidak ditemukan!');
+        }
+
+        $disk->delete($path);
+        ActivityLogHelper::log('media.deleted', 'File dihapus: ' . $path, ['path' => $path]);
+
+        return redirect()->back()->with('success', 'File berhasil dihapus!');
     }
 
     // Analytics
-    public function analytics(AnalyticsService $analyticsService)
+    public function analytics(Request $request, AnalyticsService $analyticsService)
     {
-        // Get comprehensive analytics
-        $analytics = $analyticsService->getAnalyticsSummary();
+        $days = (int) $request->input('days', 30);
+        if (!in_array($days, [7, 30, 90], true)) {
+            $days = 30;
+        }
 
-        // Basic stats for compatibility
+        $engagement = $analyticsService->getEngagementMetrics($days);
+        $popularArticles = $analyticsService->getArticlePerformance(10);
+        $categoryStats = $analyticsService->getArticlePerformanceByCategory();
+
         $stats = [
             'total_articles' => Article::count(),
-            'published_articles' => Article::where('status', 'published')->count(),
-            'total_views' => Article::sum('views'),
+            'published_articles' => Article::published()->count(),
+            'total_views' => (int) Article::sum('views'),
             'total_users' => User::count(),
-            'total_comments' => \App\Models\Comment::count(),
+            'total_comments' => Comment::count(),
+            'period_views' => $engagement['total_views'] ?? 0,
+            'period_articles' => $engagement['total_articles'] ?? 0,
+            'period_comments' => $engagement['total_comments'] ?? 0,
+            'days' => $days,
         ];
 
-        // Chart data for last 30 days (engagement trends)
-        $chartData = $analytics['engagement']['trends'] ?? [];
+        $chartData = $engagement['trends'] ?? [];
 
-        return view('admin.analytics.index', compact('stats', 'chartData', 'analytics'));
+        return view('admin.analytics.index', compact(
+            'stats',
+            'chartData',
+            'popularArticles',
+            'categoryStats',
+            'days'
+        ));
+    }
+
+    // Article reports (user/guest flagging)
+    public function articleReports(Request $request)
+    {
+        $status = $request->get('status', 'open');
+        $query = ArticleReport::with(['article.author', 'article.category', 'user', 'resolver'])
+            ->latest();
+
+        if (in_array($status, ['open', 'resolved', 'dismissed'], true)) {
+            $query->where('status', $status);
+        }
+
+        $reports = $query->paginate(20)->withQueryString();
+        $openCount = ArticleReport::open()->count();
+
+        return view('admin.article-reports.index', compact('reports', 'status', 'openCount'));
+    }
+
+    public function dismissArticleReport(Request $request, ArticleReport $articleReport)
+    {
+        if ($articleReport->status !== 'open') {
+            return back()->with('error', 'Laporan ini sudah diproses.');
+        }
+
+        $request->validate([
+            'resolution_note' => 'nullable|string|max:1000',
+        ]);
+
+        $articleReport->update([
+            'status' => 'dismissed',
+            'resolved_by' => Auth::id(),
+            'resolved_at' => now(),
+            'resolution_note' => $request->resolution_note,
+        ]);
+
+        ActivityLogHelper::log(
+            'article_report.dismissed',
+            'Laporan artikel diabaikan #' . $articleReport->id,
+            ['article_report_id' => $articleReport->id, 'article_id' => $articleReport->article_id]
+        );
+
+        return back()->with('success', 'Laporan diabaikan.');
+    }
+
+    public function resolveArticleReport(Request $request, ArticleReport $articleReport)
+    {
+        if ($articleReport->status !== 'open') {
+            return back()->with('error', 'Laporan ini sudah diproses.');
+        }
+
+        $request->validate([
+            'action' => 'required|in:resolve,suspend',
+            'resolution_note' => 'nullable|string|max:1000',
+            'reason' => 'required_if:action,suspend|nullable|string|max:1000',
+        ], [
+            'reason.required_if' => 'Alasan penangguhan wajib diisi.',
+        ]);
+
+        $article = $articleReport->article;
+
+        if ($request->action === 'suspend') {
+            if (!$article || !in_array($article->status, ['published', 'archived'], true)) {
+                return back()->with('error', 'Artikel tidak dapat ditangguhkan dari status saat ini.');
+            }
+
+            $this->authorize('suspend', $article);
+
+            $reason = $request->reason ?: ('Laporan pengguna: ' . $articleReport->reasonLabel());
+
+            $article->update([
+                'status' => 'suspended',
+                'suspension_reason' => $reason,
+                'suspended_at' => now(),
+                'suspended_by' => Auth::id(),
+                'is_featured' => false,
+                'is_breaking' => false,
+            ]);
+
+            CacheHelper::clearArticleCache();
+            CacheHelper::clearDashboardCache();
+
+            ActivityLogHelper::logArticle(
+                'article.suspended',
+                $article,
+                "Penayangan '{$article->title}' ditangguhkan dari laporan #{$articleReport->id}: {$reason}"
+            );
+        }
+
+        $articleReport->update([
+            'status' => 'resolved',
+            'resolved_by' => Auth::id(),
+            'resolved_at' => now(),
+            'resolution_note' => $request->resolution_note ?: ($request->action === 'suspend' ? 'Artikel ditangguhkan' : 'Ditandai selesai'),
+        ]);
+
+        // Tandai laporan open lain untuk artikel yang sama sebagai resolved jika ditangguhkan
+        if ($request->action === 'suspend' && $article) {
+            ArticleReport::query()
+                ->where('article_id', $article->id)
+                ->where('status', 'open')
+                ->where('id', '!=', $articleReport->id)
+                ->update([
+                    'status' => 'resolved',
+                    'resolved_by' => Auth::id(),
+                    'resolved_at' => now(),
+                    'resolution_note' => 'Diselesaikan bersama penangguhan artikel',
+                ]);
+        }
+
+        ActivityLogHelper::log(
+            'article_report.resolved',
+            'Laporan artikel diselesaikan #' . $articleReport->id,
+            [
+                'article_report_id' => $articleReport->id,
+                'article_id' => $articleReport->article_id,
+                'action' => $request->action,
+            ]
+        );
+
+        $msg = $request->action === 'suspend'
+            ? 'Laporan diselesaikan dan penayangan artikel ditangguhkan.'
+            : 'Laporan ditandai selesai.';
+
+        return back()->with('success', $msg);
     }
 
     // Reports
@@ -1074,7 +1462,7 @@ class AdminDashboardController extends Controller
     {
         $reports = [
             'articles_by_category' => \App\Models\Category::withCount('articles')->get(),
-            'articles_by_author' => User::where('role', 'penulis')->withCount('articles')->get(),
+            'articles_by_author' => User::where('role', 'penulis')->withCount('articles')->orderByDesc('articles_count')->get(),
             'monthly_stats' => $this->getMonthlyStats(),
         ];
 
@@ -1084,10 +1472,95 @@ class AdminDashboardController extends Controller
     public function exportReport(Request $request)
     {
         $type = $request->input('type', 'articles');
-        
-        // Here you would implement the export logic
-        // For now, just return success
-        return redirect()->back()->with('success', 'Laporan berhasil diekspor!');
+        if (!in_array($type, ['articles', 'users', 'comments', 'newsletter'], true)) {
+            return redirect()->back()->with('error', 'Tipe laporan tidak valid.');
+        }
+
+        $filename = 'laporan_' . $type . '_' . date('Y-m-d_His') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function () use ($type) {
+            $out = fopen('php://output', 'w');
+            // UTF-8 BOM for Excel
+            fwrite($out, "\xEF\xBB\xBF");
+
+            switch ($type) {
+                case 'articles':
+                    fputcsv($out, ['ID', 'Judul', 'Slug', 'Status', 'Kategori', 'Penulis', 'Views', 'Published At', 'Created At']);
+                    Article::with(['category', 'author'])->orderBy('id')->chunk(200, function ($rows) use ($out) {
+                        foreach ($rows as $article) {
+                            fputcsv($out, [
+                                $article->id,
+                                $article->title,
+                                $article->slug,
+                                $article->status,
+                                $article->category->name ?? '',
+                                $article->author->name ?? '',
+                                $article->views,
+                                optional($article->published_at)->format('Y-m-d H:i:s'),
+                                optional($article->created_at)->format('Y-m-d H:i:s'),
+                            ]);
+                        }
+                    });
+                    break;
+
+                case 'users':
+                    fputcsv($out, ['ID', 'Nama', 'Email', 'Role', 'Verified', 'Created At']);
+                    User::orderBy('id')->chunk(200, function ($rows) use ($out) {
+                        foreach ($rows as $user) {
+                            fputcsv($out, [
+                                $user->id,
+                                $user->name,
+                                $user->email,
+                                $user->role,
+                                $user->verified ? 'yes' : 'no',
+                                optional($user->created_at)->format('Y-m-d H:i:s'),
+                            ]);
+                        }
+                    });
+                    break;
+
+                case 'comments':
+                    fputcsv($out, ['ID', 'Artikel', 'User', 'Konten', 'Approved', 'Created At']);
+                    Comment::with(['article', 'user'])->orderBy('id')->chunk(200, function ($rows) use ($out) {
+                        foreach ($rows as $comment) {
+                            fputcsv($out, [
+                                $comment->id,
+                                $comment->article->title ?? '',
+                                $comment->user->name ?? '',
+                                $comment->comment,
+                                $comment->is_approved ? 'yes' : 'no',
+                                optional($comment->created_at)->format('Y-m-d H:i:s'),
+                            ]);
+                        }
+                    });
+                    break;
+
+                case 'newsletter':
+                    fputcsv($out, ['ID', 'Email', 'Aktif', 'Subscribed At']);
+                    \App\Models\NewsletterSubscriber::orderBy('id')->chunk(200, function ($rows) use ($out) {
+                        foreach ($rows as $sub) {
+                            fputcsv($out, [
+                                $sub->id,
+                                $sub->email,
+                                $sub->is_active ? 'yes' : 'no',
+                                optional($sub->created_at)->format('Y-m-d H:i:s'),
+                            ]);
+                        }
+                    });
+                    break;
+            }
+
+            fclose($out);
+        };
+
+        ActivityLogHelper::log('reports.export', "Export laporan {$type}");
+
+        return response()->stream($callback, 200, $headers);
     }
 
     // Backup
@@ -1101,14 +1574,17 @@ class AdminDashboardController extends Controller
 
     public function createBackup(Request $request, BackupService $backupService)
     {
-        $type = $request->input('type', 'full');
+        $type = $request->input('type', 'database');
+        if (!in_array($type, ['database', 'files', 'full'], true)) {
+            $type = 'database';
+        }
 
         try {
             switch ($type) {
                 case 'database':
                     $result = $backupService->createDatabaseBackup();
                     if ($result) {
-                        ActivityLogHelper::log('backup', 'created', 'Database backup created: ' . basename($result));
+                        ActivityLogHelper::log('backup.created', 'Database backup created: ' . basename($result));
                         return redirect()->back()->with('success', 'Database backup berhasil dibuat!');
                     }
                     break;
@@ -1116,7 +1592,7 @@ class AdminDashboardController extends Controller
                 case 'files':
                     $result = $backupService->createFilesBackup();
                     if ($result) {
-                        ActivityLogHelper::log('backup', 'created', 'Files backup created: ' . basename($result));
+                        ActivityLogHelper::log('backup.created', 'Files backup created: ' . basename($result));
                         return redirect()->back()->with('success', 'Files backup berhasil dibuat!');
                     }
                     break;
@@ -1125,7 +1601,7 @@ class AdminDashboardController extends Controller
                 default:
                     $results = $backupService->createFullBackup();
                     if ($results['success']) {
-                        ActivityLogHelper::log('backup', 'created', 'Full backup created');
+                        ActivityLogHelper::log('backup.created', 'Full backup created');
                         return redirect()->back()->with('success', 'Full backup berhasil dibuat!');
                     }
                     break;
@@ -1133,13 +1609,14 @@ class AdminDashboardController extends Controller
 
             return redirect()->back()->with('error', 'Backup gagal dibuat!');
         } catch (\Exception $e) {
-            ActivityLogHelper::log('backup', 'error', 'Backup failed: ' . $e->getMessage());
+            ActivityLogHelper::log('backup.error', 'Backup failed: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Terjadi kesalahan saat membuat backup: ' . $e->getMessage());
         }
     }
 
     public function downloadBackup($backup, BackupService $backupService)
     {
+        $backup = basename((string) $backup);
         $backups = $backupService->getBackups();
         $backupFile = collect($backups)->firstWhere('filename', $backup);
 
@@ -1147,13 +1624,14 @@ class AdminDashboardController extends Controller
             return redirect()->back()->with('error', 'File backup tidak ditemukan!');
         }
 
-        ActivityLogHelper::log('backup', 'downloaded', 'Backup downloaded: ' . $backup);
+        ActivityLogHelper::log('backup.downloaded', 'Backup downloaded: ' . $backup);
 
         return response()->download($backupFile['path'], $backup);
     }
 
     public function deleteBackup($backup, BackupService $backupService)
     {
+        $backup = basename((string) $backup);
         $backups = $backupService->getBackups();
         $backupFile = collect($backups)->firstWhere('filename', $backup);
 
@@ -1162,7 +1640,7 @@ class AdminDashboardController extends Controller
         }
 
         if (@unlink($backupFile['path'])) {
-            ActivityLogHelper::log('backup', 'deleted', 'Backup deleted: ' . $backup);
+            ActivityLogHelper::log('backup.deleted', 'Backup deleted: ' . $backup);
             return redirect()->back()->with('success', 'Backup berhasil dihapus!');
         }
 
@@ -1170,29 +1648,53 @@ class AdminDashboardController extends Controller
     }
 
     // System Logs
-    public function logs()
+    public function logs(Request $request)
     {
         $logFile = storage_path('logs/laravel.log');
-        $logs = [];
-        
-        if (file_exists($logFile)) {
-            $logs = file($logFile);
-            $logs = array_slice($logs, -100); // Last 100 lines
+        $level = strtoupper((string) $request->input('level', ''));
+        $search = trim((string) $request->input('q', ''));
+        $allowedLevels = ['ERROR', 'WARNING', 'INFO', 'DEBUG', 'CRITICAL', 'ALERT', 'EMERGENCY'];
+        if ($level !== '' && !in_array($level, $allowedLevels, true)) {
+            $level = '';
         }
 
-        return view('admin.logs.index', compact('logs'));
+        $logs = [];
+        $fileSize = 0;
+        $lastModified = null;
+
+        if (file_exists($logFile)) {
+            $fileSize = filesize($logFile) ?: 0;
+            $lastModified = filemtime($logFile);
+            $raw = @file($logFile, FILE_IGNORE_NEW_LINES);
+            if (is_array($raw)) {
+                $raw = array_slice($raw, -500);
+                $logs = array_values(array_filter($raw, function ($line) use ($level, $search) {
+                    if ($level !== '' && stripos($line, '.' . $level) === false && stripos($line, $level) === false) {
+                        return false;
+                    }
+                    if ($search !== '' && stripos($line, $search) === false) {
+                        return false;
+                    }
+                    return true;
+                }));
+                $logs = array_slice($logs, -100);
+            }
+        }
+
+        return view('admin.logs.index', compact('logs', 'level', 'search', 'fileSize', 'lastModified'));
     }
 
     public function clearLogs()
     {
         $logFile = storage_path('logs/laravel.log');
-        
+
         if (file_exists($logFile)) {
             file_put_contents($logFile, '');
-            return redirect()->back()->with('success', 'Log berhasil dibersihkan!');
+            ActivityLogHelper::log('logs.cleared', 'Laravel log cleared');
+            return redirect()->route('admin.logs.index')->with('success', 'Log berhasil dibersihkan!');
         }
 
-        return redirect()->back()->with('error', 'File log tidak ditemukan!');
+        return redirect()->route('admin.logs.index')->with('error', 'File log tidak ditemukan!');
     }
 
     private function getMonthlyStats()

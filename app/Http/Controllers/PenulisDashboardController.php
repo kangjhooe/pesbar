@@ -17,29 +17,32 @@ use Illuminate\Support\Str;
 class PenulisDashboardController extends Controller
 {
     /**
-     * Constructor - memastikan hanya penulis, admin, atau editor yang bisa akses
+     * Defense in depth: only role penulis may use this controller.
+     * Admin/editor moderate via /admin — they must not enter /penulis.
      */
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
             $user = Auth::user();
-            
-            // Refresh user dari database untuk memastikan data terbaru (terutama role)
-            // Ini penting ketika role user berubah saat mereka masih login
             $user->refresh();
-            
-            // Admin dan editor bisa akses semua
-            if ($user->isAdmin() || $user->isEditor()) {
-                return $next($request);
-            }
-            
-            // Hanya penulis yang bisa akses
-            if (!$user->isPenulis()) {
-                // Jika user bukan penulis lagi, redirect ke user dashboard
+
+            // Invariant: penulis unverified tidak boleh ada — demote & arahkan ke dashboard user
+            if ($user->role === 'penulis' && !$user->isVerified()) {
+                $user->demoteUnverifiedPenulisToUser();
+
                 return redirect()->route('user.dashboard')
-                    ->with('error', 'Akses ditolak. Anda tidak lagi memiliki akses sebagai penulis.');
+                    ->with('error', 'Akses penulis hanya untuk akun terverifikasi. Ajukan upgrade dari dashboard pengguna.');
             }
-            
+
+            if (!$user->isPenulis()) {
+                if ($user->role === 'user') {
+                    return redirect()->route('user.dashboard')
+                        ->with('error', 'Akses ditolak. Anda tidak lagi memiliki akses sebagai penulis.');
+                }
+
+                abort(403, 'Akses ditolak. Anda tidak memiliki izin untuk mengakses halaman ini.');
+            }
+
             return $next($request);
         });
     }
@@ -51,8 +54,7 @@ class PenulisDashboardController extends Controller
         $stats = [
             'total_articles' => $user->articles()->count(),
             'published_articles' => $user->articles()->where('status', 'published')->count(),
-            'pending_articles' => $user->articles()->where('status', 'pending_review')->count(),
-            'rejected_articles' => $user->articles()->where('status', 'rejected')->count(),
+            'suspended_articles' => $user->articles()->where('status', 'suspended')->count(),
             'draft_articles' => $user->articles()->where('status', 'draft')->count(),
             'total_views' => $user->articles()->sum('views'),
             'total_comments' => $user->articles()->withCount('comments')->get()->sum('comments_count'),
@@ -109,7 +111,7 @@ class PenulisDashboardController extends Controller
     public function create()
     {
         $categories = \App\Models\Category::all();
-        $tags = \App\Models\Tag::all();
+        $tags = \App\Models\Tag::orderBy('name')->get();
         return view('penulis.articles.create', compact('categories', 'tags'));
     }
 
@@ -140,14 +142,23 @@ class PenulisDashboardController extends Controller
         }
 
         $user = Auth::user();
-        
-        // Determine status
+
+        // Tidak ada antrean review: draft / jadwal / terbit langsung. Publish dibatasi → draft saja.
         if ($request->has('save_as_draft') && $request->save_as_draft) {
             $status = 'draft';
-        } elseif ($request->scheduled_at) {
-            $status = $user->isVerified() ? 'published' : 'pending_review';
+        } elseif ($request->filled('scheduled_at')) {
+            if (!$user->canPublishDirectly()) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['scheduled_at' => 'Publikasi Anda dibatasi. Simpan sebagai draft sampai pembatasan berakhir.']);
+            }
+            $status = 'draft';
+        } elseif ($user->canPublishDirectly()) {
+            $status = 'published';
         } else {
-            $status = $user->isVerified() ? 'published' : 'pending_review';
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['status' => 'Publikasi Anda dibatasi. Simpan sebagai draft sampai pembatasan berakhir.']);
         }
 
         $article = $user->articles()->create([
@@ -162,7 +173,7 @@ class PenulisDashboardController extends Controller
             'featured_image' => $request->hasFile('featured_image') 
                 ? $request->file('featured_image')->store('articles', 'public') 
                 : null,
-            'published_at' => $request->scheduled_at ? null : ($status === 'published' ? now() : null),
+            'published_at' => $status === 'published' ? now() : null,
             'scheduled_at' => $request->scheduled_at ? \Carbon\Carbon::parse($request->scheduled_at) : null,
         ]);
 
@@ -173,7 +184,11 @@ class PenulisDashboardController extends Controller
             $article->tags()->detach();
         }
 
-        $message = $status === 'draft' ? 'Draft artikel berhasil disimpan!' : 'Artikel berhasil dibuat!';
+        if ($status === 'draft' && $request->filled('scheduled_at')) {
+            $message = 'Artikel dijadwalkan dan akan terbit otomatis pada waktu yang ditentukan.';
+        } else {
+            $message = $status === 'draft' ? 'Draft artikel berhasil disimpan!' : 'Artikel berhasil dibuat!';
+        }
         return redirect()->route('penulis.articles.index')->with('success', $message);
     }
 
@@ -181,7 +196,7 @@ class PenulisDashboardController extends Controller
     {
         $this->authorize('update', $article);
         $categories = \App\Models\Category::all();
-        $tags = \App\Models\Tag::all();
+        $tags = \App\Models\Tag::orderBy('name')->get();
         return view('penulis.articles.edit', compact('article', 'categories', 'tags'));
     }
 
@@ -203,6 +218,7 @@ class PenulisDashboardController extends Controller
             'meta_keywords' => 'nullable|string|max:255',
             'save_as_draft' => 'nullable|boolean',
             'scheduled_at' => 'nullable|date|after:now',
+            'correction_notice' => 'nullable|string|max:2000',
         ]);
 
         // Use content_html if available (from Quill), otherwise use content
@@ -215,17 +231,26 @@ class PenulisDashboardController extends Controller
 
         $user = Auth::user();
         
-        // Determine status - don't change if already published, unless saving as draft
-        if ($request->has('save_as_draft') && $request->save_as_draft) {
+        // Penangguhan redaksi tidak boleh diubah penulis; tidak ada antrean review.
+        if ($article->status === 'suspended') {
+            $status = 'suspended';
+        } elseif ($request->has('save_as_draft') && $request->save_as_draft) {
             $status = 'draft';
-        } elseif ($request->scheduled_at) {
-            $status = $user->isVerified() ? 'published' : 'pending_review';
+        } elseif ($request->filled('scheduled_at')) {
+            if (!$user->canPublishDirectly()) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['scheduled_at' => 'Publikasi Anda dibatasi. Simpan sebagai draft sampai pembatasan berakhir.']);
+            }
+            $status = 'draft';
         } elseif ($article->status === 'published') {
-            // Keep published status if already published
+            $status = 'published';
+        } elseif ($user->canPublishDirectly()) {
             $status = 'published';
         } else {
-            // For pending/rejected/draft, set based on verification
-            $status = $user->isVerified() ? 'published' : 'pending_review';
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['status' => 'Publikasi Anda dibatasi. Simpan sebagai draft sampai pembatasan berakhir.']);
         }
 
         $updateData = [
@@ -240,11 +265,22 @@ class PenulisDashboardController extends Controller
             'scheduled_at' => $request->scheduled_at ? \Carbon\Carbon::parse($request->scheduled_at) : null,
         ];
 
-        // Set published_at if publishing for the first time
-        if ($status === 'published' && !$article->published_at && !$request->scheduled_at) {
-            $updateData['published_at'] = now();
-        } elseif ($request->scheduled_at) {
-            $updateData['published_at'] = null; // Will be set when scheduled time arrives
+        // Correction / klarifikasi (untuk artikel yang sudah/akan terbit)
+        $notice = trim((string) $request->input('correction_notice', ''));
+        if ($notice !== '') {
+            $updateData['correction_notice'] = $notice;
+            if ($article->correction_notice !== $notice) {
+                $updateData['corrected_at'] = now();
+            }
+        } else {
+            $updateData['correction_notice'] = null;
+            $updateData['corrected_at'] = null;
+        }
+
+        if ($status === 'published') {
+            $updateData['published_at'] = $article->published_at ?? now();
+        } elseif ($request->filled('scheduled_at')) {
+            $updateData['published_at'] = null;
         }
 
         $article->update($updateData);
@@ -266,7 +302,11 @@ class PenulisDashboardController extends Controller
             $article->tags()->detach();
         }
 
-        $message = $status === 'draft' ? 'Draft artikel berhasil diperbarui!' : 'Artikel berhasil diperbarui!';
+        if ($status === 'draft' && $request->filled('scheduled_at')) {
+            $message = 'Artikel dijadwalkan dan akan terbit otomatis pada waktu yang ditentukan.';
+        } else {
+            $message = $status === 'draft' ? 'Draft artikel berhasil diperbarui!' : 'Artikel berhasil diperbarui!';
+        }
         return redirect()->route('penulis.articles.index')->with('success', $message);
     }
 
@@ -312,15 +352,26 @@ class PenulisDashboardController extends Controller
                 break;
 
             case 'submit':
-                $status = $user->isVerified() ? 'published' : 'pending_review';
+                if (!$user->canPublishDirectly()) {
+                    return back()->with('error', 'Publikasi Anda dibatasi. Simpan sebagai draft sampai pembatasan berakhir.');
+                }
                 foreach ($articles as $article) {
                     $this->authorize('update', $article);
-                    $article->update(['status' => $status]);
+                    if ($article->status === 'suspended') {
+                        continue;
+                    }
+                    $payload = [
+                        'status' => 'published',
+                    ];
+                    if (!$article->published_at) {
+                        $payload['published_at'] = now();
+                    }
+                    $article->update($payload);
                     $count++;
                 }
-                $message = $status === 'published'
+                $message = $count > 0
                     ? "{$count} artikel diterbitkan."
-                    : "{$count} artikel diajukan untuk review.";
+                    : 'Tidak ada artikel yang dapat diterbitkan.';
                 break;
 
             case 'delete':
@@ -421,55 +472,14 @@ class PenulisDashboardController extends Controller
 
     public function requestVerification()
     {
-        $user = Auth::user();
-        
-        if (!$user->canRequestVerification()) {
-            return redirect()->route('penulis.dashboard')
-                ->with('error', 'Anda tidak dapat mengajukan verifikasi saat ini.');
-        }
-
-        return view('penulis.request-verification');
+        return redirect()->route('penulis.dashboard')
+            ->with('info', 'Penulis selalu terverifikasi. Tidak ada pengajuan verifikasi terpisah.');
     }
 
     public function submitVerificationRequest(Request $request)
     {
-        $user = Auth::user();
-        
-        if (!$user->canRequestVerification()) {
-            return redirect()->route('penulis.dashboard')
-                ->with('error', 'Anda tidak dapat mengajukan verifikasi saat ini.');
-        }
-
-        $request->validate([
-            'reason' => 'nullable|string|max:1000',
-            'verification_type' => 'required|in:perorangan,lembaga',
-            'verification_document' => UploadValidation::verificationDocument(true, 5120),
-        ]);
-
-        $updateData = [
-            'verification_requested_at' => now(),
-            'verification_request_status' => 'pending',
-            'verification_type' => $request->verification_type,
-            'verification_rejection_reason' => null,
-        ];
-
-        // Handle file upload
-        if ($request->hasFile('verification_document')) {
-            // Delete old document if exists
-            if ($user->verification_document && Storage::disk('public')->exists($user->verification_document)) {
-                Storage::disk('public')->delete($user->verification_document);
-            }
-            
-            $updateData['verification_document'] = $request->file('verification_document')->store('verification-documents', 'public');
-        }
-
-        $user->update($updateData);
-
-        // Log activity
-        ActivityLogHelper::logUser('verification.requested', $user, "Penulis {$user->name} mengajukan permintaan verifikasi");
-
         return redirect()->route('penulis.dashboard')
-            ->with('success', 'Permintaan verifikasi berhasil dikirim! Admin akan meninjau permintaan Anda.');
+            ->with('info', 'Penulis selalu terverifikasi. Tidak ada pengajuan verifikasi terpisah.');
     }
 
     public function show(Article $article)
@@ -759,41 +769,67 @@ class PenulisDashboardController extends Controller
     public function mediaLibrary(Request $request)
     {
         $user = Auth::user();
-        
-        // Get all media files from articles
-        $articles = $user->articles()->whereNotNull('featured_image')->get();
-        $mediaFiles = [];
-        
-        foreach ($articles as $article) {
-            if ($article->featured_image && Storage::disk('public')->exists($article->featured_image)) {
-                $filePath = $article->featured_image;
-                $fullPath = storage_path('app/public/' . $filePath);
-                $fileInfo = pathinfo($filePath);
-                
-                $mediaFiles[] = [
-                    'id' => $article->id,
-                    'name' => $fileInfo['basename'],
-                    'path' => $filePath,
-                    'url' => Storage::disk('public')->url($filePath),
-                    'size' => file_exists($fullPath) ? filesize($fullPath) : 0,
-                    'type' => mime_content_type($fullPath) ?? 'image/jpeg',
-                    'article_id' => $article->id,
-                    'article_title' => $article->title,
-                    'uploaded_at' => $article->created_at,
-                ];
-            }
+        $disk = Storage::disk('public');
+        $userMediaPrefix = 'media/penulis/' . $user->id;
+        $byPath = [];
+
+        if (!$disk->exists($userMediaPrefix)) {
+            $disk->makeDirectory($userMediaPrefix);
         }
-        
-        // Sort by uploaded_at desc
-        usort($mediaFiles, fn($a, $b) => $b['uploaded_at']->timestamp <=> $a['uploaded_at']->timestamp);
-        
-        // Pagination
+
+        // Uploads owned by this penulis
+        foreach ($disk->files($userMediaPrefix) as $path) {
+            $fullPath = storage_path('app/public/' . $path);
+            if (!is_file($fullPath)) {
+                continue;
+            }
+
+            $byPath[$path] = [
+                'id' => null,
+                'name' => basename($path),
+                'path' => $path,
+                'url' => $disk->url($path),
+                'size' => filesize($fullPath),
+                'type' => mime_content_type($fullPath) ?: 'image/jpeg',
+                'article_id' => null,
+                'article_title' => null,
+                'uploaded_at' => \Carbon\Carbon::createFromTimestamp(filemtime($fullPath)),
+            ];
+        }
+
+        // Featured images from own articles (may live under articles/)
+        $articles = $user->articles()->whereNotNull('featured_image')->get();
+        foreach ($articles as $article) {
+            $path = str_replace('\\', '/', (string) $article->featured_image);
+            if ($path === '' || !$disk->exists($path)) {
+                continue;
+            }
+
+            $fullPath = storage_path('app/public/' . $path);
+            $existing = $byPath[$path] ?? null;
+
+            $byPath[$path] = [
+                'id' => $article->id,
+                'name' => basename($path),
+                'path' => $path,
+                'url' => $disk->url($path),
+                'size' => is_file($fullPath) ? filesize($fullPath) : ($existing['size'] ?? 0),
+                'type' => is_file($fullPath) ? (mime_content_type($fullPath) ?: 'image/jpeg') : ($existing['type'] ?? 'image/jpeg'),
+                'article_id' => $article->id,
+                'article_title' => $article->title,
+                'uploaded_at' => $existing['uploaded_at'] ?? $article->created_at,
+            ];
+        }
+
+        $mediaFiles = array_values($byPath);
+        usort($mediaFiles, fn ($a, $b) => $b['uploaded_at']->timestamp <=> $a['uploaded_at']->timestamp);
+
         $perPage = 24;
-        $currentPage = $request->get('page', 1);
+        $currentPage = max(1, (int) $request->get('page', 1));
         $offset = ($currentPage - 1) * $perPage;
         $paginatedFiles = array_slice($mediaFiles, $offset, $perPage);
-        $totalPages = ceil(count($mediaFiles) / $perPage);
-        
+        $totalPages = (int) ceil(count($mediaFiles) / $perPage);
+
         return view('penulis.media.index', compact('paginatedFiles', 'currentPage', 'totalPages', 'perPage'));
     }
 
@@ -842,9 +878,16 @@ class PenulisDashboardController extends Controller
         $user = Auth::user();
         $userMediaPrefix = 'media/penulis/' . $user->id . '/';
         $article = $user->articles()->where('featured_image', $path)->first();
-        
-        if (!$article && !str_starts_with($path, $userMediaPrefix)) {
+
+        // Own library uploads OR own article featured image only
+        $isOwnUpload = str_starts_with($path, $userMediaPrefix);
+        if (!$article && !$isOwnUpload) {
             return response()->json(['success' => false, 'message' => 'File tidak ditemukan atau tidak memiliki akses'], 403);
+        }
+
+        // Never allow deleting another author's folder via crafted path
+        if (str_starts_with($path, 'media/penulis/') && !$isOwnUpload) {
+            return response()->json(['success' => false, 'message' => 'Akses ditolak'], 403);
         }
         
         if (Storage::disk('public')->exists($path)) {

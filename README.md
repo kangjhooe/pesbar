@@ -22,41 +22,56 @@ Platform informasi Kabupaten Pesisir Barat yang dibangun dengan Laravel. Aplikas
 ### Frontend
 - ✅ **Desain Responsif** - Mobile-friendly dengan UI modern menggunakan Tailwind CSS
 - ✅ **Berita Terkini** - Menampilkan berita terbaru, trending, dan populer
-- ✅ **Kategori Berita** - Politik, Ekonomi, Sosial, Olahraga, Teknologi, Kesehatan, Pendidikan
+- ✅ **Kategori Berita** - Berita, Artikel, Politik, Ekonomi, Sosial, Olahraga, Teknologi, Kesehatan, Pendidikan
 - ✅ **Pencarian Lanjutan** - Fitur pencarian dengan filter dan autocomplete
 - ✅ **Detail Artikel** - Halaman detail dengan komentar dan berita terkait
-- ✅ **Sistem Komentar** - Komentar dengan sistem moderasi
+- ✅ **Sistem Komentar** - Komentar dengan moderasi dan like
+- ✅ **Bookmark & Riwayat Baca** - Simpan artikel dan lihat riwayat bacaan (user login)
+- ✅ **Follow Penulis** - Ikuti penulis dan lihat daftar following/followers
+- ✅ **Agenda / Event** - Halaman agenda publik (`/agenda`)
 - ✅ **Newsletter** - Sistem berlangganan newsletter
 - ✅ **Widget Cuaca** - Informasi cuaca terkini
 - ✅ **Widget Waktu Sholat** - Informasi waktu sholat
+- ✅ **Widget Maritim** - Informasi kondisi maritim
+- ✅ **Kontak Penting** - Widget daftar kontak penting
 - ✅ **Polling** - Sistem polling interaktif
-- ✅ **Event Popup** - Popup event yang dapat dikonfigurasi
+- ✅ **Event Popup** - Popup event yang dapat dikonfigurasi (global)
 - ✅ **SEO Friendly** - Optimasi untuk mesin pencari
-- ✅ **Sitemap** - Sitemap XML untuk SEO
+- ✅ **Sitemap & Robots** - Sitemap XML (termasuk news sitemap) dan `robots.txt`
 
 ### Backend & Admin Panel
-- ✅ **Sistem Autentikasi** - Login dengan Laravel Breeze dan OAuth Google
-- ✅ **Multi-URL Login** - Login terpisah untuk Admin/Editor (`/admin/login`), Penulis (`/penulis/login`), dan User (`/login`)
+- ✅ **Sistem Autentikasi** - Login dengan Laravel Breeze; OAuth Google (backend siap; tombol UI dapat disembunyikan hingga kredensial `.env` siap)
+- ✅ **Login Tunggal** - Satu URL login (`/login`); setelah login dialihkan otomatis menurut role (admin/editor → dashboard admin, penulis → dashboard penulis, user → dashboard user)
 - ✅ **Role Management** - User, Penulis, Editor, Admin dengan hak akses berbeda
 - ✅ **Dashboard Admin** - Statistik dan overview sistem
-- ✅ **Manajemen Artikel** - CRUD artikel dengan status (draft/pending_review/published/rejected)
-- ✅ **Sistem Review Artikel** - Penulis unverified harus melalui review editor
-- ✅ **Manajemen Kategori** - Kelola kategori berita
-- ✅ **Manajemen Tag** - Sistem tagging artikel
-- ✅ **Manajemen Komentar** - Approve/reject komentar
-- ✅ **Manajemen User** - Kelola pengguna dan upgrade role
-- ✅ **Newsletter Management** - Kelola subscriber newsletter
-- ✅ **Pengaturan Website** - Konfigurasi situs lengkap
-- ✅ **Activity Log** - Log aktivitas admin
+- ✅ **Manajemen Artikel** - CRUD artikel dengan status (`draft` / `pending_review` / `published` / `rejected` / `archived`)
+- ✅ **Sistem Review Artikel** - Penulis unverified harus melalui review editor/admin
+- ✅ **Manajemen Kategori & Tag** - Kelola kategori dan tagging artikel
+- ✅ **Manajemen Komentar** - Approve/reject/hapus komentar
+- ✅ **Manajemen User & Penulis** - Kelola pengguna, upgrade role, dan verifikasi penulis
+- ✅ **Media Library** - Upload dan kelola media
+- ✅ **Analytics & Reports** - Analitik dan laporan (termasuk export)
+- ✅ **Backup** - Buat, unduh, dan hapus backup
+- ✅ **Activity / System Logs** - Log aktivitas dan log sistem
+- ✅ **Newsletter Management** - Kelola subscriber dan kirim newsletter
+- ✅ **Event, Poll & Event Popup** - CRUD agenda, polling, dan popup event
+- ✅ **Kontak Penting** - CRUD kontak penting
+- ✅ **Pengaturan Website** - Konfigurasi umum, logo, tentang, editorial, SEO, dan sistem
 - ✅ **Image Processing** - Optimasi gambar otomatis dengan multiple sizes dan WebP
 - ✅ **Email Notifications** - Notifikasi email untuk berbagai event
 
+### Dashboard Penulis
+- ✅ Manajemen artikel (CRUD, draft, duplicate, export)
+- ✅ Moderasi komentar pada artikel sendiri
+- ✅ Media library, analytics, dan tools SEO
+
 ### Teknologi & Performa
-- ✅ **Redis Integration** - Caching, Session, dan Queue dengan Redis
+- ✅ **Redis Integration** - Caching, Session, dan Queue dengan Redis (opsional)
 - ✅ **Image Optimization** - Multiple sizes dan konversi WebP
 - ✅ **Advanced Search** - Full-text search dengan filters
 - ✅ **Queue System** - Background job processing
 - ✅ **Caching System** - Cache untuk performa optimal
+- ✅ **Rate Limiting** - Pembatasan request untuk auth, API widget, dan komentar
 
 ## 💻 Persyaratan Sistem
 
@@ -120,7 +135,9 @@ php artisan serve
 
 Login dengan:
 - **Admin**: `admin@pesisirbarat.id` / `password`
-- **URL**: `http://localhost:8000/admin/login`
+- **URL**: `http://localhost:8000/login`
+
+Setelah login, admin/editor dialihkan ke `/admin/dashboard`.
 
 ## 🛠️ Instalasi
 
@@ -170,14 +187,14 @@ DB_PASSWORD=password_database
 # Jalankan migration
 php artisan migrate
 
-# Jalankan seeder (membuat admin dan data awal)
+# Jalankan seeder (membuat admin, penulis contoh, kategori, tag, settings, artikel)
 php artisan db:seed
 
-# Atau jalankan seeder spesifik untuk user tambahan (opsional)
+# Opsional: akun demo tambahan (admin/editor/penulis/user sample)
 php artisan db:seed --class=AdminUserSeeder
 ```
 
-> **Catatan:** Seeder default akan membuat admin dengan email `admin@pesisirbarat.id`. Untuk mendapatkan user tambahan (editor, penulis, dll), jalankan `AdminUserSeeder`.
+> **Catatan:** `DatabaseSeeder` membuat admin `admin@pesisirbarat.id` serta beberapa penulis contoh via `PenulisUserSeeder`. `AdminUserSeeder` bersifat opsional dan membuat akun demo terpisah (lihat [Default Login](#-default-login)).
 
 ### 6. Build Assets
 
@@ -201,7 +218,7 @@ php artisan storage:link
 # Development server
 php artisan serve
 
-# Atau gunakan script composer
+# Atau jalankan server + queue + Vite sekaligus
 composer dev
 ```
 
@@ -238,6 +255,8 @@ REDIS_CLIENT=phpredis
 ```
 
 ### Konfigurasi Google OAuth
+
+Backend Google OAuth sudah tersedia. Isi kredensial berikut di `.env`, lalu aktifkan kembali tombol Google di UI login/register jika sebelumnya disembunyikan:
 
 ```env
 GOOGLE_CLIENT_ID=your-google-client-id
@@ -621,26 +640,27 @@ composer install --no-dev --optimize-autoloader
 ```
 pesbar/
 ├── app/                    # Aplikasi utama
-│   ├── Console/           # Artisan commands
-│   ├── Exceptions/        # Exception handlers
-│   ├── Helpers/           # Helper classes
-│   ├── Http/              # Controllers, Middleware, Requests
-│   ├── Jobs/              # Queue jobs
-│   ├── Models/            # Eloquent models
-│   ├── Notifications/     # Email notifications
-│   ├── Observers/         # Model observers
-│   ├── Policies/          # Authorization policies
-│   ├── Providers/         # Service providers
-│   └── Services/          # Business logic services
-├── bootstrap/             # Bootstrap files
-├── config/                # Konfigurasi aplikasi
-├── database/              # Migrations, seeders, factories
-├── public/                # Public assets (document root)
-├── resources/             # Views, CSS, JS
-├── routes/                # Route definitions
-├── storage/               # Logs, cache, uploaded files
-├── tests/                 # Test files
-└── vendor/                # Composer dependencies
+│   ├── Console/            # Artisan commands
+│   ├── Exceptions/         # Exception handlers
+│   ├── Helpers/            # Helper classes
+│   ├── Http/               # Controllers, Middleware, Requests
+│   ├── Jobs/               # Queue jobs
+│   ├── Models/             # Eloquent models
+│   ├── Notifications/      # Email notifications
+│   ├── Observers/          # Model observers
+│   ├── Policies/           # Authorization policies
+│   ├── Providers/          # Service providers
+│   ├── Services/           # Business logic services
+│   └── View/               # Blade view components
+├── bootstrap/              # Bootstrap files
+├── config/                 # Konfigurasi aplikasi
+├── database/               # Migrations, seeders, factories
+├── public/                 # Public assets (document root)
+├── resources/              # Views, CSS, JS
+├── routes/                 # Route definitions
+├── storage/                # Logs, cache, uploaded files
+├── tests/                  # Test files
+└── vendor/                 # Composer dependencies
 ```
 
 ## 🛠️ Teknologi yang Digunakan
@@ -657,44 +677,39 @@ pesbar/
 
 ## 📝 Default Login
 
-Setelah menjalankan seeder (`php artisan db:seed`), Anda dapat login dengan:
+Semua akun demo memakai password: `password`. Login melalui `/login`.
 
-### Admin
+### Dari `php artisan db:seed` (default)
+
+#### Admin
 - **Email:** `admin@pesisirbarat.id`
-- **Password:** `password`
 - **Role:** Admin
-- **URL Login:** `/admin/login`
+- **Setelah login:** `/admin/dashboard`
 
-### Editor
-- **Email:** `editor@pesbar.com` (jika menjalankan `AdminUserSeeder`)
-- **Password:** `password`
-- **Role:** Editor
-- **URL Login:** `/admin/login`
+#### Penulis contoh (`PenulisUserSeeder`)
+- `ahmad.fauzi@pesisirbarat.id`
+- `siti.nurhaliza@pesisirbarat.id`
+- `budi.santoso@pesisirbarat.id`
+- `maya.sari@pesisirbarat.id`
+- `rizki.pratama@pesisirbarat.id`
+- **Role:** Penulis (terverifikasi)
+- **Setelah login:** `/penulis/dashboard`
 
-### Penulis Terverifikasi
-- **Email:** `penulis@pesbar.com` (jika menjalankan `AdminUserSeeder`)
-- **Password:** `password`
-- **Role:** Penulis
-- **Status:** Terverifikasi
-- **URL Login:** `/penulis/login`
+### Dari `php artisan db:seed --class=AdminUserSeeder` (opsional)
 
-### Penulis Belum Terverifikasi
-- **Email:** `penulis2@pesbar.com` (jika menjalankan `AdminUserSeeder`)
-- **Password:** `password`
-- **Role:** Penulis
-- **Status:** Belum Terverifikasi
-- **URL Login:** `/penulis/login`
+| Email | Role | Catatan |
+|-------|------|---------|
+| `admin@pesbar.com` | Admin | Akun admin tambahan (beda dari default) |
+| `editor@pesbar.com` | Editor | Login ke dashboard admin |
+| `penulis@pesbar.com` | Penulis | Terverifikasi |
+| `penulis2@pesbar.com` | Penulis | Belum terverifikasi |
+| `user@pesbar.com` | Penulis (belum terverifikasi) | Label di seeder “User Biasa”, role di DB: `penulis` |
 
-### User Biasa
-- **Email:** `user@pesbar.com` (jika menjalankan `AdminUserSeeder`)
-- **Password:** `password`
-- **Role:** User
-- **URL Login:** `/login`
-
-> ⚠️ **PENTING**: 
+> ⚠️ **PENTING**:
 > - Segera ubah password default setelah pertama kali login!
 > - Email admin default dari `DatabaseSeeder` adalah `admin@pesisirbarat.id`
-> - Untuk mendapatkan user tambahan (editor, penulis, dll), jalankan: `php artisan db:seed --class=AdminUserSeeder`
+> - Jangan jalankan `AdminUserSeeder` di production kecuali memang dibutuhkan untuk demo
+> - User biasa baru biasanya dibuat lewat registrasi (`/register`) atau upgrade request
 
 ## 🔒 Keamanan
 

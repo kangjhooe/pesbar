@@ -83,8 +83,10 @@
         </button>
     </form>
 
+    @if(\App\Helpers\SettingsHelper::enableRegistration())
     <p class="mt-6 text-center text-sm text-news-muted">
         Belum punya akun?
         <a href="{{ route('register') }}" class="font-semibold text-news-accent hover:text-news-ink transition-colors">Daftar di sini</a>
     </p>
+    @endif
 </x-guest-layout>

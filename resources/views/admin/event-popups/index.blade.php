@@ -15,11 +15,11 @@
 
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-            <h3 class="text-lg font-semibold text-gray-900">Daftar Event Popup</h3>
-            <p class="text-sm text-gray-600">Total {{ $eventPopups->total() }} popup</p>
+            <h3 class="text-lg font-semibold text-news-ink">Daftar Event Popup</h3>
+            <p class="text-sm text-news-muted">Total {{ $eventPopups->total() }} popup</p>
         </div>
         <a href="{{ route('admin.event-popups.create') }}"
-           class="inline-flex items-center justify-center bg-news-accent text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors">
+           class="inline-flex items-center justify-center bg-news-accent text-white px-4 py-2 rounded-lg hover:bg-news-ink transition-colors">
             <i class="fas fa-plus mr-2"></i>Tambah Event Popup
         </a>
     </div>
@@ -44,22 +44,22 @@
         </x-slot:head>
 
         @forelse($eventPopups as $popup)
-            <tr class="hover:bg-slate-50/80 transition-colors">
+            <tr class="hover:bg-news-paper transition-colors">
                 <x-admin.checkbox :value="$popup->id" bulk-id="event-popups-bulk" name="ids[]" />
                 <x-admin.td-number :index="$eventPopups->firstItem() + $loop->index" />
                 <td class="px-4 py-4">
-                    <div class="text-sm font-medium text-gray-900 line-clamp-2" title="{{ $popup->title }}">{{ $popup->title }}</div>
-                    <div class="text-sm text-gray-500 line-clamp-1 max-w-xs">{{ $popup->message }}</div>
+                    <div class="text-sm font-medium text-news-ink line-clamp-2" title="{{ $popup->title }}">{{ $popup->title }}</div>
+                    <div class="text-sm text-news-muted line-clamp-1 max-w-xs">{{ $popup->message }}</div>
                 </td>
-                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td class="px-4 py-4 whitespace-nowrap text-sm text-news-ink">
                     {{ $popup->start_date->format('d-m-Y') }}
                 </td>
-                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td class="px-4 py-4 whitespace-nowrap text-sm text-news-ink">
                     {{ $popup->end_date->format('d-m-Y') }}
                 </td>
                 <td class="px-4 py-4 whitespace-nowrap">
                     @if($popup->status)
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-800">
                             Aktif
                         </span>
                     @else
@@ -94,12 +94,12 @@
             </tr>
         @empty
             <tr>
-                <td colspan="7" class="px-4 py-12 text-center text-gray-500">
-                    <i class="fas fa-bell text-4xl mb-4 text-gray-300"></i>
-                    <p class="text-lg font-medium text-gray-700">Belum ada Event Popup</p>
+                <td colspan="7" class="px-4 py-12 text-center text-news-muted">
+                    <i class="fas fa-bell text-4xl mb-4 text-news-muted"></i>
+                    <p class="text-lg font-medium text-news-ink">Belum ada Event Popup</p>
                     <p class="text-sm mb-4">Mulai dengan membuat event popup pertama Anda.</p>
                     <a href="{{ route('admin.event-popups.create') }}"
-                       class="inline-flex items-center bg-news-accent text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors">
+                       class="inline-flex items-center bg-news-accent text-white px-4 py-2 rounded-lg hover:bg-news-ink transition-colors">
                         <i class="fas fa-plus mr-2"></i>Tambah Event Popup
                     </a>
                 </td>

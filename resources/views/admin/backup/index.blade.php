@@ -1,87 +1,105 @@
 @extends('layouts.admin-simple')
 
-@section('title', 'Backup Database - Admin Panel')
-@section('page-title', 'Backup Database')
+@section('title', 'Backup - Admin Panel')
+@section('page-title', 'Backup')
 @section('page-subtitle', 'Kelola backup database dan file')
 
 @section('content')
 <div class="space-y-6">
-    <!-- Backup Actions -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Buat Backup</h3>
-        <div class="flex flex-col sm:flex-row gap-4">
-            <form action="{{ route('admin.backup.create') }}" method="POST" class="inline">
+    <div class="bg-white border border-news-line p-6">
+        <h3 class="text-lg font-semibold text-news-ink mb-4">Buat Backup</h3>
+        <div class="flex flex-col sm:flex-row flex-wrap gap-3">
+            <form action="{{ route('admin.backup.create') }}" method="POST">
                 @csrf
-                <button type="button" 
-                        class="bg-news-accent text-white px-6 py-2 rounded-lg hover:bg-red-800 transition-colors flex items-center"
-                        onclick="window.pesbarConfirmSubmit(this.form, 'Apakah Anda yakin ingin membuat backup database?')">
+                <input type="hidden" name="type" value="database">
+                <button type="button"
+                        class="bg-news-accent text-white px-6 py-2 hover:bg-news-ink transition-colors inline-flex items-center"
+                        onclick="window.pesbarConfirmSubmit(this.form, 'Buat backup database sekarang?')">
                     <i class="fas fa-database mr-2"></i>
-                    Buat Backup Database
+                    Backup Database
                 </button>
             </form>
-            
-            <button onclick="downloadFullBackup()" 
-                    class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center">
-                <i class="fas fa-download mr-2"></i>
-                Download Full Backup
-            </button>
+
+            <form action="{{ route('admin.backup.create') }}" method="POST">
+                @csrf
+                <input type="hidden" name="type" value="files">
+                <button type="button"
+                        class="btn-secondary px-6 py-2 inline-flex items-center"
+                        onclick="window.pesbarConfirmSubmit(this.form, 'Buat backup file media sekarang?')">
+                    <i class="fas fa-folder mr-2"></i>
+                    Backup Files
+                </button>
+            </form>
+
+            <form action="{{ route('admin.backup.create') }}" method="POST">
+                @csrf
+                <input type="hidden" name="type" value="full">
+                <button type="button"
+                        class="bg-news-ink text-white px-6 py-2 hover:bg-news-accent transition-colors inline-flex items-center"
+                        onclick="window.pesbarConfirmSubmit(this.form, 'Buat full backup (database + files)? Ini bisa memakan waktu.')">
+                    <i class="fas fa-archive mr-2"></i>
+                    Full Backup
+                </button>
+            </form>
         </div>
-        
-        <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <div class="flex items-center">
-                <i class="fas fa-exclamation-triangle text-yellow-600 mr-2"></i>
-                <p class="text-sm text-yellow-800">
-                    <strong>Peringatan:</strong> Backup database akan memakan waktu beberapa menit tergantung ukuran database. 
-                    Pastikan tidak ada aktivitas yang sedang berlangsung saat membuat backup.
-                </p>
-            </div>
+
+        <div class="mt-4 border border-news-line border-l-4 border-l-amber-500 bg-amber-50 px-4 py-3">
+            <p class="text-sm text-news-ink">
+                <strong>Catatan:</strong> Backup disimpan di <code class="text-xs">storage/app/backups/</code>.
+                Total saat ini: {{ $storageInfo['backup_count'] ?? count($backups) }} file
+                ({{ $storageInfo['total_size_human'] ?? '0 B' }}).
+            </p>
         </div>
     </div>
 
-    <!-- Backup List -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-900">Daftar Backup</h3>
-            <p class="text-sm text-gray-600">{{ $backups->count() }} file backup</p>
+    <div class="bg-white border border-news-line">
+        <div class="px-6 py-4 border-b border-news-line">
+            <h3 class="text-lg font-semibold text-news-ink">Daftar Backup</h3>
+            <p class="text-sm text-news-muted">{{ count($backups) }} file backup</p>
         </div>
-        
-        @if($backups->count() > 0)
+
+        @if(count($backups) > 0)
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+            <table class="min-w-full divide-y divide-news-line">
+                <thead class="bg-news-paper">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama File</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ukuran</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Dibuat</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-news-muted uppercase tracking-wider">Nama File</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-news-muted uppercase tracking-wider">Tipe</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-news-muted uppercase tracking-wider">Ukuran</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-news-muted uppercase tracking-wider">Tanggal</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-news-muted uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="bg-white divide-y divide-news-line">
                     @foreach($backups as $backup)
-                    <tr class="hover:bg-gray-50">
+                    <tr class="hover:bg-news-paper">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
-                                <i class="fas fa-database text-blue-600 mr-3"></i>
-                                <div class="text-sm font-medium text-gray-900">{{ $backup['name'] }}</div>
+                                <i class="fas fa-file-archive text-news-accent mr-3"></i>
+                                <div class="text-sm font-medium text-news-ink">{{ $backup['filename'] }}</div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ number_format($backup['size'] / 1024 / 1024, 2) }} MB
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ date('d-m-Y H:i:s', $backup['created']) }}
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-news-ink capitalize">{{ $backup['type'] }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-news-ink">{{ $backup['size_human'] }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-news-muted">
+                            {{ $backup['created_at']->format('d-m-Y H:i:s') }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div class="flex items-center space-x-2">
-                                <a href="{{ route('admin.backup.download', $backup['name']) }}" 
-                                   class="text-blue-600 hover:text-blue-900" title="Download">
+                            <div class="flex items-center space-x-3">
+                                <a href="{{ route('admin.backup.download', $backup['filename']) }}"
+                                   class="text-news-accent hover:text-news-ink" title="Download">
                                     <i class="fas fa-download"></i>
                                 </a>
-                                
-                                <button onclick="deleteBackup('{{ $backup['name'] }}')" 
-                                        class="text-red-600 hover:text-red-900" title="Hapus">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                <form action="{{ route('admin.backup.delete', $backup['filename']) }}" method="POST" class="inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="button"
+                                            class="text-news-accent hover:text-news-ink"
+                                            title="Hapus"
+                                            onclick="window.pesbarConfirmSubmit(this.form, 'Hapus backup ini?', {danger:true})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>
@@ -90,135 +108,12 @@
             </table>
         </div>
         @else
-        <div class="p-12 text-center">
-            <div class="text-gray-500">
-                <i class="fas fa-database text-4xl mb-4"></i>
-                <p class="text-lg font-medium">Belum ada backup</p>
-                <p class="text-sm">Buat backup pertama Anda</p>
-            </div>
+        <div class="p-12 text-center text-news-muted">
+            <i class="fas fa-database text-4xl mb-4"></i>
+            <p class="text-lg font-medium">Belum ada backup</p>
+            <p class="text-sm">Buat backup pertama Anda</p>
         </div>
         @endif
     </div>
-
-    <!-- Backup Settings -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Pengaturan Backup</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                <h4 class="text-sm font-medium text-gray-900 mb-2">Auto Backup</h4>
-                <p class="text-sm text-gray-600 mb-4">Konfigurasi backup otomatis</p>
-                <div class="space-y-3">
-                    <label class="flex items-center">
-                        <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-news-accent">
-                        <span class="ml-2 text-sm text-gray-700">Aktifkan backup harian</span>
-                    </label>
-                    <label class="flex items-center">
-                        <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-news-accent">
-                        <span class="ml-2 text-sm text-gray-700">Aktifkan backup mingguan</span>
-                    </label>
-                    <label class="flex items-center">
-                        <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-news-accent">
-                        <span class="ml-2 text-sm text-gray-700">Aktifkan backup bulanan</span>
-                    </label>
-                </div>
-            </div>
-            
-            <div>
-                <h4 class="text-sm font-medium text-gray-900 mb-2">Retention Policy</h4>
-                <p class="text-sm text-gray-600 mb-4">Atur berapa lama backup disimpan</p>
-                <div class="space-y-3">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Backup Harian</label>
-                        <select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">
-                            <option value="7">7 hari</option>
-                            <option value="14">14 hari</option>
-                            <option value="30" selected>30 hari</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Backup Mingguan</label>
-                        <select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">
-                            <option value="4">4 minggu</option>
-                            <option value="8">8 minggu</option>
-                            <option value="12" selected>12 minggu</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Backup Bulanan</label>
-                        <select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">
-                            <option value="6">6 bulan</option>
-                            <option value="12" selected>12 bulan</option>
-                            <option value="24">24 bulan</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="mt-6 flex justify-end">
-            <button class="bg-news-accent text-white px-6 py-2 rounded-lg hover:bg-red-800 transition-colors">
-                Simpan Pengaturan
-            </button>
-        </div>
-    </div>
-
-    <!-- Backup Information -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Informasi Backup</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-blue-50 rounded-lg p-4">
-                <div class="flex items-center">
-                    <i class="fas fa-info-circle text-blue-600 text-xl mr-3"></i>
-                    <div>
-                        <h4 class="text-sm font-medium text-blue-900">Lokasi Backup</h4>
-                        <p class="text-sm text-news-accent">storage/app/backups/</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-green-50 rounded-lg p-4">
-                <div class="flex items-center">
-                    <i class="fas fa-check-circle text-green-600 text-xl mr-3"></i>
-                    <div>
-                        <h4 class="text-sm font-medium text-green-900">Format Backup</h4>
-                        <p class="text-sm text-green-700">SQL Dump</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-yellow-50 rounded-lg p-4">
-                <div class="flex items-center">
-                    <i class="fas fa-exclamation-triangle text-yellow-600 text-xl mr-3"></i>
-                    <div>
-                        <h4 class="text-sm font-medium text-yellow-900">Ukuran Maksimal</h4>
-                        <p class="text-sm text-yellow-700">Tidak terbatas</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
-
-@push('scripts')
-<script>
-function downloadFullBackup() {
-    window.pesbarConfirm('Apakah Anda yakin ingin mendownload full backup? Ini akan memakan waktu beberapa menit.').then(function (ok) {
-        if (!ok) return;
-        window.pesbarAlert('Fitur full backup akan segera tersedia.');
-    });
-}
-
-function deleteBackup(filename) {
-    window.pesbarConfirm('Apakah Anda yakin ingin menghapus backup ini?', { danger: true }).then(function (ok) {
-        if (!ok) return;
-        window.pesbarAlert('Fitur hapus backup akan segera tersedia.');
-    });
-}
-
-// Auto refresh backup list every 30 seconds
-setInterval(function() {
-    // You can implement auto-refresh here if needed
-}, 30000);
-</script>
-@endpush
 @endsection

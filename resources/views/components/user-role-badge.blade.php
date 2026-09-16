@@ -31,7 +31,7 @@
         // Admin: icon istimewa (crown)
         $config = [
             'label' => 'Admin',
-            'class' => 'bg-gradient-to-br from-blue-600 to-blue-700 text-white',
+            'class' => 'bg-news-ink text-white',
             'icon' => 'fas fa-crown',
         ];
     } elseif ($user->role === 'penulis' && $user->isVerified()) {
@@ -47,7 +47,7 @@
             // Penulis perorangan: centang biru
             $config = [
                 'label' => 'Penulis Terverifikasi',
-                'class' => 'bg-blue-500 text-white',
+                'class' => 'bg-news-accent text-white',
                 'icon' => 'fas fa-check-circle',
             ];
         }

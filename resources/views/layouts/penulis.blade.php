@@ -34,6 +34,7 @@
     @stack('styles')
 </head>
 <body class="font-sans antialiased bg-news-paper text-news-ink">
+    <x-impersonation-banner />
     <div class="min-h-screen flex flex-col lg:flex-row">
         <div class="fixed inset-0 bg-black/40 z-40 lg:hidden hidden" id="mobile-overlay"></div>
 
@@ -120,19 +121,6 @@
                             Profil Saya
                         </a>
 
-                        @if(auth()->user()->isPenulis() && !auth()->user()->isVerified())
-                            @if(auth()->user()->canRequestVerification())
-                                <a href="{{ route('penulis.verification.request') }}"
-                                   class="flex items-center px-3 py-2.5 text-sm font-medium transition-colors touch-target {{ request()->routeIs('penulis.verification.*') ? 'bg-news-paper text-news-accent border-l-2 border-news-accent' : 'text-news-ink hover:bg-news-paper hover:text-news-accent border-l-2 border-transparent' }}">
-                                    <i class="fas fa-check-circle mr-3 w-4 text-center text-xs"></i>
-                                    Ajukan Verifikasi
-                                </a>
-                            @elseif(auth()->user()->hasPendingVerificationRequest())
-                                <div class="flex items-center px-3 py-2.5 text-sm font-medium text-news-muted bg-news-paper border-l-2 border-news-ink">
-                                    <i class="fas fa-clock mr-3 w-4 text-center text-xs"></i>
-                                    Verifikasi Pending
-                                </div>
-                            @endif
                         @elseif(auth()->user()->isVerified())
                             <div class="flex items-center px-3 py-2.5 text-sm font-medium text-news-ink bg-news-paper border-l-2 border-news-ink">
                                 <i class="fas fa-check-circle mr-3 w-4 text-center text-xs"></i>
@@ -161,16 +149,29 @@
                         <i class="fas fa-newspaper text-xs text-news-muted w-4 text-center"></i>
                         Ke Portal
                     </a>
-                    <div class="border-t border-news-line my-0.5"></div>
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit"
-                                role="menuitem"
-                                class="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-news-ink hover:bg-news-paper hover:text-news-accent transition-colors text-left">
-                            <i class="fas fa-sign-out-alt text-xs text-news-muted w-4 text-center"></i>
-                            Logout
-                        </button>
-                    </form>
+                    @if(\App\Services\ImpersonationManager::isImpersonating())
+                        <div class="border-t border-news-line my-0.5"></div>
+                        <form method="POST" action="{{ route('impersonation.leave') }}">
+                            @csrf
+                            <button type="submit"
+                                    role="menuitem"
+                                    class="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-news-ink hover:bg-news-paper hover:text-news-accent transition-colors text-left">
+                                <i class="fas fa-undo text-xs text-news-muted w-4 text-center"></i>
+                                Kembali ke Admin
+                            </button>
+                        </form>
+                    @else
+                        <div class="border-t border-news-line my-0.5"></div>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit"
+                                    role="menuitem"
+                                    class="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-news-ink hover:bg-news-paper hover:text-news-accent transition-colors text-left">
+                                <i class="fas fa-sign-out-alt text-xs text-news-muted w-4 text-center"></i>
+                                Logout
+                            </button>
+                        </form>
+                    @endif
                 </div>
 
                 <button type="button"
@@ -218,6 +219,27 @@
             </header>
 
             <main class="flex-1 p-3 sm:p-4 lg:p-6 overflow-y-auto overflow-x-hidden min-w-0">
+                @auth
+                    @if(auth()->user()->isPublishRestricted())
+                        <div class="mb-5 border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+                            <p class="font-semibold"><i class="fas fa-ban mr-1"></i> Publish langsung dibatasi</p>
+                            <p class="mt-1 text-amber-900/90">
+                                Artikel baru akan masuk review hingga
+                                {{ auth()->user()->publish_restricted_until->format('d M Y, H:i') }} WIB
+                                (peringatan: {{ auth()->user()->content_warning_count }}).
+                            </p>
+                        </div>
+                    @elseif((int) auth()->user()->content_warning_count > 0)
+                        <div class="mb-5 border border-news-line bg-white px-4 py-3 text-sm text-news-ink">
+                            <p class="font-semibold"><i class="fas fa-exclamation-triangle mr-1 text-amber-600"></i> Peringatan konten</p>
+                            <p class="mt-1 text-news-muted">
+                                Anda memiliki {{ auth()->user()->content_warning_count }} peringatan terkait keakuratan konten.
+                                Pastikan fakta artikel sudah diverifikasi sebelum diterbitkan.
+                            </p>
+                        </div>
+                    @endif
+                @endauth
+
                 @if(session('success'))
                     <div class="notification-toast mb-5 animate-slide-down">
                         <div class="bg-white border-l-4 border-news-ink border border-news-line p-4 flex items-start gap-3">

@@ -165,13 +165,13 @@ class WidgetController extends BaseApiController
             );
 
             if ($result['success']) {
-                return $this->successResponse($result['data'], 'Suara berhasil disimpan');
+                return $this->successResponse($result['data'] ?? null, $result['message'] ?? 'Suara berhasil disimpan');
             }
 
             return $this->errorResponse($result['message'] ?? 'Gagal menyimpan suara', 400);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return $this->validationErrorResponse($e->errors(), 'Validasi gagal');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             \Log::error('Submit Poll Vote Error: ' . $e->getMessage());
             return $this->errorResponse('Gagal menyimpan suara', 500);
         }

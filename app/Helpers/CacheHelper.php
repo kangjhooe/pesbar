@@ -150,16 +150,24 @@ class CacheHelper
                     'total_users' => \App\Models\User::count(),
                     'total_penulis' => \App\Models\User::where('role', 'penulis')->count(),
                     'total_articles' => \App\Models\Article::count(),
-                    'pending_articles' => \App\Models\Article::where('status', 'pending_review')->count(),
+                    'suspended_articles' => \App\Models\Article::where('status', 'suspended')->count(),
                     'published_articles' => \App\Models\Article::where('status', 'published')->count(),
                     'total_views' => \App\Models\Article::sum('views'),
                     'total_categories' => \App\Models\Category::count(),
                     'total_comments' => \App\Models\Comment::count(),
                     'pending_comments' => \App\Models\Comment::where('is_approved', false)->count(),
-                    'newsletter_subscribers' => \App\Models\NewsletterSubscriber::count(),
+                    'newsletter_subscribers' => \App\Models\NewsletterSubscriber::where('is_active', true)->count(),
                 ];
             }
         );
+    }
+
+    /**
+     * Forget a single cache key (alias used by services).
+     */
+    public static function forget(string $key): void
+    {
+        Cache::forget($key);
     }
 
     /**
@@ -173,7 +181,7 @@ class CacheHelper
             return;
         }
 
-        Cache::forget($pattern);
+        self::forget($pattern);
 
         if (config('cache.default') === 'redis') {
             try {

@@ -9,11 +9,11 @@
     <!-- Header Actions -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-            <h3 class="text-lg font-semibold text-gray-900">Daftar Artikel</h3>
-            <p class="text-sm text-gray-600">Total {{ $articles->total() }} artikel</p>
+            <h3 class="text-lg font-semibold text-news-ink">Daftar Artikel</h3>
+            <p class="text-sm text-news-muted">Total {{ $articles->total() }} artikel</p>
         </div>
         <div class="flex gap-2">
-            <a href="{{ route('admin.articles.create') }}" class="bg-news-accent text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors flex items-center">
+            <a href="{{ route('admin.articles.create') }}" class="bg-news-accent text-white px-4 py-2 rounded-lg hover:bg-news-ink transition-colors flex items-center">
                 <i class="fas fa-plus mr-2"></i>
                 Tambah Artikel
             </a>
@@ -21,34 +21,34 @@
     </div>
 
     <!-- Articles Table -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="bg-white rounded-xl shadow-sm border border-news-line overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+            <table class="min-w-full divide-y divide-news-line">
+                <thead class="bg-news-paper">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th class="px-6 py-3 text-left text-xs font-medium text-news-muted uppercase tracking-wider">
                             Artikel
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th class="px-6 py-3 text-left text-xs font-medium text-news-muted uppercase tracking-wider">
                             Kategori
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th class="px-6 py-3 text-left text-xs font-medium text-news-muted uppercase tracking-wider">
                             Status
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th class="px-6 py-3 text-left text-xs font-medium text-news-muted uppercase tracking-wider">
                             Penulis
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th class="px-6 py-3 text-left text-xs font-medium text-news-muted uppercase tracking-wider">
                             Dibuat
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th class="px-6 py-3 text-left text-xs font-medium text-news-muted uppercase tracking-wider">
                             Aksi
                         </th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="bg-white divide-y divide-news-line">
                     @forelse($articles as $article)
-                    <tr class="hover:bg-gray-50">
+                    <tr class="hover:bg-news-paper">
                         <td class="px-6 py-4">
                             <div class="flex items-center">
                                 <div class="flex-shrink-0 h-12 w-12">
@@ -57,17 +57,17 @@
                                          alt="{{ $article->title }}">
                                 </div>
                                 <div class="ml-4">
-                                    <div class="text-sm font-medium text-gray-900 line-clamp-2">
+                                    <div class="text-sm font-medium text-news-ink line-clamp-2">
                                         {{ $article->title }}
                                     </div>
-                                    <div class="text-sm text-gray-500">
+                                    <div class="text-sm text-news-muted">
                                         {{ Str::limit($article->excerpt, 60) }}
                                     </div>
                                 </div>
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-news-paper text-news-ink">
                                 {{ $article->category->name ?? 'Tidak ada kategori' }}
                             </span>
                         </td>
@@ -84,7 +84,7 @@
                                 </span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-news-ink">
                             <div class="flex items-center gap-2">
                                 <span class="font-medium">{{ $article->author->name ?? 'Sistem' }}</span>
                                 @if($article->author)
@@ -92,21 +92,24 @@
                                 @endif
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-news-muted">
                             {{ $article->created_at->format('d-m-Y H:i') }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex items-center space-x-2">
                                 <a href="{{ $article->publicUrl() }}" 
-                                   class="text-blue-600 hover:text-blue-900" 
+                                   class="text-news-accent hover:text-news-ink" 
                                    title="Lihat">
                                     <i class="fas fa-eye"></i>
                                 </a>
+                                @can('update', $article)
                                 <a href="{{ route('admin.articles.edit', $article) }}" 
                                    class="text-yellow-600 hover:text-yellow-900" 
                                    title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </a>
+                                @endcan
+                                @can('delete', $article)
                                 <form action="{{ route('admin.articles.destroy', $article) }}" 
                                       method="POST" class="inline" 
                                       onsubmit="return window.pesbarConfirmForm(event, 'Apakah Anda yakin ingin menghapus artikel ini?')">
@@ -116,13 +119,14 @@
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
+                                @endcan
                             </div>
                         </td>
                     </tr>
                     @empty
                     <tr>
                         <td colspan="6" class="px-6 py-12 text-center">
-                            <div class="text-gray-500">
+                            <div class="text-news-muted">
                                 <i class="fas fa-newspaper text-4xl mb-4"></i>
                                 <p class="text-lg font-medium">Belum ada artikel</p>
                                 <p class="text-sm">Mulai buat artikel pertama Anda</p>

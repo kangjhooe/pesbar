@@ -214,6 +214,29 @@
  </div>
  </div>
 
+ <!-- Koreksi / Klarifikasi -->
+ <div class="mb-6">
+ <label for="correction_notice" class="block text-sm font-medium text-news-ink mb-2">
+ <i class="fas fa-exclamation-circle mr-1"></i>
+ Koreksi / Klarifikasi (opsional)
+ </label>
+ <textarea
+ id="correction_notice"
+ name="correction_notice"
+ rows="3"
+ maxlength="2000"
+ class="w-full px-3 py-2 border border-news-line rounded-md focus:outline-none focus:ring-2 focus:ring-news-accent/30 focus:border-news-accent @error('correction_notice') border-news-accent @enderror"
+ placeholder="Jika ada perbaikan fakta setelah terbit, tulis catatan singkat di sini."
+ >{{ old('correction_notice', $article->correction_notice) }}</textarea>
+ @error('correction_notice')
+ <p class="mt-1 text-sm text-news-accent">{{ $message }}</p>
+ @enderror
+ <p class="mt-1 text-sm text-news-muted">Catatan ini tampil di halaman publik. Kosongkan untuk menghapus.</p>
+ @if($article->corrected_at)
+ <p class="mt-1 text-xs text-news-muted">Terakhir dikoreksi: {{ $article->corrected_at->format('d M Y, H:i') }} WIB</p>
+ @endif
+ </div>
+
  <!-- Scheduled Publish -->
  <div class="mb-6">
  <label for="scheduled_at" class="block text-sm font-medium text-news-ink mb-2">
@@ -241,21 +264,37 @@
  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-news-paper text-news-ink">
  Terbit
  </span>
- @elseif($article->status === 'pending_review')
- <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-news-paper text-news-ink">
- Menunggu Review
+ @elseif($article->status === 'suspended')
+ <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-50 text-orange-800">
+ Ditangguhkan
+ </span>
+ @elseif($article->status === 'draft')
+ <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-news-paper text-news-muted">
+ Draft
+ </span>
+ @elseif($article->status === 'archived')
+ <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-news-paper text-news-muted">
+ Diarsipkan
+ </span>
+ @elseif($article->status === 'suspended')
+ <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-50 text-orange-800">
+ Ditangguhkan
  </span>
  @else
- <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-50 text-news-ink">
- Ditolak
+ <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-news-paper text-news-muted">
+ Draft
  </span>
+ @endif
+ @if($article->status === 'suspended' && $article->suspension_reason)
+ <p class="mt-2 text-sm text-orange-800">Penayangan ditangguhkan: {{ $article->suspension_reason }}</p>
+ <p class="mt-1 text-xs text-news-muted">Anda dapat mengedit isi, tetapi tidak dapat memulihkan penayangan sendiri. Hubungi redaksi.</p>
  @endif
  </div>
  </div>
 
  <div class="flex justify-between items-center">
  <div class="flex items-center space-x-4">
- @if($article->status !== 'published')
+ @if(!in_array($article->status, ['published', 'suspended'], true))
  <label class="flex items-center">
  <input type="checkbox" name="save_as_draft" value="1" {{ $article->status === 'draft' ? 'checked' : '' }} class="rounded border-news-line text-news-accent focus:ring-news-accent/30">
  <span class="ml-2 text-sm text-news-ink">Simpan sebagai draft</span>

@@ -10,6 +10,13 @@ class NewsletterController extends Controller
 {
     public function subscribe(Request $request)
     {
+        if (!\App\Helpers\SettingsHelper::enableNewsletter()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Newsletter sedang tidak aktif.'
+            ], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'email' => 'required|email|max:100',
             'name' => 'nullable|string|max:100',

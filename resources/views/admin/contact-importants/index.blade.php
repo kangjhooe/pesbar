@@ -15,16 +15,16 @@
 
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-            <h3 class="text-lg font-semibold text-gray-900">Daftar Kontak Penting</h3>
-            <p class="text-sm text-gray-600">Total {{ $contacts->total() }} kontak</p>
+            <h3 class="text-lg font-semibold text-news-ink">Daftar Kontak Penting</h3>
+            <p class="text-sm text-news-muted">Total {{ $contacts->total() }} kontak</p>
         </div>
         <div class="flex flex-wrap gap-2">
             <a href="{{ route('admin.contact-importants.export') }}"
-               class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+               class="inline-flex items-center px-4 py-2 border border-news-line text-news-ink hover:border-news-ink hover:bg-white transition-colors">
                 <i class="fas fa-download mr-2"></i>Export
             </a>
             <a href="{{ route('admin.contact-importants.create') }}"
-               class="inline-flex items-center px-4 py-2 bg-news-accent text-white rounded-lg hover:bg-red-800 transition-colors">
+               class="inline-flex items-center px-4 py-2 bg-news-accent text-white rounded-lg hover:bg-news-ink transition-colors">
                 <i class="fas fa-plus mr-2"></i>Tambah Kontak
             </a>
         </div>
@@ -32,106 +32,109 @@
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white rounded-lg shadow p-4">
+        <div class="bg-white border border-news-line p-4">
             <div class="flex items-center">
-                <div class="p-2 bg-blue-100 rounded-lg">
-                    <i class="fas fa-address-book text-blue-600"></i>
+                <div class="p-2 bg-news-paper">
+                    <i class="fas fa-address-book text-news-accent"></i>
                 </div>
                 <div class="ml-3">
-                    <p class="text-sm font-medium text-gray-600">Total Kontak</p>
-                    <p class="text-2xl font-bold text-gray-900">{{ $contacts->total() }}</p>
+                    <p class="text-sm font-medium text-news-muted">Total Kontak</p>
+                    <p class="text-2xl font-bold text-news-ink">{{ $stats['total'] }}</p>
                 </div>
             </div>
         </div>
-        <div class="bg-white rounded-lg shadow p-4">
+        <div class="bg-white border border-news-line p-4">
             <div class="flex items-center">
-                <div class="p-2 bg-green-100 rounded-lg">
-                    <i class="fas fa-check-circle text-green-600"></i>
+                <div class="p-2 bg-news-paper">
+                    <i class="fas fa-check-circle text-news-ink"></i>
                 </div>
                 <div class="ml-3">
-                    <p class="text-sm font-medium text-gray-600">Kontak Aktif</p>
-                    <p class="text-2xl font-bold text-gray-900">{{ $contacts->where('is_active', true)->count() }}</p>
+                    <p class="text-sm font-medium text-news-muted">Kontak Aktif</p>
+                    <p class="text-2xl font-bold text-news-ink">{{ $stats['active'] }}</p>
                 </div>
             </div>
         </div>
-        <div class="bg-white rounded-lg shadow p-4">
+        <div class="bg-white border border-news-line p-4">
             <div class="flex items-center">
-                <div class="p-2 bg-amber-100 rounded-lg">
-                    <i class="fas fa-times-circle text-amber-600"></i>
+                <div class="p-2 bg-news-paper">
+                    <i class="fas fa-times-circle text-news-ink"></i>
                 </div>
                 <div class="ml-3">
-                    <p class="text-sm font-medium text-gray-600">Tidak Aktif</p>
-                    <p class="text-2xl font-bold text-gray-900">{{ $contacts->where('is_active', false)->count() }}</p>
+                    <p class="text-sm font-medium text-news-muted">Tidak Aktif</p>
+                    <p class="text-2xl font-bold text-news-ink">{{ $stats['inactive'] }}</p>
                 </div>
             </div>
         </div>
-        <div class="bg-white rounded-lg shadow p-4">
+        <div class="bg-white border border-news-line p-4">
             <div class="flex items-center">
-                <div class="p-2 bg-indigo-100 rounded-lg">
-                    <i class="fas fa-tags text-indigo-600"></i>
+                <div class="p-2 bg-news-paper">
+                    <i class="fas fa-tags text-news-ink"></i>
                 </div>
                 <div class="ml-3">
-                    <p class="text-sm font-medium text-gray-600">Jenis Layanan</p>
-                    <p class="text-2xl font-bold text-gray-900">{{ $contacts->pluck('type')->unique()->count() }}</p>
+                    <p class="text-sm font-medium text-news-muted">Jenis Layanan</p>
+                    <p class="text-2xl font-bold text-news-ink">{{ $stats['types'] }}</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Client-side filters -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Cari</label>
-                <input type="text" id="searchInput" placeholder="Cari nama, telepon, atau alamat..."
-                       class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">
+    <!-- Server-side filters -->
+    <div class="bg-white border border-news-line p-4">
+        <form method="GET" action="{{ route('admin.contact-importants.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-news-ink mb-1">Cari</label>
+                <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari nama, telepon, atau alamat..."
+                       class="w-full border border-news-line rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Jenis</label>
-                <select id="typeFilter" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">
+                <label class="block text-sm font-medium text-news-ink mb-1">Jenis</label>
+                <select name="type" class="w-full border border-news-line rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">
                     <option value="">Semua Jenis</option>
-                    <option value="polisi">Polisi</option>
-                    <option value="rumah_sakit">Rumah Sakit</option>
-                    <option value="pemadam_kebakaran">Pemadam Kebakaran</option>
-                    <option value="ambulans">Ambulans</option>
-                    <option value="posko_bencana">Posko Bencana</option>
-                    <option value="kantor_camat">Kantor Camat</option>
-                    <option value="puskesmas">Puskesmas</option>
-                    <option value="lainnya">Lainnya</option>
+                    @foreach(['polisi'=>'Polisi','rumah_sakit'=>'Rumah Sakit','pemadam_kebakaran'=>'Pemadam Kebakaran','ambulans'=>'Ambulans','posko_bencana'=>'Posko Bencana','kantor_camat'=>'Kantor Camat','puskesmas'=>'Puskesmas','lainnya'=>'Lainnya'] as $value => $label)
+                        <option value="{{ $value }}" {{ request('type') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
                 </select>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                <select id="statusFilter" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">
+                <label class="block text-sm font-medium text-news-ink mb-1">Status</label>
+                <select name="status" class="w-full border border-news-line rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">
                     <option value="">Semua Status</option>
-                    <option value="1">Aktif</option>
-                    <option value="0">Tidak Aktif</option>
+                    <option value="1" {{ request('status') === '1' ? 'selected' : '' }}>Aktif</option>
+                    <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>Tidak Aktif</option>
                 </select>
             </div>
-        </div>
+            <div class="md:col-span-4 flex flex-wrap gap-2">
+                <button type="submit" class="inline-flex items-center px-4 py-2 bg-news-ink text-white text-sm hover:bg-news-accent">
+                    <i class="fas fa-search mr-2"></i>Filter
+                </button>
+                <a href="{{ route('admin.contact-importants.index') }}" class="inline-flex items-center px-4 py-2 border border-news-line text-sm text-news-ink hover:bg-news-paper">
+                    Reset
+                </a>
+            </div>
+        </form>
     </div>
 
     {{-- Bulk uses contact_ids via separate JSON endpoints — keep custom bulk bar --}}
     <x-admin.table :paginator="$contacts" :bulk="true" bulk-id="contacts-bulk" id="contactsTableWrap">
         <x-slot:bulkBar>
             <div class="flex flex-wrap items-center gap-3">
-                <span class="text-sm text-gray-600">
+                <span class="text-sm text-news-muted">
                     <span id="contacts-bulk-count" class="font-semibold text-news-accent">0</span> dipilih
                 </span>
                 <button type="button" onclick="bulkActivate()"
-                        class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors">
+                        class="inline-flex items-center px-3 py-1.5 bg-news-accent text-white text-sm hover:bg-news-ink transition-colors">
                     <i class="fas fa-check mr-1.5"></i>Aktifkan
                 </button>
                 <button type="button" onclick="bulkDeactivate()"
-                        class="inline-flex items-center px-3 py-1.5 bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 transition-colors">
+                        class="inline-flex items-center px-3 py-1.5 bg-news-ink text-white text-sm rounded-lg hover:bg-news-accent transition-colors">
                     <i class="fas fa-times mr-1.5"></i>Nonaktifkan
                 </button>
                 <button type="button" onclick="bulkDelete()"
-                        class="inline-flex items-center px-3 py-1.5 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
+                        class="inline-flex items-center px-3 py-1.5 border border-news-accent text-news-accent text-sm hover:bg-news-accent hover:text-white transition-colors">
                     <i class="fas fa-trash mr-1.5"></i>Hapus
                 </button>
                 <button type="button" onclick="window.adminTableClearSelection('contacts-bulk')"
-                        class="inline-flex items-center px-3 py-1.5 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300 transition-colors">
+                        class="inline-flex items-center px-3 py-1.5 border border-news-line text-news-ink text-sm hover:border-news-ink hover:bg-white transition-colors">
                     Batal
                 </button>
             </div>
@@ -150,19 +153,19 @@
         </x-slot:head>
 
         @forelse($contacts as $contact)
-            <tr class="hover:bg-slate-50/80 transition-colors contact-row"
+            <tr class="hover:bg-news-paper transition-colors contact-row"
                 data-type="{{ $contact->type }}"
                 data-status="{{ $contact->is_active ? '1' : '0' }}">
                 <x-admin.checkbox :value="$contact->id" bulk-id="contacts-bulk" name="contact_ids[]" />
                 <x-admin.td-number :index="$contacts->firstItem() + $loop->index" />
                 <td class="px-4 py-4">
-                    <div class="text-sm font-medium text-gray-900">{{ $contact->name }}</div>
+                    <div class="text-sm font-medium text-news-ink">{{ $contact->name }}</div>
                     @if($contact->description)
-                        <div class="text-sm text-gray-500">{{ Str::limit($contact->description, 50) }}</div>
+                        <div class="text-sm text-news-muted">{{ Str::limit($contact->description, 50) }}</div>
                     @endif
                 </td>
                 <td class="px-4 py-4 whitespace-nowrap">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-news-paper text-news-ink border border-news-line">
                         {{ ucwords(str_replace('_', ' ', $contact->type)) }}
                     </span>
                 </td>
@@ -172,28 +175,28 @@
                             <i class="fas fa-phone mr-1"></i>{{ $contact->formatted_phone }}
                         </a>
                     @else
-                        <span class="text-gray-400">Tidak ada</span>
+                        <span class="text-news-muted">Tidak ada</span>
                     @endif
                 </td>
-                <td class="px-4 py-4 text-sm text-gray-600">
+                <td class="px-4 py-4 text-sm text-news-muted">
                     @if($contact->address)
                         <i class="fas fa-map-marker-alt text-amber-500 mr-1"></i>{{ Str::limit($contact->address, 35) }}
                     @else
-                        <span class="text-gray-400">Tidak ada</span>
+                        <span class="text-news-muted">Tidak ada</span>
                     @endif
                 </td>
                 <td class="px-4 py-4 whitespace-nowrap">
                     @if($contact->is_active)
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-800">
                             Aktif
                         </span>
                     @else
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-news-paper text-news-ink">
                             Tidak Aktif
                         </span>
                     @endif
                 </td>
-                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td class="px-4 py-4 whitespace-nowrap text-sm text-news-muted">
                     {{ $contact->sort_order }}
                 </td>
                 <x-admin.actions>
@@ -218,12 +221,12 @@
             </tr>
         @empty
             <tr>
-                <td colspan="9" class="px-4 py-12 text-center text-gray-500">
-                    <i class="fas fa-address-book text-4xl mb-4 text-gray-300"></i>
-                    <p class="text-lg font-medium text-gray-700">Belum ada kontak penting</p>
+                <td colspan="9" class="px-4 py-12 text-center text-news-muted">
+                    <i class="fas fa-address-book text-4xl mb-4 text-news-muted"></i>
+                    <p class="text-lg font-medium text-news-ink">Belum ada kontak penting</p>
                     <p class="text-sm mb-4">Mulai dengan menambahkan kontak penting pertama Anda</p>
                     <a href="{{ route('admin.contact-importants.create') }}"
-                       class="inline-flex items-center px-4 py-2 bg-news-accent text-white rounded-lg hover:bg-red-800 transition-colors">
+                       class="inline-flex items-center px-4 py-2 bg-news-accent text-white rounded-lg hover:bg-news-ink transition-colors">
                         <i class="fas fa-plus mr-2"></i>Tambah Kontak Pertama
                     </a>
                 </td>
@@ -234,33 +237,6 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('searchInput');
-    const typeFilter = document.getElementById('typeFilter');
-    const statusFilter = document.getElementById('statusFilter');
-
-    function filterTable() {
-        const searchTerm = searchInput.value.toLowerCase();
-        const selectedType = typeFilter.value;
-        const selectedStatus = statusFilter.value;
-        const rows = document.querySelectorAll('.contact-row');
-
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            const type = row.getAttribute('data-type');
-            const status = row.getAttribute('data-status');
-            const matchesSearch = !searchTerm || text.includes(searchTerm);
-            const matchesType = !selectedType || type === selectedType;
-            const matchesStatus = !selectedStatus || status === selectedStatus;
-            row.style.display = (matchesSearch && matchesType && matchesStatus) ? '' : 'none';
-        });
-    }
-
-    searchInput.addEventListener('input', filterTable);
-    typeFilter.addEventListener('change', filterTable);
-    statusFilter.addEventListener('change', filterTable);
-});
-
 function getSelectedContactIds() {
     return Array.from(document.querySelectorAll('.admin-row-checkbox[data-bulk-id="contacts-bulk"]:checked'))
         .map(cb => cb.value);
@@ -268,31 +244,36 @@ function getSelectedContactIds() {
 
 async function bulkRequest(url, confirmMsg) {
     const contactIds = getSelectedContactIds();
-    if (contactIds.length === 0) return;
+    if (contactIds.length === 0) {
+        window.pesbarAlert('Pilih minimal satu kontak terlebih dahulu.');
+        return;
+    }
     const ok = await window.pesbarConfirm(confirmMsg.replace('{n}', contactIds.length), { danger: true });
     if (!ok) return;
 
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify({ contact_ids: contactIds })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ contact_ids: contactIds })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (response.ok && data.success) {
             location.reload();
-        } else {
-            alert(data.message || 'Terjadi kesalahan.');
+            return;
         }
-    })
-    .catch(error => {
+        const msg = data.message
+            || (data.errors ? Object.values(data.errors).flat()[0] : null)
+            || 'Terjadi kesalahan saat memproses aksi massal.';
+        window.pesbarAlert(msg);
+    } catch (error) {
         console.error('Error:', error);
-        alert('Terjadi kesalahan saat memproses aksi massal.');
-    });
+        window.pesbarAlert('Terjadi kesalahan saat memproses aksi massal.');
+    }
 }
 
 function bulkActivate() {

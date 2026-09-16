@@ -1,61 +1,61 @@
 <!-- Comments Overview -->
 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
     <!-- Total Comments -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white border border-news-line p-6">
         <div class="flex items-center">
-            <div class="p-3 bg-blue-100 rounded-lg">
-                <i class="fas fa-comments text-blue-600 text-xl"></i>
+            <div class="p-3 bg-news-paper rounded-lg">
+                <i class="fas fa-comments text-news-accent text-xl"></i>
             </div>
             <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">Total Komentar</p>
-                <p class="text-2xl font-bold text-gray-900">{{ $stats['comments'] }}</p>
+                <p class="text-sm font-medium text-news-muted">Total Komentar</p>
+                <p class="text-2xl font-bold text-news-ink">{{ $stats['comments'] }}</p>
             </div>
         </div>
     </div>
 
     <!-- Approved Comments -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white border border-news-line p-6">
         <div class="flex items-center">
             <div class="p-3 bg-green-100 rounded-lg">
                 <i class="fas fa-check-circle text-green-600 text-xl"></i>
             </div>
             <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">Disetujui</p>
-                <p class="text-2xl font-bold text-gray-900">{{ $stats['comments'] - $stats['pending_comments'] }}</p>
+                <p class="text-sm font-medium text-news-muted">Disetujui</p>
+                <p class="text-2xl font-bold text-news-ink">{{ $stats['comments'] - $stats['pending_comments'] }}</p>
             </div>
         </div>
     </div>
 
     <!-- Pending Comments -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white border border-news-line p-6">
         <div class="flex items-center">
             <div class="p-3 bg-yellow-100 rounded-lg">
                 <i class="fas fa-clock text-yellow-600 text-xl"></i>
             </div>
             <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">Menunggu Moderasi</p>
-                <p class="text-2xl font-bold text-gray-900">{{ $stats['pending_comments'] }}</p>
+                <p class="text-sm font-medium text-news-muted">Menunggu Moderasi</p>
+                <p class="text-2xl font-bold text-news-ink">{{ $stats['pending_comments'] }}</p>
             </div>
         </div>
     </div>
 
     <!-- Comments This Month -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white border border-news-line p-6">
         <div class="flex items-center">
-            <div class="p-3 bg-purple-100 rounded-lg">
-                <i class="fas fa-calendar text-purple-600 text-xl"></i>
+            <div class="p-3 bg-news-paper rounded-lg">
+                <i class="fas fa-calendar text-news-ink text-xl"></i>
             </div>
             <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">Bulan Ini</p>
-                <p class="text-2xl font-bold text-gray-900">{{ $monthlyStats['comments_this_month'] }}</p>
+                <p class="text-sm font-medium text-news-muted">Bulan Ini</p>
+                <p class="text-2xl font-bold text-news-ink">{{ $monthlyStats['comments_this_month'] }}</p>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Comment Management Actions -->
-<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-    <h3 class="text-lg font-semibold text-gray-900 mb-4">Manajemen Komentar</h3>
+<div class="bg-white border border-news-line p-6 mb-8">
+    <h3 class="text-lg font-semibold text-news-ink mb-4">Manajemen Komentar</h3>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <a href="#" class="flex items-center p-4 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors">
             <i class="fas fa-clock text-yellow-600 text-xl mr-3"></i>
@@ -78,10 +78,10 @@
                 <p class="text-sm text-red-700">Komentar yang ditolak</p>
             </div>
         </a>
-        <a href="#" class="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
-            <i class="fas fa-list text-blue-600 text-xl mr-3"></i>
+        <a href="#" class="flex items-center p-4 bg-news-paper hover:border-news-ink transition-colors">
+            <i class="fas fa-list text-news-accent text-xl mr-3"></i>
             <div>
-                <p class="font-medium text-blue-900">Semua Komentar</p>
+                <p class="font-medium text-news-ink">Semua Komentar</p>
                 <p class="text-sm text-news-accent">Lihat semua komentar</p>
             </div>
         </a>
@@ -89,11 +89,11 @@
 </div>
 
 <!-- Recent Comments -->
-<div class="bg-white rounded-lg shadow-sm border border-gray-200">
-    <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900">Komentar Terbaru</h3>
+<div class="bg-white border border-news-line">
+    <div class="px-6 py-4 border-b border-news-line flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-news-ink">Komentar Terbaru</h3>
         <div class="flex space-x-2">
-            <button class="px-3 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+            <button class="px-3 py-1 text-xs font-medium bg-news-paper text-news-ink rounded-full">
                 Semua ({{ $recentComments->count() }})
             </button>
             <button class="px-3 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
@@ -108,32 +108,32 @@
         @if($recentComments->count() > 0)
             <div class="space-y-4">
                 @foreach($recentComments as $comment)
-                    <div class="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div class="flex items-start space-x-4 p-4 bg-news-paper hover:border-news-ink transition-colors">
                         <div class="flex-shrink-0">
-                            <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                                <i class="fas fa-user text-gray-600"></i>
+                            <div class="w-10 h-10 bg-news-paper rounded-full flex items-center justify-center">
+                                <i class="fas fa-user text-news-muted"></i>
                             </div>
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center space-x-2 mb-2">
-                                <h4 class="text-sm font-medium text-gray-900">{{ $comment->name }}</h4>
+                                <h4 class="text-sm font-medium text-news-ink">{{ $comment->name }}</h4>
                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $comment->is_approved ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
                                     {{ $comment->is_approved ? 'Disetujui' : 'Pending' }}
                                 </span>
                             </div>
-                            <p class="text-sm text-gray-700 mb-2">{{ Str::limit($comment->content, 150) }}</p>
-                            <div class="flex items-center space-x-4 text-xs text-gray-500">
+                            <p class="text-sm text-news-ink mb-2">{{ Str::limit($comment->content, 150) }}</p>
+                            <div class="flex items-center space-x-4 text-xs text-news-muted">
                                 <span class="line-clamp-1" title="{{ $comment->article->title ?? 'Artikel tidak ditemukan' }}">
-                                    <i class="fas fa-newspaper text-gray-400 mr-1"></i>
+                                    <i class="fas fa-newspaper text-news-muted mr-1"></i>
                                     {{ $comment->article->title ?? 'Artikel tidak ditemukan' }}
                                 </span>
                                 <span>
-                                    <i class="fas fa-clock text-gray-400 mr-1"></i>
+                                    <i class="fas fa-clock text-news-muted mr-1"></i>
                                     {{ $comment->created_at->format('d-m-Y H:i') }}
                                 </span>
                                 @if($comment->email)
                                     <span>
-                                        <i class="fas fa-envelope text-gray-400 mr-1"></i>
+                                        <i class="fas fa-envelope text-news-muted mr-1"></i>
                                         {{ $comment->email }}
                                     </span>
                                 @endif
@@ -148,7 +148,7 @@
                             <button class="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" title="Hapus">
                                 <i class="fas fa-trash text-sm"></i>
                             </button>
-                            <button class="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors" title="Lihat Detail">
+                            <button class="p-2 text-news-accent hover:bg-news-paper rounded-lg transition-colors" title="Lihat Detail">
                                 <i class="fas fa-eye text-sm"></i>
                             </button>
                         </div>
@@ -158,28 +158,28 @@
             
             <!-- Load More Button -->
             <div class="mt-6 text-center">
-                <button class="px-4 py-2 bg-news-accent text-white rounded-lg hover:bg-red-800 transition-colors">
+                <button class="px-4 py-2 bg-news-accent text-white rounded-lg hover:bg-news-ink transition-colors">
                     <i class="fas fa-plus mr-2"></i>
                     Lihat Semua Komentar
                 </button>
             </div>
         @else
             <div class="text-center py-8">
-                <i class="fas fa-comments text-gray-400 text-4xl mb-4"></i>
-                <p class="text-gray-600 mb-4">Belum ada komentar</p>
-                <p class="text-sm text-gray-500">Komentar dari pembaca akan muncul di sini</p>
+                <i class="fas fa-comments text-news-muted text-4xl mb-4"></i>
+                <p class="text-news-muted mb-4">Belum ada komentar</p>
+                <p class="text-sm text-news-muted">Komentar dari pembaca akan muncul di sini</p>
             </div>
         @endif
     </div>
 </div>
 
 <!-- Comment Statistics -->
-<div class="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-    <h3 class="text-lg font-semibold text-gray-900 mb-4">Statistik Komentar</h3>
+<div class="mt-8 bg-white border border-news-line p-6">
+    <h3 class="text-lg font-semibold text-news-ink mb-4">Statistik Komentar</h3>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Most Commented Articles -->
         <div>
-            <h4 class="text-sm font-medium text-gray-600 mb-3">Artikel dengan Komentar Terbanyak</h4>
+            <h4 class="text-sm font-medium text-news-muted mb-3">Artikel dengan Komentar Terbanyak</h4>
             <div class="space-y-2">
                 @php
                     $mostCommented = \App\Models\Article::withCount('comments')
@@ -188,54 +188,54 @@
                         ->get();
                 @endphp
                 @forelse($mostCommented as $article)
-                    <div class="flex items-center justify-between gap-3 p-2 bg-gray-50 rounded">
-                        <span class="text-sm text-gray-900 min-w-0 line-clamp-2" title="{{ $article->title }}">{{ $article->title }}</span>
-                        <span class="text-xs text-gray-500 shrink-0">{{ $article->comments_count }} komentar</span>
+                    <div class="flex items-center justify-between gap-3 p-2 bg-news-paper rounded">
+                        <span class="text-sm text-news-ink min-w-0 line-clamp-2" title="{{ $article->title }}">{{ $article->title }}</span>
+                        <span class="text-xs text-news-muted shrink-0">{{ $article->comments_count }} komentar</span>
                     </div>
                 @empty
-                    <p class="text-sm text-gray-500">Belum ada data</p>
+                    <p class="text-sm text-news-muted">Belum ada data</p>
                 @endforelse
             </div>
         </div>
 
         <!-- Comment Activity -->
         <div>
-            <h4 class="text-sm font-medium text-gray-600 mb-3">Aktivitas Komentar</h4>
+            <h4 class="text-sm font-medium text-news-muted mb-3">Aktivitas Komentar</h4>
             <div class="space-y-2">
-                <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
-                    <span class="text-sm text-gray-900">Hari ini</span>
-                    <span class="text-xs text-gray-500">
+                <div class="flex items-center justify-between p-2 bg-news-paper rounded">
+                    <span class="text-sm text-news-ink">Hari ini</span>
+                    <span class="text-xs text-news-muted">
                         {{ \App\Models\Comment::whereDate('created_at', today())->count() }} komentar
                     </span>
                 </div>
-                <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
-                    <span class="text-sm text-gray-900">Minggu ini</span>
-                    <span class="text-xs text-gray-500">
+                <div class="flex items-center justify-between p-2 bg-news-paper rounded">
+                    <span class="text-sm text-news-ink">Minggu ini</span>
+                    <span class="text-xs text-news-muted">
                         {{ \App\Models\Comment::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count() }} komentar
                     </span>
                 </div>
-                <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
-                    <span class="text-sm text-gray-900">Bulan ini</span>
-                    <span class="text-xs text-gray-500">{{ $monthlyStats['comments_this_month'] }} komentar</span>
+                <div class="flex items-center justify-between p-2 bg-news-paper rounded">
+                    <span class="text-sm text-news-ink">Bulan ini</span>
+                    <span class="text-xs text-news-muted">{{ $monthlyStats['comments_this_month'] }} komentar</span>
                 </div>
             </div>
         </div>
 
         <!-- Comment Moderation -->
         <div>
-            <h4 class="text-sm font-medium text-gray-600 mb-3">Moderasi</h4>
+            <h4 class="text-sm font-medium text-news-muted mb-3">Moderasi</h4>
             <div class="space-y-2">
                 <div class="flex items-center justify-between p-2 bg-yellow-50 rounded">
-                    <span class="text-sm text-gray-900">Menunggu Review</span>
+                    <span class="text-sm text-news-ink">Menunggu Review</span>
                     <span class="text-xs text-yellow-600 font-medium">{{ $stats['pending_comments'] }}</span>
                 </div>
                 <div class="flex items-center justify-between p-2 bg-green-50 rounded">
-                    <span class="text-sm text-gray-900">Disetujui</span>
+                    <span class="text-sm text-news-ink">Disetujui</span>
                     <span class="text-xs text-green-600 font-medium">{{ $stats['comments'] - $stats['pending_comments'] }}</span>
                 </div>
-                <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
-                    <span class="text-sm text-gray-900">Tingkat Persetujuan</span>
-                    <span class="text-xs text-gray-500">
+                <div class="flex items-center justify-between p-2 bg-news-paper rounded">
+                    <span class="text-sm text-news-ink">Tingkat Persetujuan</span>
+                    <span class="text-xs text-news-muted">
                         @php
                             $approvalRate = $stats['comments'] > 0 ? round((($stats['comments'] - $stats['pending_comments']) / $stats['comments']) * 100, 1) : 0;
                         @endphp

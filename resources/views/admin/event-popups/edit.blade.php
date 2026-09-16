@@ -6,24 +6,24 @@
 <div class="container mx-auto px-4 py-6">
     <div class="max-w-2xl mx-auto">
         <div class="flex items-center mb-6">
-            <a href="{{ route('admin.event-popups.index') }}" class="text-gray-600 hover:text-gray-800 mr-4">
+            <a href="{{ route('admin.event-popups.index') }}" class="text-news-muted hover:text-news-ink mr-4">
                 <i class="fas fa-arrow-left"></i>
             </a>
-            <h1 class="text-2xl font-bold text-gray-800">Edit Event Popup</h1>
+            <h1 class="text-2xl font-bold text-news-ink">Edit Event Popup</h1>
         </div>
 
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="bg-white border border-news-line p-6">
             <form action="{{ route('admin.event-popups.update', $eventPopup) }}" method="POST">
                 @csrf
                 @method('PUT')
                 
                 <div class="mb-4">
-                    <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Judul Event</label>
+                    <label for="title" class="block text-sm font-medium text-news-ink mb-2">Judul Event</label>
                     <input type="text" 
                            id="title" 
                            name="title" 
                            value="{{ old('title', $eventPopup->title) }}"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-news-accent focus:border-transparent @error('title') border-red-500 @enderror"
+                           class="w-full px-3 py-2 border border-news-line rounded-md focus:outline-none focus:ring-2 focus:ring-news-accent focus:border-transparent @error('title') border-red-500 @enderror"
                            placeholder="Masukkan judul event popup"
                            required>
                     @error('title')
@@ -32,11 +32,11 @@
                 </div>
 
                 <div class="mb-4">
-                    <label for="message" class="block text-sm font-medium text-gray-700 mb-2">Pesan</label>
+                    <label for="message" class="block text-sm font-medium text-news-ink mb-2">Pesan</label>
                     <textarea id="message" 
                               name="message" 
                               rows="4"
-                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-news-accent focus:border-transparent @error('message') border-red-500 @enderror"
+                              class="w-full px-3 py-2 border border-news-line rounded-md focus:outline-none focus:ring-2 focus:ring-news-accent focus:border-transparent @error('message') border-red-500 @enderror"
                               placeholder="Masukkan pesan yang akan ditampilkan di popup"
                               required>{{ old('message', $eventPopup->message) }}</textarea>
                     @error('message')
@@ -46,12 +46,12 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label for="start_date" class="block text-sm font-medium text-gray-700 mb-2">Tanggal Mulai</label>
+                        <label for="start_date" class="block text-sm font-medium text-news-ink mb-2">Tanggal Mulai</label>
                         <input type="date" 
                                id="start_date" 
                                name="start_date" 
                                value="{{ old('start_date', $eventPopup->start_date->format('Y-m-d')) }}"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-news-accent focus:border-transparent @error('start_date') border-red-500 @enderror"
+                               class="w-full px-3 py-2 border border-news-line rounded-md focus:outline-none focus:ring-2 focus:ring-news-accent focus:border-transparent @error('start_date') border-red-500 @enderror"
                                required>
                         @error('start_date')
                             <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -59,12 +59,12 @@
                     </div>
 
                     <div>
-                        <label for="end_date" class="block text-sm font-medium text-gray-700 mb-2">Tanggal Selesai</label>
+                        <label for="end_date" class="block text-sm font-medium text-news-ink mb-2">Tanggal Selesai</label>
                         <input type="date" 
                                id="end_date" 
                                name="end_date" 
                                value="{{ old('end_date', $eventPopup->end_date->format('Y-m-d')) }}"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-news-accent focus:border-transparent @error('end_date') border-red-500 @enderror"
+                               class="w-full px-3 py-2 border border-news-line rounded-md focus:outline-none focus:ring-2 focus:ring-news-accent focus:border-transparent @error('end_date') border-red-500 @enderror"
                                required>
                         @error('end_date')
                             <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -78,16 +78,16 @@
                                name="status" 
                                value="1"
                                {{ old('status', $eventPopup->status) ? 'checked' : '' }}
-                               class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                        <span class="ml-2 text-sm text-gray-700">Aktifkan event popup</span>
+                               class="rounded border-news-line text-news-accent shadow-sm focus:border-news-accent focus:ring focus:ring-news-accent/30 focus:ring-opacity-50">
+                        <span class="ml-2 text-sm text-news-ink">Aktifkan event popup</span>
                     </label>
                 </div>
 
                 <div class="flex justify-end space-x-3">
-                    <a href="{{ route('admin.event-popups.index') }}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors">
+                    <a href="{{ route('admin.event-popups.index') }}" class="px-4 py-2 border border-news-line rounded-md text-news-ink hover:bg-news-paper transition-colors">
                         Batal
                     </a>
-                    <button type="submit" class="px-4 py-2 bg-news-accent text-white rounded-md hover:bg-red-800 transition-colors">
+                    <button type="submit" class="px-4 py-2 bg-news-accent text-white rounded-md hover:bg-news-ink transition-colors">
                         <i class="fas fa-save mr-2"></i>Update
                     </button>
                 </div>

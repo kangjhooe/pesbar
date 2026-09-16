@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\SettingsHelper;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -17,8 +18,13 @@ class RegisteredUserController extends Controller
     /**
      * Display the registration view.
      */
-    public function create(): View
+    public function create(): View|RedirectResponse
     {
+        if (!SettingsHelper::enableRegistration()) {
+            return redirect()->route('login')
+                ->with('error', 'Pendaftaran akun baru sedang ditutup.');
+        }
+
         return view('auth.register');
     }
 
@@ -29,6 +35,11 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        if (!SettingsHelper::enableRegistration()) {
+            return redirect()->route('login')
+                ->with('error', 'Pendaftaran akun baru sedang ditutup.');
+        }
+
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'alpha_dash', 'min:3', 'max:30', 'lowercase', 'unique:'.User::class],

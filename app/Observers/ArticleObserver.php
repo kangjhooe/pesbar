@@ -49,14 +49,6 @@ class ArticleObserver
             }
         }
 
-        // Notify admins if article needs review
-        if ($article->status === 'pending_review') {
-            try {
-                $this->getNotificationService()->notifyArticlePendingReview($article);
-            } catch (\Exception $e) {
-                \Log::warning('Failed to send notification: ' . $e->getMessage());
-            }
-        }
     }
 
     /**
@@ -67,12 +59,12 @@ class ArticleObserver
         CacheHelper::clearArticleCache();
         
         // Clear sitemap cache if status changed to/from published
-        if ($article->isDirty('status') || $article->isDirty('published_at')) {
+        if ($article->wasChanged('status') || $article->wasChanged('published_at')) {
             CacheHelper::clearSitemapCache();
         }
 
         // Process new image if changed
-        if ($article->isDirty('featured_image')) {
+        if ($article->wasChanged('featured_image')) {
             // Delete old image variants if exists
             $oldImage = $article->getOriginal('featured_image');
             if ($oldImage) {
@@ -100,8 +92,8 @@ class ArticleObserver
             }
         }
 
-        // Handle status changes
-        if ($article->isDirty('status')) {
+        // Handle status changes (use wasChanged — isDirty is empty after save)
+        if ($article->wasChanged('status')) {
             $oldStatus = $article->getOriginal('status');
             $newStatus = $article->status;
 
@@ -111,14 +103,9 @@ class ArticleObserver
                     $this->getNotificationService()->notifyArticlePublished($article);
                 }
 
-                // Notify when rejected
-                if ($newStatus === 'rejected' && $oldStatus !== 'rejected') {
-                    $this->getNotificationService()->notifyArticleRejected($article);
-                }
-
-                // Notify when pending review
-                if ($newStatus === 'pending_review' && $oldStatus !== 'pending_review') {
-                    $this->getNotificationService()->notifyArticlePendingReview($article);
+                // Notify when suspended
+                if ($newStatus === 'suspended' && $oldStatus !== 'suspended') {
+                    $this->getNotificationService()->notifyArticleSuspended($article);
                 }
             } catch (\Exception $e) {
                 \Log::warning('Failed to send notification: ' . $e->getMessage());

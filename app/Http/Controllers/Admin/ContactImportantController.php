@@ -15,6 +15,24 @@ class ContactImportantController extends Controller
     public function index(Request $request)
     {
         $query = ContactImportant::query();
+
+        if ($search = trim((string) $request->input('q', ''))) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        if ($type = trim((string) $request->input('type', ''))) {
+            $query->where('type', $type);
+        }
+
+        if ($request->filled('status') && in_array($request->input('status'), ['0', '1'], true)) {
+            $query->where('is_active', $request->input('status') === '1');
+        }
+
         $query = \App\Helpers\AdminTableHelper::applySort($query, $request, [
             'name' => 'name',
             'type' => 'type',
@@ -24,7 +42,15 @@ class ContactImportantController extends Controller
         ], 'sort_order', 'asc');
 
         $contacts = $query->paginate(10)->withQueryString();
-        return view('admin.contact-importants.index', compact('contacts'));
+
+        $stats = [
+            'total' => ContactImportant::count(),
+            'active' => ContactImportant::where('is_active', true)->count(),
+            'inactive' => ContactImportant::where('is_active', false)->count(),
+            'types' => ContactImportant::query()->select('type')->distinct()->count('type'),
+        ];
+
+        return view('admin.contact-importants.index', compact('contacts', 'stats'));
     }
 
     /**
@@ -67,7 +93,15 @@ class ContactImportantController extends Controller
                 ->withInput();
         }
 
-        ContactImportant::create($request->all());
+        ContactImportant::create([
+            'name' => $request->name,
+            'type' => $request->type,
+            'phone' => $request->phone,
+            'address' => $request->address,
+            'description' => $request->description,
+            'is_active' => $request->boolean('is_active'),
+            'sort_order' => (int) $request->input('sort_order', 0),
+        ]);
 
         return redirect()->route('admin.contact-importants.index')
             ->with('success', 'Kontak penting berhasil ditambahkan.');
@@ -121,7 +155,15 @@ class ContactImportantController extends Controller
                 ->withInput();
         }
 
-        $contactImportant->update($request->all());
+        $contactImportant->update([
+            'name' => $request->name,
+            'type' => $request->type,
+            'phone' => $request->phone,
+            'address' => $request->address,
+            'description' => $request->description,
+            'is_active' => $request->boolean('is_active'),
+            'sort_order' => (int) $request->input('sort_order', $contactImportant->sort_order),
+        ]);
 
         return redirect()->route('admin.contact-importants.index')
             ->with('success', 'Kontak penting berhasil diperbarui.');

@@ -337,7 +337,7 @@
                         </a>
                     </div>
 
-                    <div class="grid grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-5">
                         @foreach($section['articles'] as $article)
                         <article class="group min-w-0">
                             <a href="{{ $article->publicUrl() }}" class="block aspect-[16/10] overflow-hidden bg-news-line mb-2 sm:mb-3">
@@ -368,27 +368,30 @@
                 <section class="border-t-2 border-news-ink pt-5" aria-labelledby="active-authors">
                     <div class="flex items-baseline justify-between gap-4 mb-4">
                         <h2 id="active-authors" class="font-display text-xl md:text-2xl font-bold text-news-ink tracking-tight">
-                            Redaksi
+                            Penulis
                         </h2>
                     </div>
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
                         @foreach($activeAuthors as $author)
-                        <a href="{{ route('penulis.public-profile', $author) }}" class="group text-center">
-                            @if($author->profile && $author->profile->avatar)
-                                <img
-                                    src="{{ asset('storage/' . $author->profile->avatar) }}"
-                                    alt="{{ $author->name }}"
-                                    class="w-16 h-16 mx-auto object-cover border border-news-line group-hover:border-news-accent transition-colors"
-                                    loading="lazy"
-                                >
-                            @else
-                                <div class="w-16 h-16 mx-auto bg-news-ink text-white flex items-center justify-center font-display text-xl font-bold group-hover:bg-news-accent transition-colors">
-                                    {{ strtoupper(substr($author->name, 0, 1)) }}
-                                </div>
-                            @endif
-                            <p class="mt-2 text-sm font-bold text-news-ink group-hover:text-news-accent transition-colors line-clamp-1">{{ $author->name }}</p>
-                            <p class="text-[11px] text-news-muted">{{ $author->articles_count }} artikel</p>
-                        </a>
+                        <div class="text-center">
+                            <a href="{{ route('penulis.public-profile', $author) }}" class="group block">
+                                @if($author->profile && $author->profile->avatar)
+                                    <img
+                                        src="{{ asset('storage/' . $author->profile->avatar) }}"
+                                        alt="{{ $author->name }}"
+                                        class="w-16 h-16 mx-auto object-cover border border-news-line group-hover:border-news-accent transition-colors"
+                                        loading="lazy"
+                                    >
+                                @else
+                                    <div class="w-16 h-16 mx-auto bg-news-ink text-white flex items-center justify-center font-display text-xl font-bold group-hover:bg-news-accent transition-colors">
+                                        {{ strtoupper(substr($author->name, 0, 1)) }}
+                                    </div>
+                                @endif
+                                <p class="mt-2 text-sm font-bold text-news-ink group-hover:text-news-accent transition-colors line-clamp-1">{{ $author->name }}</p>
+                                <p class="text-[11px] text-news-muted">{{ $author->articles_count }} artikel</p>
+                            </a>
+                            <x-follow-button :user="$author" compact />
+                        </div>
                         @endforeach
                     </div>
                 </section>

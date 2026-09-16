@@ -4,8 +4,17 @@
 @endphp
 
 @if($pollData && $pollData['poll'])
-    @php $poll = $pollData['poll']; @endphp
-    <div class="border border-news-line poll-widget" data-poll-id="{{ $poll->id }}">
+    @php
+        $poll = $pollData['poll'];
+        $voterId = auth()->id();
+        $canVote = $poll->canUserVote($voterId, request()->ip());
+        $voteBlockReason = $canVote ? null : $poll->getVoteBlockReason($voterId, request()->ip());
+        $alreadyVoted = $voterId
+            ? $poll->votes()->where('user_id', $voterId)->exists()
+            : $poll->votes()->where('ip_address', request()->ip())->exists();
+        $showResultsByDefault = $alreadyVoted && $poll->show_results;
+    @endphp
+    <div class="public-widget border border-news-line poll-widget" data-poll-id="{{ $poll->id }}">
         <div class="bg-news-ink text-white px-4 py-2.5 flex items-center justify-between gap-2">
             <h2 class="text-xs font-bold uppercase tracking-[0.15em]">Polling</h2>
             <span class="text-[10px] font-bold uppercase tracking-wider text-white/60 shrink-0">
@@ -19,43 +28,60 @@
                 <p class="mt-1 text-[12px] text-news-muted">{{ $poll->description }}</p>
             @endif
 
-            <div class="mt-4 space-y-2 poll-options">
-                @if($poll->poll_type === 'single')
-                    @foreach($poll->options as $option)
-                        <label class="poll-option-label flex items-center gap-2 px-3 py-2 border border-news-line cursor-pointer hover:border-news-ink transition-colors">
-                            <input type="radio"
-                                   name="poll_option"
-                                   value="{{ $option->id }}"
-                                   class="poll-option-input text-news-accent focus:ring-news-accent">
-                            <span class="poll-option-text text-sm text-news-ink">{{ $option->option_text }}</span>
-                        </label>
-                    @endforeach
-                @else
-                    @foreach($poll->options as $option)
-                        <label class="poll-option-label flex items-center gap-2 px-3 py-2 border border-news-line cursor-pointer hover:border-news-ink transition-colors">
-                            <input type="checkbox"
-                                   name="poll_option[]"
-                                   value="{{ $option->id }}"
-                                   class="poll-option-input text-news-accent focus:ring-news-accent">
-                            <span class="poll-option-text text-sm text-news-ink">{{ $option->option_text }}</span>
-                        </label>
-                    @endforeach
-                @endif
-            </div>
+            @if($canVote)
+                <div class="mt-4 space-y-2 poll-options">
+                    @if($poll->poll_type === 'single')
+                        @foreach($poll->options as $option)
+                            <label class="poll-option-label flex items-center gap-2 px-3 py-2 border border-news-line cursor-pointer hover:border-news-ink transition-colors">
+                                <input type="radio"
+                                       name="poll_option"
+                                       value="{{ $option->id }}"
+                                       class="poll-option-input text-news-accent focus:ring-news-accent">
+                                <span class="poll-option-text text-sm text-news-ink">{{ $option->option_text }}</span>
+                            </label>
+                        @endforeach
+                    @else
+                        @foreach($poll->options as $option)
+                            <label class="poll-option-label flex items-center gap-2 px-3 py-2 border border-news-line cursor-pointer hover:border-news-ink transition-colors">
+                                <input type="checkbox"
+                                       name="poll_option[]"
+                                       value="{{ $option->id }}"
+                                       class="poll-option-input text-news-accent focus:ring-news-accent">
+                                <span class="poll-option-text text-sm text-news-ink">{{ $option->option_text }}</span>
+                            </label>
+                        @endforeach
+                    @endif
+                </div>
 
-            <div class="mt-4 flex flex-wrap gap-2">
-                <button type="button"
-                        class="poll-submit-btn px-3 py-1.5 bg-news-ink text-white text-xs font-semibold hover:bg-news-accent transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                        disabled>
-                    Kirim Suara
-                </button>
-                @if($poll->show_results)
+                <div class="mt-4 flex flex-wrap gap-2">
                     <button type="button"
-                            class="poll-results-btn px-3 py-1.5 border border-news-line text-news-ink text-xs font-semibold hover:border-news-ink transition-colors">
-                        Lihat Hasil
+                            class="poll-submit-btn px-3 py-1.5 bg-news-ink text-white text-xs font-semibold hover:bg-news-accent transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            disabled>
+                        Kirim Suara
                     </button>
+                    @if($poll->show_results)
+                        <button type="button"
+                                class="poll-results-btn px-3 py-1.5 border border-news-line text-news-ink text-xs font-semibold hover:border-news-ink transition-colors">
+                            Lihat Hasil
+                        </button>
+                    @endif
+                </div>
+            @else
+                <div class="mt-4 px-3 py-2 border border-news-line bg-news-paper text-[12px] text-news-muted">
+                    {{ $voteBlockReason }}
+                    @if(!$voterId && !$poll->allow_anonymous)
+                        <a href="{{ route('login') }}" class="ml-1 font-semibold text-news-accent hover:underline">Login</a>
+                    @endif
+                </div>
+                @if($poll->show_results)
+                    <div class="mt-3">
+                        <button type="button"
+                                class="poll-results-btn px-3 py-1.5 border border-news-line text-news-ink text-xs font-semibold hover:border-news-ink transition-colors">
+                            {{ $showResultsByDefault ? 'Sembunyikan Hasil' : 'Lihat Hasil' }}
+                        </button>
+                    </div>
                 @endif
-            </div>
+            @endif
 
             <div class="mt-3 pt-3 border-t border-news-line flex flex-wrap items-center justify-between gap-2 text-[11px] text-news-muted">
                 <span>{{ $poll->total_votes }} suara</span>
@@ -64,7 +90,7 @@
                 @endif
             </div>
 
-            <div class="poll-results mt-4 pt-3 border-t border-news-line" style="display: none;">
+            <div class="poll-results mt-4 pt-3 border-t border-news-line" @if(!($poll->show_results && $showResultsByDefault)) style="display: none;" @endif>
                 <h4 class="text-[10px] font-bold uppercase tracking-wider text-news-muted mb-3">Hasil Polling</h4>
                 <div class="space-y-3">
                     @foreach($poll->options as $option)
@@ -100,56 +126,58 @@
         const resultsDiv = pollWidget.querySelector('.poll-results');
         const optionInputs = pollWidget.querySelectorAll('.poll-option-input');
 
-        optionInputs.forEach(input => {
-            input.addEventListener('change', function() {
-                const hasSelection = Array.from(optionInputs).some(input => input.checked);
-                submitBtn.disabled = !hasSelection;
+        if (submitBtn && optionInputs.length) {
+            optionInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    const hasSelection = Array.from(optionInputs).some(input => input.checked);
+                    submitBtn.disabled = !hasSelection;
+                });
             });
-        });
 
-        submitBtn.addEventListener('click', function() {
-            const selectedOptions = Array.from(optionInputs)
-                .filter(input => input.checked)
-                .map(input => input.value);
+            submitBtn.addEventListener('click', function() {
+                const selectedOptions = Array.from(optionInputs)
+                    .filter(input => input.checked)
+                    .map(input => input.value);
 
-            if (selectedOptions.length === 0) {
-                alert('Pilih minimal satu pilihan');
-                return;
-            }
+                if (selectedOptions.length === 0) {
+                    alert('Pilih minimal satu pilihan');
+                    return;
+                }
 
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Mengirim...';
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Mengirim...';
 
-            fetch('/api/widgets/submit-poll-vote', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({
-                    poll_id: pollId,
-                    option_ids: selectedOptions
+                fetch('/api/widgets/submit-poll-vote', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        poll_id: pollId,
+                        option_ids: selectedOptions
+                    })
                 })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    location.reload();
-                } else {
-                    alert(data.message);
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Kirim Suara';
+                    }
+                })
+                .catch(() => {
+                    alert('Terjadi kesalahan saat mengirim suara');
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'Kirim Suara';
-                }
-            })
-            .catch(() => {
-                alert('Terjadi kesalahan saat mengirim suara');
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Kirim Suara';
+                });
             });
-        });
+        }
 
-        if (resultsBtn) {
+        if (resultsBtn && resultsDiv) {
             resultsBtn.addEventListener('click', function() {
                 if (resultsDiv.style.display === 'none') {
                     resultsDiv.style.display = 'block';

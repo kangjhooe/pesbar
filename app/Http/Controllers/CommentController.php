@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Comment;
 use App\Models\CommentLike;
-use App\Helpers\SettingsHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -13,19 +12,40 @@ class CommentController extends Controller
 {
     public function store(Request $request)
     {
-        // Hanya user yang sudah login yang bisa berkomentar
-        if (!auth()->check()) {
+        // Honeypot: bot sering mengisi field tersembunyi
+        if ($request->filled('website')) {
             if ($request->expectsJson()) {
-                return response()->json(['error' => 'Anda harus login terlebih dahulu untuk berkomentar.'], 401);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Komentar Anda telah dikirim dan menunggu persetujuan admin.',
+                    'comment' => null,
+                    'is_approved' => false,
+                ]);
             }
-            return redirect()->route('login')
-                ->with('error', 'Anda harus login terlebih dahulu untuk berkomentar.');
+
+            return back()->with('success', 'Komentar Anda telah dikirim dan menunggu persetujuan admin.');
         }
-        
-        $validator = Validator::make($request->all(), [
+
+        $isGuest = !auth()->check();
+
+        $rules = [
             'article_id' => 'required|exists:articles,id',
             'comment' => 'required|string|max:1000',
             'parent_id' => 'nullable|exists:comments,id',
+        ];
+
+        if ($isGuest) {
+            $rules['name'] = 'required|string|max:100';
+            $rules['email'] = 'required|email|max:100';
+            // Guest hanya boleh komentar top-level (tanpa balas)
+            $rules['parent_id'] = 'prohibited';
+        }
+
+        $validator = Validator::make($request->all(), $rules, [
+            'parent_id.prohibited' => 'Tamu tidak dapat membalas komentar. Silakan login untuk membalas.',
+            'name.required' => 'Nama wajib diisi.',
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
         ]);
 
         if ($validator->fails()) {
@@ -39,10 +59,8 @@ class CommentController extends Controller
         }
 
         try {
-            // Semua komentar langsung disetujui tanpa perlu persetujuan admin
-            $autoApprove = true;
-            
-            // User sudah pasti login karena ada middleware auth
+            // Login: langsung tampil. Guest: menunggu moderasi admin.
+            $approved = !$isGuest;
             $user = auth()->user();
 
             if ($request->filled('parent_id')) {
@@ -56,25 +74,31 @@ class CommentController extends Controller
                         ->with('error', 'Balasan tidak valid untuk artikel ini.');
                 }
             }
-            
+
             $comment = Comment::create([
                 'article_id' => $request->article_id,
-                'parent_id' => $request->parent_id,
-                'user_id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
+                'parent_id' => $isGuest ? null : $request->parent_id,
+                'user_id' => $user?->id,
+                'name' => $isGuest ? $request->name : $user->name,
+                'email' => $isGuest ? $request->email : $user->email,
                 'comment' => $request->comment,
-                'is_approved' => true, // Langsung disetujui
+                'is_approved' => $approved,
                 'ip_address' => $request->ip(),
             ]);
 
-            $comment->load('user');
+            if ($user) {
+                $comment->load('user');
+            }
+
+            $message = $approved
+                ? 'Komentar Anda telah berhasil dikirim dan ditampilkan.'
+                : 'Komentar Anda telah dikirim dan menunggu persetujuan admin.';
 
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Komentar Anda telah berhasil dikirim dan ditampilkan.',
-                    'comment' => [
+                    'message' => $message,
+                    'comment' => $approved ? [
                         'id' => $comment->id,
                         'name' => $comment->name,
                         'comment' => $comment->comment,
@@ -88,12 +112,12 @@ class CommentController extends Controller
                             'name' => $comment->user->name,
                             'username' => $comment->user->username ?? null,
                         ] : null,
-                    ],
-                    'is_approved' => true,
+                    ] : null,
+                    'is_approved' => $approved,
                 ]);
             }
 
-            return back()->with('success', 'Komentar Anda telah berhasil dikirim dan ditampilkan.');
+            return back()->with('success', $message);
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
                 return response()->json(['error' => 'Terjadi kesalahan saat mengirim komentar. Silakan coba lagi.'], 500);
@@ -186,18 +210,19 @@ class CommentController extends Controller
 
         $comment->update([
             'comment' => $request->comment,
-            'is_approved' => true, // Langsung disetujui setelah edit
+            // Re-moderate after edit (same as user dashboard) — do not bypass reject
+            'is_approved' => false,
         ]);
 
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Komentar berhasil diperbarui.',
+                'message' => 'Komentar berhasil diperbarui dan menunggu moderasi ulang.',
                 'comment' => $comment,
             ]);
         }
 
-        return back()->with('success', 'Komentar berhasil diperbarui.');
+        return back()->with('success', 'Komentar berhasil diperbarui. Komentar akan ditinjau ulang.');
     }
 
     public function destroy(Comment $comment)

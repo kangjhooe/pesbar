@@ -67,7 +67,10 @@ class EventController extends Controller
             'contact_info' => 'nullable|string'
         ]);
 
-        $data = $request->all();
+        $data = $request->only([
+            'title', 'description', 'event_date', 'start_time', 'end_time',
+            'location', 'organizer', 'event_type', 'priority', 'contact_info',
+        ]);
         
         // Handle image upload
         if ($request->hasFile('image')) {
@@ -121,7 +124,10 @@ class EventController extends Controller
             'contact_info' => 'nullable|string'
         ]);
 
-        $data = $request->all();
+        $data = $request->only([
+            'title', 'description', 'event_date', 'start_time', 'end_time',
+            'location', 'organizer', 'event_type', 'priority', 'contact_info',
+        ]);
         
         // Handle image upload
         if ($request->hasFile('image')) {
@@ -178,30 +184,30 @@ class EventController extends Controller
     {
         $request->validate([
             'action' => 'required|in:activate,deactivate,delete',
-            'event_ids' => 'required|array',
+            'event_ids' => 'required|array|min:1',
             'event_ids.*' => 'exists:events,id'
         ]);
 
         $events = Event::whereIn('id', $request->event_ids);
+        $count = (clone $events)->count();
 
         switch ($request->action) {
             case 'activate':
                 $events->update(['is_active' => true]);
-                $message = 'Event berhasil diaktifkan!';
+                $message = "{$count} event berhasil diaktifkan!";
                 break;
             case 'deactivate':
                 $events->update(['is_active' => false]);
-                $message = 'Event berhasil dinonaktifkan!';
+                $message = "{$count} event berhasil dinonaktifkan!";
                 break;
             case 'delete':
-                // Delete images
                 $events->get()->each(function ($event) {
                     if ($event->image) {
                         Storage::disk('public')->delete($event->image);
                     }
                 });
                 $events->delete();
-                $message = 'Event berhasil dihapus!';
+                $message = "{$count} event berhasil dihapus!";
                 break;
         }
 

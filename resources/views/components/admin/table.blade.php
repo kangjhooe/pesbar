@@ -22,7 +22,7 @@
                     {{ $head }}
                 </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-news-line">
+            <tbody class="bg-white divide-y divide-news-line [&_tr]:hover:bg-news-paper">
                 {{ $slot }}
             </tbody>
         </table>

@@ -50,7 +50,7 @@ class PollService
         
         return [
             'poll' => $poll,
-            'updated_at' => now()->format('H:i')
+            'updated_at' => now()->format('d/m/Y H:i'),
         ];
     }
 
@@ -102,12 +102,12 @@ class PollService
     public function submitVote($pollId, $optionIds, $userId = null, $ipAddress = null, $userAgent = null)
     {
         $poll = Poll::findOrFail($pollId);
-        
-        // Check if user can vote
-        if (!$poll->canUserVote($userId, $ipAddress)) {
+
+        $blockReason = $poll->getVoteBlockReason($userId, $ipAddress);
+        if ($blockReason !== null) {
             return [
                 'success' => false,
-                'message' => 'Anda sudah memberikan suara untuk polling ini'
+                'message' => $blockReason,
             ];
         }
 
@@ -144,14 +144,17 @@ class PollService
                 ]);
             }
 
-            // Clear cache
-            CacheHelper::forget(self::CACHE_KEY . '_active');
+            // Clear cache (vote already saved — cache failure must not fail the request)
+            CacheHelper::clearCache(self::CACHE_KEY . '_active');
 
             return [
                 'success' => true,
-                'message' => 'Suara Anda telah direkam'
+                'message' => 'Suara Anda telah direkam',
+                'data' => null,
             ];
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            \Log::error('Poll vote save error: ' . $e->getMessage());
+
             return [
                 'success' => false,
                 'message' => 'Terjadi kesalahan saat menyimpan suara'

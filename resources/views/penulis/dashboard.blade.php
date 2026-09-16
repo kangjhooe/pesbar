@@ -28,60 +28,6 @@
     </div>
 </div>
 
-@auth
-    @if(auth()->user()->isPenulis() && !auth()->user()->isVerified())
-        @if(auth()->user()->hasPendingVerificationRequest())
-            <div class="bg-news-paper border border-news-line border-l-4 border-l-news-ink mb-6 p-4 sm:p-5">
-                <div class="flex items-start gap-3">
-                    <i class="fas fa-clock text-news-muted mt-1"></i>
-                    <div>
-                        <p class="font-semibold text-news-ink">Verifikasi sedang diproses</p>
-                        <p class="text-sm text-news-muted mt-1">Permintaan verifikasi Anda sedang direview oleh admin.</p>
-                        @if(auth()->user()->verification_requested_at)
-                            <p class="text-sm text-news-muted mt-1">
-                                Dikirim: {{ auth()->user()->verification_requested_at->format('d M Y, H:i') }}
-                            </p>
-                        @endif
-                    </div>
-                </div>
-            </div>
-        @elseif(auth()->user()->verification_request_status === 'rejected')
-            <div class="bg-red-50 border border-news-line border-l-4 border-l-news-accent mb-6 p-4 sm:p-5">
-                <div class="flex flex-wrap items-center justify-between gap-4">
-                    <div class="flex items-start gap-3 min-w-0">
-                        <i class="fas fa-times-circle text-news-accent mt-1"></i>
-                        <div>
-                            <p class="font-semibold text-news-ink">Verifikasi ditolak</p>
-                            @if(auth()->user()->verification_rejection_reason)
-                                <p class="text-sm text-news-ink mt-1">Alasan: {{ auth()->user()->verification_rejection_reason }}</p>
-                            @endif
-                            <p class="text-sm text-news-muted mt-1">Anda dapat mengajukan ulang dengan informasi yang lebih lengkap.</p>
-                        </div>
-                    </div>
-                    <a href="{{ route('penulis.verification.request') }}"
-                       class="inline-flex items-center bg-news-accent hover:bg-news-ink text-white px-4 py-2 text-sm font-semibold transition-colors">
-                        Ajukan Ulang
-                    </a>
-                </div>
-            </div>
-        @elseif(auth()->user()->canRequestVerification())
-            <div class="bg-white border border-news-line border-l-4 border-l-news-accent mb-6 p-4 sm:p-5">
-                <div class="flex flex-wrap items-center justify-between gap-4">
-                    <div class="flex items-start gap-3 min-w-0">
-                        <i class="fas fa-shield-alt text-news-accent mt-1"></i>
-                        <div>
-                            <p class="font-semibold text-news-ink">Belum terverifikasi</p>
-                            <p class="text-sm text-news-muted mt-1">Ajukan verifikasi agar bisa publish tanpa menunggu review admin.</p>
-                        </div>
-                    </div>
-                    <a href="{{ route('penulis.verification.request') }}"
-                       class="inline-flex items-center bg-news-ink hover:bg-news-accent text-white px-4 py-2 text-sm font-semibold transition-colors">
-                        Ajukan Verifikasi
-                    </a>
-                </div>
-            </div>
-        @endif
-    @endif
 @endauth
 
 {{-- Stats --}}
@@ -94,9 +40,9 @@
         <p class="text-[11px] font-bold uppercase tracking-wider text-news-muted">Terbit</p>
         <p class="text-3xl font-bold text-news-ink mt-1 tabular-nums">{{ $stats['published_articles'] }}</p>
     </a>
-    <a href="{{ route('penulis.articles.index', ['status' => 'pending_review']) }}" class="bg-white border border-news-line border-t-2 border-t-news-muted p-4 sm:p-5 hover:border-news-ink transition-colors">
-        <p class="text-[11px] font-bold uppercase tracking-wider text-news-muted">Pending</p>
-        <p class="text-3xl font-bold text-news-ink mt-1 tabular-nums">{{ $stats['pending_articles'] }}</p>
+    <a href="{{ route('penulis.articles.index', ['status' => 'suspended']) }}" class="bg-white border border-news-line border-t-2 border-t-orange-500 p-4 sm:p-5 hover:border-news-ink transition-colors">
+        <p class="text-[11px] font-bold uppercase tracking-wider text-news-muted">Ditangguhkan</p>
+        <p class="text-3xl font-bold text-news-ink mt-1 tabular-nums">{{ $stats['suspended_articles'] }}</p>
     </a>
     <div class="bg-white border border-news-line border-t-2 border-t-news-accent p-4 sm:p-5">
         <p class="text-[11px] font-bold uppercase tracking-wider text-news-muted">Total Views</p>
@@ -111,13 +57,6 @@
             <p class="text-2xl font-bold text-news-ink tabular-nums">{{ $stats['draft_articles'] ?? 0 }}</p>
         </div>
         <i class="fas fa-pen text-news-muted"></i>
-    </a>
-    <a href="{{ route('penulis.articles.index', ['status' => 'rejected']) }}" class="bg-white border border-news-line p-4 flex items-center justify-between hover:border-news-ink transition-colors">
-        <div>
-            <p class="text-xs text-news-muted uppercase tracking-wide font-semibold">Ditolak</p>
-            <p class="text-2xl font-bold text-news-ink tabular-nums">{{ $stats['rejected_articles'] ?? 0 }}</p>
-        </div>
-        <i class="fas fa-times text-news-muted"></i>
     </a>
     <a href="{{ route('penulis.comments.advanced') }}" class="bg-white border border-news-line p-4 flex items-center justify-between hover:border-news-ink transition-colors">
         <div>

@@ -166,7 +166,7 @@
  @endif
  </td>
  <td class="px-6 py-4">
- <a href="{{ route('penulis.articles.show', $comment->article_id) }}" class="text-sm text-news-accent hover:text-news-ink line-clamp-2" title="{{ $comment->article->title }}">
+ <a href="{{ route('penulis.articles.show', $comment->article) }}" class="text-sm text-news-accent hover:text-news-ink line-clamp-2" title="{{ $comment->article->title }}">
  {{ $comment->article->title }}
  </a>
  </td>
@@ -191,7 +191,7 @@
  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
  <div class="flex gap-2">
  @if(!$comment->is_approved)
- <form method="POST" action="{{ route('penulis.articles.comments.status', [$comment->article_id, $comment->id]) }}" class="inline">
+ <form method="POST" action="{{ route('penulis.articles.comments.status', [$comment->article, $comment]) }}" class="inline">
  @csrf
  <input type="hidden" name="is_approved" value="1">
  <button type="submit" class="text-news-accent hover:text-news-ink" title="Setujui">
@@ -199,7 +199,7 @@
  </button>
  </form>
  @else
- <form method="POST" action="{{ route('penulis.articles.comments.status', [$comment->article_id, $comment->id]) }}" class="inline">
+ <form method="POST" action="{{ route('penulis.articles.comments.status', [$comment->article, $comment]) }}" class="inline">
  @csrf
  <input type="hidden" name="is_approved" value="0">
  <button type="submit" class="text-news-muted hover:text-news-ink" title="Tolak">
@@ -207,10 +207,10 @@
  </button>
  </form>
  @endif
- <button onclick="showReplyModal({{ $comment->id }}, '{{ $comment->article_id }}')" class="text-news-accent hover:text-news-ink" title="Balas">
+ <button type="button" onclick="showReplyModal({{ $comment->id }}, {{ json_encode($comment->article->slug) }})" class="text-news-accent hover:text-news-ink" title="Balas">
  <i class="fas fa-reply"></i>
  </button>
- <form method="POST" action="{{ route('penulis.articles.comments.delete', [$comment->article_id, $comment->id]) }}" class="inline" onsubmit="return window.pesbarConfirmForm(event, 'Yakin ingin menghapus komentar ini?')">
+ <form method="POST" action="{{ route('penulis.articles.comments.delete', [$comment->article, $comment]) }}" class="inline" onsubmit="return window.pesbarConfirmForm(event, 'Yakin ingin menghapus komentar ini?')">
  @csrf
  @method('DELETE')
  <button type="submit" class="text-news-accent hover:text-news-ink" title="Hapus">
@@ -279,8 +279,8 @@
  checkboxes.forEach(cb => cb.checked = selectAll.checked);
  }
 
- function showReplyModal(commentId, articleId) {
- document.getElementById('replyForm').action = `/penulis/articles/${articleId}/comments/${commentId}/reply`;
+ function showReplyModal(commentId, articleSlug) {
+ document.getElementById('replyForm').action = `/penulis/articles/${encodeURIComponent(articleSlug)}/comments/${commentId}/reply`;
  document.getElementById('replyModal').classList.remove('hidden');
  document.getElementById('replyModal').classList.add('flex');
  }

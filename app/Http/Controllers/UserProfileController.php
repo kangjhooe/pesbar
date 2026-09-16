@@ -24,16 +24,16 @@ class UserProfileController extends Controller
         }
 
         $articles = $user->articles()
-            ->where('status', 'published')
+            ->published()
             ->with('category')
-            ->latest()
+            ->latest('published_at')
             ->paginate(12);
 
-        // Get statistics
+        // Statistik publik: hanya artikel yang benar-benar terbit (status + published_at).
         $stats = [
-            'total_articles' => $user->articles()->where('status', 'published')->count(),
-            'total_views' => $user->articles()->where('status', 'published')->sum('views'),
-            'total_comments' => $user->articles()->where('status', 'published')->withCount('comments')->get()->sum('comments_count'),
+            'total_articles' => $user->articles()->published()->count(),
+            'total_views' => $user->articles()->published()->sum('views'),
+            'total_comments' => $user->articles()->published()->withCount('comments')->get()->sum('comments_count'),
         ];
 
         // Check if current user is admin
@@ -46,20 +46,14 @@ class UserProfileController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->role === 'penulis' && $user->verified) {
+        if ($user->isPenulis()) {
             return redirect()->route('penulis.dashboard')
                 ->with('info', 'Anda sudah menjadi penulis terverifikasi.');
         }
 
-        // Penulis (mis. hasil promote manual) ajukan verifikasi dari dashboard penulis
-        if ($user->role === 'penulis') {
-            if ($user->verification_request_status === 'pending') {
-                return redirect()->route('penulis.dashboard')
-                    ->with('info', 'Permintaan verifikasi Anda sedang ditinjau. Mohon tunggu konfirmasi dari admin.');
-            }
-
-            return redirect()->route('penulis.dashboard')
-                ->with('info', 'Anda sudah menjadi penulis. Silakan ajukan verifikasi untuk publish artikel langsung.');
+        if ($user->isBanned()) {
+            return redirect()->route('user.dashboard')
+                ->with('error', 'Anda sedang dibanned dan tidak dapat mengajukan upgrade hingga ' . $user->banned_until->format('d M Y, H:i') . '.');
         }
 
         if ($user->hasPendingUpgradeRequest()) {
@@ -88,6 +82,11 @@ class UserProfileController extends Controller
             ]);
 
             $user = Auth::user();
+
+            if ($user->isBanned()) {
+                return redirect()->route('user.dashboard')
+                    ->with('error', 'Anda sedang dibanned dan tidak dapat mengajukan upgrade.');
+            }
 
             if ($user->role !== 'user') {
                 return redirect()->back()

@@ -15,11 +15,11 @@
 
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-            <h3 class="text-lg font-semibold text-gray-900">Daftar Event</h3>
-            <p class="text-sm text-gray-600">Total {{ $stats['total'] }} event</p>
+            <h3 class="text-lg font-semibold text-news-ink">Daftar Event</h3>
+            <p class="text-sm text-news-muted">Total {{ $stats['total'] }} event</p>
         </div>
         <a href="{{ route('admin.events.create') }}"
-           class="inline-flex items-center bg-news-accent text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors">
+           class="inline-flex items-center bg-news-accent text-white px-4 py-2 rounded-lg hover:bg-news-ink transition-colors">
             <i class="fas fa-plus mr-2"></i>
             Tambah Event
         </a>
@@ -27,50 +27,50 @@
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white rounded-lg shadow p-4">
+        <div class="bg-white border border-news-line p-4">
             <div class="flex items-center">
-                <div class="p-2 bg-blue-100 rounded-lg">
-                    <i class="fas fa-calendar-alt text-blue-600"></i>
+                <div class="p-2 bg-news-paper">
+                    <i class="fas fa-calendar-alt text-news-accent"></i>
                 </div>
                 <div class="ml-3">
-                    <p class="text-sm font-medium text-gray-600">Total Event</p>
-                    <p class="text-2xl font-bold text-gray-900">{{ $stats['total'] }}</p>
+                    <p class="text-sm font-medium text-news-muted">Total Event</p>
+                    <p class="text-2xl font-bold text-news-ink">{{ $stats['total'] }}</p>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow p-4">
+        <div class="bg-white border border-news-line p-4">
             <div class="flex items-center">
-                <div class="p-2 bg-green-100 rounded-lg">
-                    <i class="fas fa-check-circle text-green-600"></i>
+                <div class="p-2 bg-news-paper">
+                    <i class="fas fa-check-circle text-news-ink"></i>
                 </div>
                 <div class="ml-3">
-                    <p class="text-sm font-medium text-gray-600">Aktif</p>
-                    <p class="text-2xl font-bold text-gray-900">{{ $stats['active'] }}</p>
+                    <p class="text-sm font-medium text-news-muted">Aktif</p>
+                    <p class="text-2xl font-bold text-news-ink">{{ $stats['active'] }}</p>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow p-4">
+        <div class="bg-white border border-news-line p-4">
             <div class="flex items-center">
-                <div class="p-2 bg-yellow-100 rounded-lg">
-                    <i class="fas fa-clock text-yellow-600"></i>
+                <div class="p-2 bg-news-paper">
+                    <i class="fas fa-clock text-news-ink"></i>
                 </div>
                 <div class="ml-3">
-                    <p class="text-sm font-medium text-gray-600">Akan Datang</p>
-                    <p class="text-2xl font-bold text-gray-900">{{ $stats['upcoming'] }}</p>
+                    <p class="text-sm font-medium text-news-muted">Akan Datang</p>
+                    <p class="text-2xl font-bold text-news-ink">{{ $stats['upcoming'] }}</p>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow p-4">
+        <div class="bg-white border border-news-line p-4">
             <div class="flex items-center">
-                <div class="p-2 bg-red-100 rounded-lg">
-                    <i class="fas fa-calendar-day text-red-600"></i>
+                <div class="p-2 bg-news-paper">
+                    <i class="fas fa-calendar-day text-news-ink"></i>
                 </div>
                 <div class="ml-3">
-                    <p class="text-sm font-medium text-gray-600">Hari Ini</p>
-                    <p class="text-2xl font-bold text-gray-900">{{ $stats['today'] }}</p>
+                    <p class="text-sm font-medium text-news-muted">Hari Ini</p>
+                    <p class="text-2xl font-bold text-news-ink">{{ $stats['today'] }}</p>
                 </div>
             </div>
         </div>
@@ -98,7 +98,7 @@
         </x-slot:head>
 
         @forelse($events as $event)
-            <tr class="hover:bg-slate-50/80 transition-colors">
+            <tr class="hover:bg-news-paper transition-colors">
                 <x-admin.checkbox :value="$event->id" bulk-id="events-bulk" name="event_ids[]" />
                 <x-admin.td-number :index="$events->firstItem() + $loop->index" />
                 <td class="px-4 py-4">
@@ -107,34 +107,34 @@
                             @if($event->image)
                                 <img class="h-10 w-10 rounded-lg object-cover" src="{{ asset('storage/' . $event->image) }}" alt="{{ $event->title }}">
                             @else
-                                <div class="h-10 w-10 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                                <div class="h-10 w-10 bg-news-ink flex items-center justify-center">
                                     <i class="fas fa-calendar-alt text-white text-sm"></i>
                                 </div>
                             @endif
                         </div>
                         <div class="ml-4">
-                            <div class="text-sm font-medium text-gray-900 line-clamp-2" title="{{ $event->title }}">{{ $event->title }}</div>
-                            <div class="text-sm text-gray-500 line-clamp-1">{{ $event->organizer }}</div>
+                            <div class="text-sm font-medium text-news-ink line-clamp-2" title="{{ $event->title }}">{{ $event->title }}</div>
+                            <div class="text-sm text-news-muted line-clamp-1">{{ $event->organizer }}</div>
                         </div>
                     </div>
                 </td>
                 <td class="px-4 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ $event->formatted_date }}</div>
+                    <div class="text-sm text-news-ink">{{ $event->formatted_date }}</div>
                     @if($event->start_time)
-                        <div class="text-sm text-gray-500">{{ $event->formatted_start_time }}</div>
+                        <div class="text-sm text-news-muted">{{ $event->formatted_start_time }}</div>
                     @endif
                 </td>
                 <td class="px-4 py-4">
-                    <div class="text-sm text-gray-900">{{ Str::limit($event->location, 25) }}</div>
+                    <div class="text-sm text-news-ink">{{ Str::limit($event->location, 25) }}</div>
                 </td>
                 <td class="px-4 py-4 whitespace-nowrap">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-news-paper text-news-ink">
                         {{ $event->event_type_label }}
                     </span>
                 </td>
                 <td class="px-4 py-4 whitespace-nowrap">
                     <div class="flex flex-col space-y-1">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $event->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $event->is_active ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-news-accent' }}">
                             {{ $event->is_active ? 'Aktif' : 'Tidak Aktif' }}
                         </span>
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-{{ $event->priority_color }}-100 text-{{ $event->priority_color }}-800">
@@ -164,9 +164,9 @@
             </tr>
         @empty
             <tr>
-                <td colspan="8" class="px-4 py-12 text-center text-gray-500">
-                    <i class="fas fa-calendar-alt text-4xl mb-4 text-gray-300"></i>
-                    <p class="text-lg font-medium text-gray-700">Belum ada event</p>
+                <td colspan="8" class="px-4 py-12 text-center text-news-muted">
+                    <i class="fas fa-calendar-alt text-4xl mb-4 text-news-muted"></i>
+                    <p class="text-lg font-medium text-news-ink">Belum ada event</p>
                     <p class="text-sm">Mulai dengan membuat event pertama Anda</p>
                 </td>
             </tr>

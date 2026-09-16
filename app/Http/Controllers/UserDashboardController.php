@@ -56,6 +56,23 @@ class UserDashboardController extends Controller
         return view('user.dashboard', compact('comments', 'stats', 'recentArticles'));
     }
 
+    public function submitBanAppeal(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'message' => 'required|string|min:20|max:1000',
+        ]);
+
+        try {
+            $user->submitBanAppeal($request->input('message'));
+            return redirect()->route('user.dashboard')
+                ->with('success', 'Banding berhasil dikirim. Admin akan meninjau permintaan Anda.');
+        } catch (\RuntimeException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
+
     public function updateComment(Request $request, Comment $comment)
     {
         $user = Auth::user();

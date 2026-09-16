@@ -34,7 +34,7 @@ class AdminUserSeeder extends Seeder
             'verified' => true,
         ]);
 
-        // Create sample penulis
+        // Create sample penulis redaksi (staf)
         User::create([
             'name' => 'Penulis Terverifikasi',
             'username' => 'penulis-terverifikasi',
@@ -42,16 +42,7 @@ class AdminUserSeeder extends Seeder
             'password' => Hash::make('password'),
             'role' => 'penulis',
             'verified' => true,
-        ]);
-
-        // Create sample penulis unverified
-        User::create([
-            'name' => 'Penulis Belum Terverifikasi',
-            'username' => 'penulis-belum-terverifikasi',
-            'email' => 'penulis2@pesbar.com',
-            'password' => Hash::make('password'),
-            'role' => 'penulis',
-            'verified' => false,
+            'is_internal' => true,
         ]);
 
         // Create sample user
@@ -60,8 +51,9 @@ class AdminUserSeeder extends Seeder
             'username' => 'user-biasa',
             'email' => 'user@pesbar.com',
             'password' => Hash::make('password'),
-            'role' => 'penulis',
+            'role' => 'user',
             'verified' => false,
+            'is_internal' => false,
         ]);
     }
 }

@@ -9,51 +9,57 @@ use Symfony\Component\HttpFoundation\Response;
 class RoleMiddleware
 {
     /**
-     * Handle an incoming request.
+     * Strict role gate: user may pass only if their role is in the allowed list.
+     * Supports comma-separated roles, e.g. role:admin,editor.
+     * Admin/editor no longer bypass into /penulis.
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next, string $role): Response
+    public function handle(Request $request, Closure $next, string ...$roles): Response
     {
         if (!auth()->check()) {
             return redirect()->route('login');
         }
 
         $user = auth()->user();
-        
-        // Refresh user dari database untuk memastikan data terbaru (terutama role)
-        // Ini penting ketika role user berubah saat mereka masih login
+
+        // Refresh so role demotions apply while still logged in
         $user->refresh();
-        
-        // Pastikan user memiliki role yang valid
+
         if (!$user->role || trim($user->role) === '') {
             abort(403, 'Akses ditolak. Anda tidak memiliki izin untuk mengakses halaman ini.');
         }
 
-        // PRIORITAS 1: Cek mantan penulis yang mencoba akses route penulis
-        // Ini harus dicek SEBELUM pengecekan admin/editor untuk mencegah bypass
-        // User biasa (bukan admin, bukan editor, bukan penulis) yang mencoba akses route penulis
-        if ($role === 'penulis' && !$user->isPenulis() && !$user->isAdmin() && !$user->isEditor()) {
+        $allowed = [];
+        foreach ($roles as $roleParam) {
+            foreach (explode(',', $roleParam) as $role) {
+                $role = trim($role);
+                if ($role !== '') {
+                    $allowed[] = $role;
+                }
+            }
+        }
+
+        if (in_array($user->role, $allowed, true)) {
+            return $next($request);
+        }
+
+        // Soft redirect for demoted / ordinary users hitting penulis area
+        if (in_array('penulis', $allowed, true) && $user->role === 'user') {
             return redirect()->route('user.dashboard')
                 ->with('error', 'Akses ditolak. Anda tidak lagi memiliki akses sebagai penulis.');
         }
-        
-        // PRIORITAS 2: Admin bisa akses semua
-        if ($user->isAdmin()) {
-            return $next($request);
+
+        // Soft redirect: higher roles must not fall into the user dashboard
+        if (in_array('user', $allowed, true)) {
+            if ($user->isAdmin() || $user->isEditor()) {
+                return redirect()->route('admin.dashboard');
+            }
+            if ($user->isPenulis()) {
+                return redirect()->route('penulis.dashboard');
+            }
         }
 
-        // PRIORITAS 3: Editor bisa akses editor dan penulis
-        if ($user->isEditor() && in_array($role, ['editor', 'penulis'])) {
-            return $next($request);
-        }
-
-        // PRIORITAS 4: Penulis hanya bisa akses penulis
-        if ($user->isPenulis() && $role === 'penulis') {
-            return $next($request);
-        }
-
-        // Jika tidak memenuhi kondisi di atas, tolak akses
         abort(403, 'Akses ditolak. Anda tidak memiliki izin untuk mengakses halaman ini.');
     }
 }

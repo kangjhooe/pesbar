@@ -1,8 +1,8 @@
 @extends('layouts.admin-simple')
 
-@section('title', 'Permintaan Upgrade & Verifikasi')
-@section('page-title', 'Permintaan Upgrade & Verifikasi')
-@section('page-subtitle', 'Tinjau upgrade user ke penulis dan verifikasi penulis')
+@section('title', 'Permintaan Upgrade Penulis')
+@section('page-title', 'Permintaan Upgrade Penulis')
+@section('page-subtitle', 'Tinjau pengajuan user biasa menjadi penulis terverifikasi')
 
 @section('content')
 <div class="space-y-6">
@@ -29,7 +29,7 @@
         </x-slot:head>
 
         @forelse($requests as $user)
-            <tr class="hover:bg-slate-50/80 transition-colors">
+            <tr class="hover:bg-news-paper transition-colors">
                 <x-admin.checkbox :value="$user->id" bulk-id="verification-bulk" name="ids[]" />
                 <x-admin.td-number :index="$requests->firstItem() + $loop->index" />
                 <td class="px-4 py-4 whitespace-nowrap">
@@ -37,40 +37,34 @@
                         @if($user->profile && $user->profile->avatar)
                             <img class="h-10 w-10 rounded-full object-cover" src="{{ asset('storage/' . $user->profile->avatar) }}" alt="{{ $user->name }}">
                         @else
-                            <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                                <span class="text-gray-600 font-medium">{{ substr($user->name, 0, 1) }}</span>
+                            <div class="h-10 w-10 rounded-full bg-news-paper flex items-center justify-center">
+                                <span class="text-news-muted font-medium">{{ substr($user->name, 0, 1) }}</span>
                             </div>
                         @endif
                         <div class="ml-4">
-                            <div class="text-sm font-medium text-gray-900">{{ $user->name }}</div>
+                            <div class="text-sm font-medium text-news-ink">{{ $user->name }}</div>
                             @if($user->profile && $user->profile->bio)
-                                <div class="text-sm text-gray-500">{{ \Illuminate\Support\Str::limit($user->profile->bio, 50) }}</div>
+                                <div class="text-sm text-news-muted">{{ \Illuminate\Support\Str::limit($user->profile->bio, 50) }}</div>
                             @endif
                         </div>
                     </div>
                 </td>
                 <td class="px-4 py-4 whitespace-nowrap text-sm">
-                    @if($user->role === 'user')
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                            Upgrade ke penulis
-                        </span>
-                    @else
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            Verifikasi penulis
-                        </span>
-                    @endif
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                        Upgrade ke penulis
+                    </span>
                 </td>
-                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td class="px-4 py-4 whitespace-nowrap text-sm text-news-muted">
                     {{ $user->email }}
                 </td>
                 <td class="px-4 py-4 whitespace-nowrap text-sm">
                     @if($user->verification_type)
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $user->verification_type === 'perorangan' ? 'bg-purple-100 text-purple-800' : 'bg-indigo-100 text-indigo-800' }}">
+                        <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium {{ $user->verification_type === 'perorangan' ? 'bg-news-paper text-news-ink' : 'bg-news-ink text-white' }}">
                             <i class="fas {{ $user->verification_type === 'perorangan' ? 'fa-user' : 'fa-building' }} mr-1"></i>
                             {{ $user->verification_type === 'perorangan' ? 'Perorangan' : 'Lembaga' }}
                         </span>
                     @else
-                        <span class="text-gray-400">—</span>
+                        <span class="text-news-muted">—</span>
                     @endif
                 </td>
                 <td class="px-4 py-4 whitespace-nowrap text-sm">
@@ -89,50 +83,41 @@
                             target="_blank"
                         />
                     @else
-                        <span class="text-gray-400 text-xs">Tidak ada</span>
+                        <span class="text-news-muted text-xs">Tidak ada</span>
                     @endif
                 </td>
-                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                <td class="px-4 py-4 whitespace-nowrap text-sm text-news-muted">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-news-paper text-news-ink">
                         {{ $user->articles_count }} artikel
                     </span>
                 </td>
-                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td class="px-4 py-4 whitespace-nowrap text-sm text-news-muted">
                     {{ $user->verification_requested_at ? $user->verification_requested_at->format('d-m-Y H:i') : '—' }}
                 </td>
                 <x-admin.actions>
-                    @if($user->role === 'penulis' && $user->username)
-                        <x-admin.action-icon
-                            :href="route('penulis.public-profile', $user->username)"
-                            icon="fas fa-eye"
-                            color="blue"
-                            title="Lihat Profil"
-                            target="_blank"
-                        />
-                    @endif
                     <x-admin.action-icon
                         :href="route('admin.verification-requests.approve', $user)"
                         method="POST"
                         icon="fas fa-check"
                         color="green"
-                        title="{{ $user->role === 'user' ? 'Setujui Upgrade' : 'Setujui Verifikasi' }}"
-                        confirm="{{ $user->role === 'user' ? 'Setujui upgrade '.$user->name.' menjadi penulis terverifikasi?' : 'Setujui verifikasi untuk '.$user->name.'? Artikel pending akan otomatis dipublish.' }}"
+                        title="Setujui Upgrade"
+                        confirm="Setujui upgrade {{ $user->name }} menjadi penulis terverifikasi?"
                     />
                     <x-admin.action-icon
                         type="button"
                         icon="fas fa-times"
                         color="red"
-                        title="{{ $user->role === 'user' ? 'Tolak Upgrade' : 'Tolak Verifikasi' }}"
-                        onclick="showRejectModal({{ $user->id }}, {{ json_encode($user->name) }}, {{ json_encode($user->role === 'user' ? 'upgrade' : 'verifikasi') }})"
+                        title="Tolak Upgrade"
+                        onclick="showRejectModal({{ $user->id }}, {{ json_encode($user->name) }}, {{ json_encode('upgrade') }})"
                     />
                 </x-admin.actions>
             </tr>
         @empty
             <tr>
-                <td colspan="10" class="px-4 py-12 text-center text-gray-500">
-                    <i class="fas fa-inbox text-4xl mb-4 text-gray-300"></i>
-                    <p class="text-lg font-medium text-gray-700">Tidak ada permintaan</p>
-                    <p class="text-sm">Semua permintaan upgrade/verifikasi telah ditinjau.</p>
+                <td colspan="10" class="px-4 py-12 text-center text-news-muted">
+                    <i class="fas fa-inbox text-4xl mb-4 text-news-muted"></i>
+                    <p class="text-lg font-medium text-news-ink">Tidak ada permintaan</p>
+                    <p class="text-sm">Semua permintaan upgrade telah ditinjau.</p>
                 </td>
             </tr>
         @endforelse
@@ -140,28 +125,28 @@
 </div>
 
 <!-- Reject Modal -->
-<div id="rejectModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+<div id="rejectModal" class="fixed inset-0 bg-news-ink/50 hidden z-50">
     <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 id="rejectModalTitle" class="text-lg font-semibold text-gray-900 mb-4">Tolak Permintaan</h3>
+        <div class="bg-white border-2 border-news-ink max-w-md w-full p-6">
+            <h3 id="rejectModalTitle" class="text-lg font-semibold text-news-ink mb-4">Tolak Permintaan</h3>
             <form id="rejectModalForm" method="POST">
                 @csrf
                 <div class="mb-4">
-                    <label for="reason" class="block text-sm font-medium text-gray-700 mb-2">
-                        Alasan Penolakan <span class="text-gray-500">(Opsional, akan dilihat pemohon)</span>
+                    <label for="reason" class="block text-sm font-medium text-news-ink mb-2">
+                        Alasan Penolakan <span class="text-news-muted">(Opsional, akan dilihat pemohon)</span>
                     </label>
                     <textarea
                         id="reason"
                         name="reason"
                         rows="3"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-news-accent focus:border-news-accent"
+                        class="w-full px-3 py-2 border border-news-line rounded-md shadow-sm focus:outline-none focus:ring-news-accent focus:border-news-accent"
                         placeholder="Masukkan alasan penolakan..."></textarea>
                 </div>
                 <div class="flex justify-end space-x-3">
-                    <button type="button" onclick="closeRejectModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
+                    <button type="button" onclick="closeRejectModal()" class="px-4 py-2 text-news-ink bg-news-paper rounded-md hover:bg-news-paper">
                         Batal
                     </button>
-                    <button type="submit" class="px-4 py-2 text-white bg-red-600 rounded-md hover:bg-red-700">
+                    <button type="submit" class="btn-primary">
                         Tolak
                     </button>
                 </div>

@@ -83,7 +83,7 @@ class HomeController extends Controller
                     ->with(['author', 'category'])
                     ->where('category_id', $category->id)
                     ->latest()
-                    ->take(4)
+                    ->take(6)
                     ->get();
 
                 return [

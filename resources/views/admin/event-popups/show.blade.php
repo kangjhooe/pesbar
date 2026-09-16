@@ -6,43 +6,43 @@
 <div class="container mx-auto px-4 py-6">
     <div class="max-w-4xl mx-auto">
         <div class="flex items-center mb-6">
-            <a href="{{ route('admin.event-popups.index') }}" class="text-gray-600 hover:text-gray-800 mr-4">
+            <a href="{{ route('admin.event-popups.index') }}" class="text-news-muted hover:text-news-ink mr-4">
                 <i class="fas fa-arrow-left"></i>
             </a>
-            <h1 class="text-2xl font-bold text-gray-800">Detail Event Popup</h1>
+            <h1 class="text-2xl font-bold text-news-ink">Detail Event Popup</h1>
         </div>
 
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="bg-white border border-news-line p-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Event Details -->
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Judul Event</label>
-                        <p class="text-lg font-semibold text-gray-900">{{ $eventPopup->title }}</p>
+                        <label class="block text-sm font-medium text-news-ink mb-1">Judul Event</label>
+                        <p class="text-lg font-semibold text-news-ink">{{ $eventPopup->title }}</p>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Pesan</label>
-                        <div class="bg-gray-50 p-4 rounded-lg">
-                            <p class="text-gray-800 leading-relaxed">{{ $eventPopup->message }}</p>
+                        <label class="block text-sm font-medium text-news-ink mb-1">Pesan</label>
+                        <div class="bg-news-paper p-4 rounded-lg">
+                            <p class="text-news-ink leading-relaxed">{{ $eventPopup->message }}</p>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai</label>
-                            <p class="text-gray-900">{{ $eventPopup->start_date->format('d-m-Y') }}</p>
+                            <label class="block text-sm font-medium text-news-ink mb-1">Tanggal Mulai</label>
+                            <p class="text-news-ink">{{ $eventPopup->start_date->format('d-m-Y') }}</p>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Selesai</label>
-                            <p class="text-gray-900">{{ $eventPopup->end_date->format('d-m-Y') }}</p>
+                            <label class="block text-sm font-medium text-news-ink mb-1">Tanggal Selesai</label>
+                            <p class="text-news-ink">{{ $eventPopup->end_date->format('d-m-Y') }}</p>
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <label class="block text-sm font-medium text-news-ink mb-1">Status</label>
                         @if($eventPopup->status)
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-emerald-50 text-emerald-800">
                                 <i class="fas fa-check-circle mr-2"></i>Aktif
                             </span>
                         @else
@@ -55,20 +55,20 @@
 
                 <!-- Event Status & Actions -->
                 <div class="space-y-4">
-                    <div class="bg-blue-50 p-4 rounded-lg">
-                        <h3 class="text-lg font-semibold text-blue-900 mb-2">Status Event</h3>
+                    <div class="bg-news-paper p-4 rounded-lg">
+                        <h3 class="text-lg font-semibold text-news-ink mb-2">Status Event</h3>
                         @if($eventPopup->isActive())
-                            <div class="flex items-center text-green-600">
+                            <div class="flex items-center text-emerald-700">
                                 <i class="fas fa-play-circle mr-2"></i>
                                 <span class="font-medium">Sedang Berjalan</span>
                             </div>
-                            <p class="text-sm text-green-700 mt-1">Event popup sedang aktif dan akan ditampilkan kepada pengunjung</p>
+                            <p class="text-sm text-news-muted mt-1">Event popup sedang aktif dan akan ditampilkan kepada pengunjung</p>
                         @else
-                            <div class="flex items-center text-gray-600">
+                            <div class="flex items-center text-news-muted">
                                 <i class="fas fa-pause-circle mr-2"></i>
                                 <span class="font-medium">Tidak Aktif</span>
                             </div>
-                            <p class="text-sm text-gray-700 mt-1">
+                            <p class="text-sm text-news-ink mt-1">
                                 @if(!$eventPopup->status)
                                     Event popup dinonaktifkan
                                 @elseif($eventPopup->start_date > now())
@@ -80,9 +80,9 @@
                         @endif
                     </div>
 
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Informasi Tambahan</h3>
-                        <div class="space-y-2 text-sm text-gray-600">
+                    <div class="bg-news-paper p-4 rounded-lg">
+                        <h3 class="text-lg font-semibold text-news-ink mb-2">Informasi Tambahan</h3>
+                        <div class="space-y-2 text-sm text-news-muted">
                             <div class="flex justify-between">
                                 <span>Dibuat:</span>
                                 <span>{{ $eventPopup->created_at->format('d-m-Y H:i') }}</span>
@@ -99,13 +99,13 @@
                     </div>
 
                     <div class="flex space-x-3">
-                        <a href="{{ route('admin.event-popups.edit', $eventPopup) }}" class="flex-1 bg-news-accent text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors text-center">
+                        <a href="{{ route('admin.event-popups.edit', $eventPopup) }}" class="flex-1 bg-news-accent text-white px-4 py-2 rounded-lg hover:bg-news-ink transition-colors text-center">
                             <i class="fas fa-edit mr-2"></i>Edit
                         </a>
                         <form action="{{ route('admin.event-popups.toggle-status', $eventPopup) }}" method="POST" class="flex-1">
                             @csrf
                             @method('PATCH')
-                            <button type="submit" class="w-full bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors">
+                            <button type="submit" class="w-full btn-secondary">
                                 <i class="fas fa-toggle-{{ $eventPopup->status ? 'on' : 'off' }} mr-2"></i>
                                 {{ $eventPopup->status ? 'Nonaktifkan' : 'Aktifkan' }}
                             </button>

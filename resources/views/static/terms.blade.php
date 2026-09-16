@@ -72,7 +72,10 @@
                         <li>Tidak mengandung materi yang melanggar hukum, menyesatkan, atau merugikan</li>
                         <li>Tidak mengandung informasi pribadi orang lain tanpa izin</li>
                         <li>Mematuhi semua hukum dan peraturan yang berlaku</li>
+                        <li>Akurat dan sesuai fakta sepanjang pengetahuan Anda yang wajar</li>
                     </ul>
+                    <p class="mb-4"><strong>Tanggung jawab penulis:</strong> Penulis bertanggung jawab utama atas keakuratan dan kebenaran isi artikel yang diterbitkan atas namanya. Redaksi/admin dapat meninjau, meminta koreksi, mengarsipkan, atau menurunkan konten yang tidak sesuai fakta.</p>
+                    <p class="mb-4"><strong>Koreksi &amp; sanksi:</strong> Jika ditemukan kesalahan fakta, penulis diharapkan segera memperbarui atau menambahkan catatan koreksi. Pelanggaran berulang dapat dikenai peringatan, pembatasan publish langsung (artikel wajib lewat review), hingga pencabutan status penulis terverifikasi, sesuai kebijakan platform.</p>
                 </div>
             </section>
 
@@ -99,7 +102,7 @@
             <section class="mb-8">
                 <h2 class="text-2xl font-bold text-gray-800 mb-4">7. Penghentian</h2>
                 <p class="text-gray-700 leading-relaxed mb-4">
-                    Kami berhak untuk menghentikan atau menangguhkan akses Anda ke layanan kami, tanpa pemberitahuan sebelumnya, karena alasan apa pun, termasuk jika Anda melanggar syarat dan ketentuan ini.
+                    Kami berhak untuk menghentikan atau menangguhkan akses Anda ke layanan kami, tanpa pemberitahuan sebelumnya, karena alasan apa pun, termasuk jika Anda melanggar syarat dan ketentuan ini. Untuk penulis, sanksi dapat berupa peringatan, pembatasan hak publish langsung, pencabutan status terverifikasi, atau penurunan peran, sesuai tingkat pelanggaran.
                 </p>
             </section>
 

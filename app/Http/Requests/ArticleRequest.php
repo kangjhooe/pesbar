@@ -33,7 +33,7 @@ class ArticleRequest extends FormRequest
             'tags' => 'nullable|string|max:1000',
             'is_featured' => 'boolean',
             'is_breaking' => 'boolean',
-            'status' => 'required|in:draft,pending_review,published,rejected,archived',
+            'status' => 'required|in:draft,published,archived,suspended',
         ];
     }
 

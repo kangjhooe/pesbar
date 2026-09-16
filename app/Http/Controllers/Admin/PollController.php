@@ -67,7 +67,9 @@ class PollController extends Controller
             'options.*.description' => 'nullable|string'
         ]);
 
-        $data = $request->all();
+        $data = $request->only([
+            'title', 'description', 'poll_type', 'start_date', 'end_date', 'max_votes_per_user',
+        ]);
         
         // Convert boolean fields
         $data['is_active'] = $request->has('is_active');
@@ -145,7 +147,9 @@ class PollController extends Controller
             'options.*.description' => 'nullable|string'
         ]);
 
-        $data = $request->all();
+        $data = $request->only([
+            'title', 'description', 'poll_type', 'start_date', 'end_date', 'max_votes_per_user',
+        ]);
         
         // Convert boolean fields
         $data['is_active'] = $request->has('is_active');
@@ -160,8 +164,8 @@ class PollController extends Controller
         $existingOptionIds = [];
         foreach ($request->options as $index => $optionData) {
             if (isset($optionData['id'])) {
-                // Update existing option
-                $option = PollOption::find($optionData['id']);
+                // Update existing option belonging to this poll only
+                $option = $poll->options()->whereKey($optionData['id'])->first();
                 if ($option) {
                     $option->update([
                         'option_text' => $optionData['text'],
@@ -235,30 +239,31 @@ class PollController extends Controller
     {
         $request->validate([
             'action' => 'required|in:activate,deactivate,delete,reset_votes',
-            'poll_ids' => 'required|array',
+            'poll_ids' => 'required|array|min:1',
             'poll_ids.*' => 'exists:polls,id'
         ]);
 
         $polls = Poll::whereIn('id', $request->poll_ids);
+        $count = (clone $polls)->count();
 
         switch ($request->action) {
             case 'activate':
                 $polls->update(['is_active' => true]);
-                $message = 'Polling berhasil diaktifkan!';
+                $message = "{$count} polling berhasil diaktifkan!";
                 break;
             case 'deactivate':
                 $polls->update(['is_active' => false]);
-                $message = 'Polling berhasil dinonaktifkan!';
+                $message = "{$count} polling berhasil dinonaktifkan!";
                 break;
             case 'delete':
                 $polls->delete();
-                $message = 'Polling berhasil dihapus!';
+                $message = "{$count} polling berhasil dihapus!";
                 break;
             case 'reset_votes':
                 foreach ($polls->get() as $poll) {
                     $poll->votes()->delete();
                 }
-                $message = 'Suara polling berhasil direset!';
+                $message = "Suara {$count} polling berhasil direset!";
                 break;
         }
 

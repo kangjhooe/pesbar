@@ -6,8 +6,7 @@ use App\Models\Article;
 use App\Models\Comment;
 use App\Models\User;
 use App\Notifications\ArticlePublished;
-use App\Notifications\ArticlePendingReview;
-use App\Notifications\ArticleRejected;
+use App\Notifications\ArticleSuspended;
 use App\Notifications\NewComment;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Log;
@@ -29,34 +28,16 @@ class NotificationService
     }
 
     /**
-     * Notify admins when article needs review
+     * Notify author when article display is suspended
      */
-    public function notifyArticlePendingReview(Article $article): void
-    {
-        try {
-            $admins = User::whereIn('role', ['admin', 'editor'])
-                ->whereNotNull('email')
-                ->get();
-
-            if ($admins->isNotEmpty()) {
-                Notification::send($admins, new ArticlePendingReview($article));
-            }
-        } catch (\Exception $e) {
-            Log::error('Failed to send article pending review notification: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Notify author when article is rejected
-     */
-    public function notifyArticleRejected(Article $article): void
+    public function notifyArticleSuspended(Article $article): void
     {
         try {
             if ($article->author && $article->author->email) {
-                $article->author->notify(new ArticleRejected($article));
+                $article->author->notify(new ArticleSuspended($article));
             }
         } catch (\Exception $e) {
-            Log::error('Failed to send article rejected notification: ' . $e->getMessage());
+            Log::error('Failed to send article suspended notification: ' . $e->getMessage());
         }
     }
 

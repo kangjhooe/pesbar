@@ -11,51 +11,32 @@ use ZipArchive;
 class BackupService
 {
     /**
-     * Create database backup
+     * Create database backup (PHP dump — works on XAMPP/Windows without mysqldump PATH).
      */
     public function createDatabaseBackup(): ?string
     {
         try {
-            $database = config('database.connections.mysql.database');
-            $username = config('database.connections.mysql.username');
-            $password = config('database.connections.mysql.password');
-            $host = config('database.connections.mysql.host');
-            $port = config('database.connections.mysql.port', 3306);
-
             $backupDir = storage_path('app/backups');
             if (!is_dir($backupDir)) {
                 mkdir($backupDir, 0755, true);
             }
 
             $filename = 'database_' . date('Y-m-d_His') . '.sql';
-            $filepath = $backupDir . '/' . $filename;
+            $filepath = $backupDir . DIRECTORY_SEPARATOR . $filename;
 
-            // Create mysqldump command
-            $command = sprintf(
-                'mysqldump -h %s -P %s -u %s -p%s %s > %s 2>&1',
-                escapeshellarg($host),
-                escapeshellarg($port),
-                escapeshellarg($username),
-                escapeshellarg($password),
-                escapeshellarg($database),
-                escapeshellarg($filepath)
-            );
-
-            exec($command, $output, $returnVar);
-
-            if ($returnVar !== 0 || !file_exists($filepath)) {
-                Log::error('Database backup failed', [
-                    'command' => $command,
-                    'output' => $output,
-                    'return_var' => $returnVar
-                ]);
+            $sql = $this->generateSqlDump();
+            if ($sql === null || $sql === '') {
+                Log::error('Database backup failed: empty SQL dump');
                 return null;
             }
 
-            // Compress backup
+            if (file_put_contents($filepath, $sql) === false) {
+                Log::error('Database backup failed: could not write file', ['path' => $filepath]);
+                return null;
+            }
+
             $compressedPath = $this->compressFile($filepath);
             if ($compressedPath) {
-                // Delete uncompressed file
                 @unlink($filepath);
                 return $compressedPath;
             }
@@ -65,6 +46,75 @@ class BackupService
             Log::error('Database backup exception: ' . $e->getMessage(), [
                 'exception' => $e
             ]);
+            return null;
+        }
+    }
+
+    /**
+     * Generate SQL dump via Laravel DB (portable fallback for local/XAMPP).
+     */
+    protected function generateSqlDump(): ?string
+    {
+        try {
+            $database = DB::getDatabaseName();
+            $tables = DB::select('SHOW TABLES');
+            $key = 'Tables_in_' . $database;
+
+            $lines = [
+                '-- Pesbar database backup',
+                '-- Generated at: ' . now()->toDateTimeString(),
+                '-- Database: ' . $database,
+                'SET FOREIGN_KEY_CHECKS=0;',
+                '',
+            ];
+
+            foreach ($tables as $tableRow) {
+                $table = $tableRow->$key ?? null;
+                if (!$table) {
+                    continue;
+                }
+
+                $create = DB::select("SHOW CREATE TABLE `{$table}`");
+                $createSql = $create[0]->{'Create Table'} ?? null;
+                if (!$createSql) {
+                    continue;
+                }
+
+                $lines[] = "DROP TABLE IF EXISTS `{$table}`;";
+                $lines[] = $createSql . ';';
+                $lines[] = '';
+
+                $rows = DB::table($table)->get();
+                foreach ($rows as $row) {
+                    $rowArray = (array) $row;
+                    $columns = array_keys($rowArray);
+                    $values = [];
+                    foreach ($rowArray as $value) {
+                        if ($value === null) {
+                            $values[] = 'NULL';
+                        } elseif (is_bool($value)) {
+                            $values[] = $value ? '1' : '0';
+                        } elseif (is_int($value) || is_float($value)) {
+                            $values[] = (string) $value;
+                        } else {
+                            $values[] = "'" . str_replace(
+                                ["\\", "'", "\n", "\r", "\x00"],
+                                ["\\\\", "\\'", "\\n", "\\r", "\\0"],
+                                (string) $value
+                            ) . "'";
+                        }
+                    }
+                    $lines[] = 'INSERT INTO `' . $table . '` (`' . implode('`, `', $columns) . '`) VALUES (' . implode(', ', $values) . ');';
+                }
+
+                $lines[] = '';
+            }
+
+            $lines[] = 'SET FOREIGN_KEY_CHECKS=1;';
+
+            return implode("\n", $lines);
+        } catch (\Exception $e) {
+            Log::error('SQL dump generation failed: ' . $e->getMessage());
             return null;
         }
     }

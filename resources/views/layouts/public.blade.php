@@ -76,6 +76,7 @@
     </style>
 </head>
 <body class="font-sans antialiased bg-white text-news-ink overflow-x-clip" :class="{ 'overflow-hidden': mobileMenuOpen }" x-data="{ mobileMenuOpen: false, searchOpen: false }">
+    <x-impersonation-banner />
     <nav class="bg-white border-b-2 border-news-ink sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
             <div class="relative flex justify-between items-center h-14 sm:h-16 gap-2 min-w-0">
@@ -92,7 +93,7 @@
                 </div>
 
                 {{-- Mobile: nama platform di tengah layar (tanpa logo) --}}
-                <span class="sm:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-display text-base font-bold tracking-tight text-news-ink truncate max-w-[calc(100%-9rem)] text-center pointer-events-none" aria-hidden="true">
+                <span class="sm:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-display text-base font-bold tracking-tight text-news-ink truncate max-w-[calc(100%-7rem)] text-center pointer-events-none" aria-hidden="true">
                     {{ \App\Helpers\SettingsHelper::siteName() }}
                 </span>
 
@@ -147,8 +148,8 @@
                             </button>
                         </form>
                     </div>
-                    <button type="button" @click="searchOpen = !searchOpen; mobileMenuOpen = false" class="md:hidden text-news-ink p-2 touch-target" aria-label="Buka pencarian">
-                        <i class="fas fa-search text-lg"></i>
+                    <button type="button" @click="searchOpen = !searchOpen; mobileMenuOpen = false" class="md:hidden text-news-ink p-1.5 inline-flex items-center justify-center" aria-label="Buka pencarian">
+                        <i class="fas fa-search text-sm"></i>
                     </button>
 
                     @auth
@@ -184,11 +185,9 @@
                     @else
                         <div class="hidden md:flex items-center space-x-1 lg:space-x-2">
                             <a href="{{ route('login') }}" class="text-news-ink hover:text-news-accent px-2 py-2 text-sm font-bold">Login</a>
+                            @if(\App\Helpers\SettingsHelper::enableRegistration())
                             <a href="{{ route('register') }}" class="bg-news-ink text-white hover:bg-news-accent px-2.5 lg:px-3 py-1.5 text-sm font-bold">Daftar</a>
-                        </div>
-                        <div class="md:hidden flex items-center space-x-0.5">
-                            <a href="{{ route('login') }}" class="text-news-ink p-2 touch-target" title="Login"><i class="fas fa-arrow-right-to-bracket"></i></a>
-                            <a href="{{ route('register') }}" class="bg-news-ink text-white p-2 touch-target" title="Daftar"><i class="fas fa-user-plus"></i></a>
+                            @endif
                         </div>
                     @endauth
 
@@ -247,7 +246,9 @@
                 @else
                     <hr class="my-2 border-news-line">
                     <a href="{{ route('login') }}" @click="mobileMenuOpen = false" class="block px-3 py-3 text-sm font-semibold text-news-ink touch-target">Login</a>
+                    @if(\App\Helpers\SettingsHelper::enableRegistration())
                     <a href="{{ route('register') }}" @click="mobileMenuOpen = false" class="block px-3 py-3 text-sm font-semibold text-news-ink touch-target">Daftar</a>
+                    @endif
                 @endauth
             </div>
         </div>
@@ -399,6 +400,155 @@
     @yield('structured-data')
 
     <x-confirm-dialog />
+
+    <script>
+    (function () {
+        function csrfToken() {
+            var meta = document.querySelector('meta[name="csrf-token"]');
+            return meta ? meta.getAttribute('content') : '';
+        }
+
+        function setFollowingState(btn, following) {
+            var icon = btn.querySelector('i');
+            var text = btn.querySelector('.follow-text');
+            var compact = btn.getAttribute('data-compact') === '1';
+
+            btn.setAttribute('data-following', following ? '1' : '0');
+
+            if (following) {
+                btn.classList.remove('bg-white', 'text-news-ink', 'border-news-line', 'hover:border-news-accent', 'hover:text-news-accent');
+                btn.classList.add('bg-news-ink', 'text-white', 'border-news-ink');
+                if (icon) {
+                    icon.classList.remove('fa-user-plus');
+                    icon.classList.add('fa-user-check');
+                }
+                if (text) text.textContent = 'Mengikuti';
+            } else {
+                btn.classList.remove('bg-news-ink', 'text-white', 'border-news-ink');
+                btn.classList.add('bg-white', 'text-news-ink', 'border-news-line', 'hover:border-news-accent', 'hover:text-news-accent');
+                if (icon) {
+                    icon.classList.remove('fa-user-check');
+                    icon.classList.add('fa-user-plus');
+                }
+                if (text) text.textContent = compact ? 'Ikuti' : 'Ikuti Penulis';
+            }
+        }
+
+        function setBookmarkedState(btn, bookmarked) {
+            var text = btn.querySelector('.bookmark-text');
+            btn.setAttribute('data-bookmarked', bookmarked ? '1' : '0');
+
+            if (bookmarked) {
+                btn.classList.remove('bg-white', 'text-news-ink', 'border-news-line', 'hover:border-news-ink');
+                btn.classList.add('bg-yellow-50', 'text-yellow-800', 'border-yellow-300');
+                if (text) text.textContent = 'Bookmarked';
+            } else {
+                btn.classList.remove('bg-yellow-50', 'text-yellow-800', 'border-yellow-300');
+                btn.classList.add('bg-white', 'text-news-ink', 'border-news-line', 'hover:border-news-ink');
+                if (text) text.textContent = 'Bookmark';
+            }
+        }
+
+        document.addEventListener('click', function (event) {
+            var followBtn = event.target.closest('[data-follow-url]');
+            if (followBtn) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                var followUrl = followBtn.getAttribute('data-follow-url');
+                var followLoginUrl = followBtn.getAttribute('data-login-url') || '{{ route('login') }}';
+
+                @guest
+                window.location.href = followLoginUrl;
+                return;
+                @endguest
+
+                if (followBtn.disabled) return;
+                followBtn.disabled = true;
+
+                fetch(followUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken(),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(function (response) {
+                    if (response.status === 401 || response.status === 419) {
+                        window.location.href = followLoginUrl;
+                        return null;
+                    }
+                    if (!response.ok) {
+                        throw new Error('Follow request failed: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(function (data) {
+                    if (!data || !data.success) return;
+                    setFollowingState(followBtn, !!data.following);
+                })
+                .catch(function (error) {
+                    console.error('Follow error:', error);
+                })
+                .finally(function () {
+                    followBtn.disabled = false;
+                });
+                return;
+            }
+
+            var bookmarkBtn = event.target.closest('[data-bookmark-url]');
+            if (!bookmarkBtn) return;
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            var bookmarkUrl = bookmarkBtn.getAttribute('data-bookmark-url');
+            var bookmarkLoginUrl = bookmarkBtn.getAttribute('data-login-url') || '{{ route('login') }}';
+
+            @guest
+            window.location.href = bookmarkLoginUrl;
+            return;
+            @endguest
+
+            if (bookmarkBtn.disabled) return;
+            bookmarkBtn.disabled = true;
+
+            fetch(bookmarkUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            })
+            .then(function (response) {
+                if (response.status === 401 || response.status === 419) {
+                    window.location.href = bookmarkLoginUrl;
+                    return null;
+                }
+                if (!response.ok) {
+                    throw new Error('Bookmark request failed: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(function (data) {
+                if (!data || !data.success) return;
+                setBookmarkedState(bookmarkBtn, !!data.bookmarked);
+            })
+            .catch(function (error) {
+                console.error('Bookmark error:', error);
+            })
+            .finally(function () {
+                bookmarkBtn.disabled = false;
+            });
+        });
+    })();
+    </script>
 
     @stack('scripts')
 

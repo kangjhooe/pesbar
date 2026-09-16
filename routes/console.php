@@ -20,3 +20,7 @@ Schedule::command('backup:create --type=files')
     ->at('03:00')
     ->withoutOverlapping()
     ->runInBackground();
+
+Schedule::command('articles:publish-scheduled')
+    ->everyMinute()
+    ->withoutOverlapping();

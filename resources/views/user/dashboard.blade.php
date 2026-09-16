@@ -20,7 +20,51 @@
 </div>
 
 @auth
-    @if(auth()->user()->role === 'user')
+    @if(auth()->user()->isBanned())
+        <div class="bg-red-50 border border-red-200 border-l-4 border-l-news-accent mb-6 p-4 sm:p-5">
+            <div class="flex items-start gap-3">
+                <i class="fas fa-ban text-news-accent mt-1"></i>
+                <div class="min-w-0 flex-1">
+                    <p class="font-semibold text-news-ink">Akun Anda sedang dibanned dari menjadi penulis</p>
+                    <p class="text-sm text-news-muted mt-1">
+                        Hingga {{ auth()->user()->banned_until->format('d M Y, H:i') }} WIB
+                        (sanksi ke-{{ auth()->user()->content_warning_count }}).
+                        Anda tidak dapat mengajukan upgrade selama masa ban.
+                    </p>
+
+                    @if(auth()->user()->ban_appeal_status === 'pending')
+                        <p class="text-sm text-amber-800 mt-3">
+                            Banding Anda sedang ditinjau sejak {{ auth()->user()->ban_appeal_at?->format('d M Y, H:i') }}.
+                        </p>
+                    @elseif(auth()->user()->ban_appeal_status === 'rejected')
+                        <p class="text-sm text-news-ink mt-3">
+                            Banding sebelumnya ditolak.
+                            @if(auth()->user()->ban_appeal_rejection_reason)
+                                Alasan: {{ auth()->user()->ban_appeal_rejection_reason }}
+                            @endif
+                        </p>
+                    @endif
+
+                    @if(auth()->user()->canSubmitBanAppeal())
+                        <form method="POST" action="{{ route('user.ban-appeal') }}" class="mt-4 space-y-3">
+                            @csrf
+                            <label class="block text-sm font-medium text-news-ink">Ajukan banding</label>
+                            <textarea name="message" rows="3" required minlength="20" maxlength="1000"
+                                      class="w-full border border-news-line px-3 py-2 text-sm"
+                                      placeholder="Jelaskan alasan banding Anda (min. 20 karakter)">{{ old('message') }}</textarea>
+                            @error('message')
+                                <p class="text-sm text-news-accent">{{ $message }}</p>
+                            @enderror
+                            <button type="submit"
+                                    class="inline-flex items-center bg-news-ink hover:bg-news-accent text-white px-4 py-2 text-sm font-semibold transition-colors">
+                                Kirim Banding
+                            </button>
+                        </form>
+                    @endif
+                </div>
+            </div>
+        </div>
+    @elseif(auth()->user()->role === 'user')
         @if(auth()->user()->verification_request_status === 'pending')
             <div class="bg-amber-50 border border-amber-200 border-l-4 border-l-amber-500 mb-6 p-4 sm:p-5">
                 <div class="flex items-start gap-3">
@@ -57,7 +101,7 @@
                     </a>
                 </div>
             </div>
-        @else
+        @elseif(auth()->user()->canRequestUpgrade())
             <div class="bg-white border border-news-line border-l-4 border-l-news-accent mb-6 p-4 sm:p-5">
                 <div class="flex flex-wrap items-center justify-between gap-4">
                     <div class="flex items-start gap-3 min-w-0">

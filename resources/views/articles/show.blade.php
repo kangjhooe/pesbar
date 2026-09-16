@@ -51,19 +51,20 @@
     @endif
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {{-- Left sidebar --}}
-        <aside class="lg:col-span-3 order-3 lg:order-1 space-y-8" aria-label="Sidebar kiri">
+        {{-- Left sidebar: on mobile Terpopuler | Kategori side by side --}}
+        <aside class="lg:col-span-3 order-3 lg:order-1" aria-label="Sidebar kiri">
+            <div class="grid grid-cols-2 lg:grid-cols-1 gap-3 lg:gap-8">
             @php
                 $popularArticles = \App\Models\Article::published()->popular()->take(5)->get();
             @endphp
-            <div class="border border-news-line">
-                <div class="bg-news-ink text-white px-4 py-2.5">
-                    <h2 class="text-xs font-bold uppercase tracking-[0.15em]">Terpopuler</h2>
+            <div class="border border-news-line min-w-0">
+                <div class="bg-news-ink text-white px-3 lg:px-4 py-2.5">
+                    <h2 class="text-[11px] lg:text-xs font-bold uppercase tracking-[0.15em]">Terpopuler</h2>
                 </div>
                 <ul class="divide-y divide-news-line">
                     @forelse($popularArticles as $popularArticle)
-                    <li class="flex gap-3 px-4 py-3">
-                        <a href="{{ $popularArticle->publicUrl() }}" class="w-16 h-16 shrink-0 overflow-hidden bg-news-line">
+                    <li class="flex gap-2 lg:gap-3 px-2.5 lg:px-4 py-2.5 lg:py-3">
+                        <a href="{{ $popularArticle->publicUrl() }}" class="w-10 h-10 lg:w-16 lg:h-16 shrink-0 overflow-hidden bg-news-line">
                             <img
                                 src="{{ $popularArticle->featured_image ? asset('storage/' . $popularArticle->featured_image) : asset('images/default-news.jpg') }}"
                                 alt=""
@@ -72,16 +73,16 @@
                             >
                         </a>
                         <div class="min-w-0">
-                            <h3 class="text-sm font-bold leading-snug text-news-ink line-clamp-2">
+                            <h3 class="text-[11px] lg:text-sm font-bold leading-snug text-news-ink line-clamp-2">
                                 <a href="{{ $popularArticle->publicUrl() }}" class="hover:text-news-accent transition-colors" title="{{ $popularArticle->title }}">
                                     {{ $popularArticle->title }}
                                 </a>
                             </h3>
-                            <p class="mt-1 text-[11px] text-news-muted">{{ number_format($popularArticle->views) }} views</p>
+                            <p class="mt-1 text-[10px] lg:text-[11px] text-news-muted">{{ number_format($popularArticle->views) }} views</p>
                         </div>
                     </li>
                     @empty
-                    <li class="px-4 py-6 text-sm text-news-muted">Belum ada data.</li>
+                    <li class="px-3 py-6 text-sm text-news-muted">Belum ada data.</li>
                     @endforelse
                 </ul>
             </div>
@@ -90,23 +91,24 @@
                 $allCategories = \App\Models\Category::where('is_active', true)->orderBy('name')->get();
             @endphp
             @if($allCategories->count() > 0)
-            <div class="border border-news-line">
-                <div class="bg-news-ink text-white px-4 py-2.5">
-                    <h2 class="text-xs font-bold uppercase tracking-[0.15em]">Kategori</h2>
+            <div class="border border-news-line min-w-0">
+                <div class="bg-news-ink text-white px-3 lg:px-4 py-2.5">
+                    <h2 class="text-[11px] lg:text-xs font-bold uppercase tracking-[0.15em]">Kategori</h2>
                 </div>
                 <ul class="divide-y divide-news-line">
                     @foreach($allCategories as $category)
                     <li>
                         <a href="{{ route('categories.show', $category) }}"
-                           class="flex items-center justify-between px-4 py-3 text-sm text-news-ink hover:text-news-accent transition-colors">
-                            <span>{{ $category->name }}</span>
-                            <span class="text-[11px] text-news-muted tabular-nums">{{ $category->publishedArticles()->count() }}</span>
+                           class="flex items-center justify-between gap-1 px-2.5 lg:px-4 py-2 lg:py-3 text-[11px] lg:text-sm text-news-ink hover:text-news-accent transition-colors">
+                            <span class="truncate">{{ $category->name }}</span>
+                            <span class="text-[10px] lg:text-[11px] text-news-muted tabular-nums shrink-0">{{ $category->publishedArticles()->count() }}</span>
                         </a>
                     </li>
                     @endforeach
                 </ul>
             </div>
             @endif
+            </div>
         </aside>
 
         {{-- Main article --}}
@@ -120,7 +122,7 @@
                     </a>
                     @endif
 
-                    <h1 class="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-news-ink leading-tight mt-2">
+                    <h1 class="font-display text-xl sm:text-2xl lg:text-3xl font-bold text-news-ink leading-snug mt-2">
                         {{ $article->title }}
                     </h1>
 
@@ -147,28 +149,16 @@
                         <span>{{ number_format($article->views) }} views</span>
                     </div>
 
-                    @auth
                     <div class="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-news-line">
-                        <button onclick="toggleBookmark({{ $article->id }})"
-                                id="bookmark-btn-{{ $article->id }}"
-                                class="flex items-center gap-2 px-3 py-1.5 text-sm border transition-colors {{ auth()->user()->hasBookmarked($article) ? 'bg-yellow-50 text-yellow-800 border-yellow-300' : 'bg-white text-news-ink border-news-line hover:border-news-ink' }}">
-                            <i class="fas fa-bookmark"></i>
-                            <span id="bookmark-text-{{ $article->id }}">
-                                {{ auth()->user()->hasBookmarked($article) ? 'Bookmarked' : 'Bookmark' }}
-                            </span>
-                        </button>
-                        @if($article->author && $article->author->id !== auth()->id())
-                        <button onclick="toggleFollow({{ $article->author->id }})"
-                                id="follow-btn-{{ $article->author->id }}"
-                                class="flex items-center gap-2 px-3 py-1.5 text-sm border transition-colors {{ auth()->user()->isFollowing($article->author) ? 'bg-news-ink text-white border-news-ink' : 'bg-white text-news-ink border-news-line hover:border-news-accent hover:text-news-accent' }}">
-                            <i class="fas {{ auth()->user()->isFollowing($article->author) ? 'fa-user-check' : 'fa-user-plus' }}"></i>
-                            <span id="follow-text-{{ $article->author->id }}">
-                                {{ auth()->user()->isFollowing($article->author) ? 'Mengikuti' : 'Ikuti Penulis' }}
-                            </span>
-                        </button>
+                        <x-bookmark-button :article="$article" />
+                        @if($article->author)
+                            <x-follow-button :user="$article->author" />
                         @endif
+                        @if($article->status === 'published')
+                            <x-report-article-button :article="$article" />
+                        @endif
+                        <x-suspend-article-button :article="$article" />
                     </div>
-                    @endauth
                 </header>
 
                 @if($article->featured_image)
@@ -179,9 +169,30 @@
                 </div>
                 @endif
 
-                <div class="prose prose-lg max-w-none article-content text-news-ink">
+                @if($article->hasCorrection())
+                <aside class="mb-6 border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-news-ink" role="note" aria-label="Catatan koreksi">
+                    <p class="font-semibold text-amber-900 mb-1">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        Koreksi / klarifikasi
+                        @if($article->corrected_at)
+                            <span class="font-normal text-amber-800">· {{ $article->corrected_at->format('d M Y, H:i') }} WIB</span>
+                        @endif
+                    </p>
+                    <p class="text-amber-950/90 leading-relaxed whitespace-pre-line">{{ $article->correction_notice }}</p>
+                </aside>
+                @endif
+
+                <div class="prose prose-sm sm:prose-base max-w-none article-content text-news-ink">
                     {!! $article->formattedContent() !!}
                 </div>
+
+                @if($article->author && $article->author->isPenulis())
+                <p class="mt-6 text-xs text-news-muted leading-relaxed border-t border-news-line pt-4">
+                    Tanggung jawab atas keakuratan isi artikel ini berada pada penulis.
+                    Redaksi dapat mengoreksi, mengarsipkan, atau menurunkan konten yang tidak sesuai fakta sesuai
+                    <a href="{{ route('terms') }}" class="underline hover:text-news-ink">Syarat &amp; Ketentuan</a>.
+                </p>
+                @endif
 
                 <footer class="mt-8 pt-6 border-t border-news-line">
                     @if($article->tags && $article->tags->count() > 0)
@@ -229,19 +240,25 @@
             </article>
 
             <section class="mt-10 border-t-2 border-news-ink pt-6" id="comments-section">
-                <h2 class="font-display text-xl md:text-2xl font-bold text-news-ink mb-6">
+                <h2 class="font-display text-lg sm:text-xl md:text-2xl font-bold text-news-ink mb-5">
                     Komentar (<span id="comments-count">{{ $article->approvedComments->where('parent_id', null)->count() }}</span>)
                 </h2>
 
                 <div class="mb-8 border-b border-news-line pb-6">
                     <h3 class="text-sm font-bold uppercase tracking-wider text-news-muted mb-4">Tulis Komentar</h3>
 
-                    @auth
-                        <form id="comment-form" action="{{ route('comments.store') }}" method="POST" class="space-y-4">
-                            @csrf
-                            <input type="hidden" name="article_id" value="{{ $article->id }}">
-                            <input type="hidden" name="parent_id" id="reply-to-id" value="">
+                    <form id="comment-form" action="{{ route('comments.store') }}" method="POST" class="space-y-4">
+                        @csrf
+                        <input type="hidden" name="article_id" value="{{ $article->id }}">
+                        <input type="hidden" name="parent_id" id="reply-to-id" value="">
 
+                        {{-- Honeypot anti-spam (tersembunyi dari manusia) --}}
+                        <div class="absolute -left-[9999px] opacity-0 h-0 overflow-hidden" aria-hidden="true">
+                            <label for="website">Website</label>
+                            <input type="text" name="website" id="website" tabindex="-1" autocomplete="off">
+                        </div>
+
+                        @auth
                             <div class="mb-2 px-3 py-2 border border-news-line bg-news-paper text-sm text-news-ink">
                                 Berkomentar sebagai <strong>{{ auth()->user()->name }}</strong>
                             </div>
@@ -254,51 +271,81 @@
                                     </button>
                                 </div>
                             </div>
-
-                            <div>
-                                <label for="comment" class="block text-sm font-medium text-news-ink mb-2">
-                                    Komentar <span class="text-news-accent">*</span>
-                                </label>
-                                <textarea name="comment"
-                                          id="comment"
-                                          rows="5"
-                                          required
-                                          maxlength="1000"
-                                          class="w-full px-3 py-2 border border-news-line text-news-ink focus:outline-none focus:ring-2 focus:ring-news-accent focus:border-transparent"
-                                          placeholder="Tulis komentar Anda di sini... (Maksimal 1000 karakter)"></textarea>
-                                <div class="flex justify-end mt-1">
-                                    <span class="text-[11px] text-news-muted"><span id="char-count">0</span>/1000</span>
+                        @else
+                            <p class="text-sm text-news-muted mb-2">
+                                Berkomentar sebagai tamu. Komentar akan ditampilkan setelah disetujui admin.
+                                Atau
+                                <a href="{{ route('login') }}" class="text-news-accent font-medium hover:underline">login</a>
+                                agar komentar langsung tampil.
+                            </p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="guest-name" class="block text-sm font-medium text-news-ink mb-2">
+                                        Nama <span class="text-news-accent">*</span>
+                                    </label>
+                                    <input type="text"
+                                           name="name"
+                                           id="guest-name"
+                                           required
+                                           maxlength="100"
+                                           value="{{ old('name') }}"
+                                           class="w-full px-3 py-2 border border-news-line text-news-ink focus:outline-none focus:ring-2 focus:ring-news-accent focus:border-transparent"
+                                           placeholder="Nama Anda">
+                                </div>
+                                <div>
+                                    <label for="guest-email" class="block text-sm font-medium text-news-ink mb-2">
+                                        Email <span class="text-news-accent">*</span>
+                                    </label>
+                                    <input type="email"
+                                           name="email"
+                                           id="guest-email"
+                                           required
+                                           maxlength="100"
+                                           value="{{ old('email') }}"
+                                           class="w-full px-3 py-2 border border-news-line text-news-ink focus:outline-none focus:ring-2 focus:ring-news-accent focus:border-transparent"
+                                           placeholder="email@contoh.com">
                                 </div>
                             </div>
+                        @endauth
 
-                            <div class="flex items-center gap-3">
-                                <button type="submit"
-                                        id="submit-comment-btn"
-                                        class="bg-news-ink text-white px-6 py-2.5 text-sm font-semibold hover:bg-news-accent transition-colors inline-flex items-center gap-2">
-                                    <i class="fas fa-paper-plane text-xs"></i>
-                                    Kirim Komentar
-                                </button>
+                        <div>
+                            <label for="comment" class="block text-sm font-medium text-news-ink mb-2">
+                                Komentar <span class="text-news-accent">*</span>
+                            </label>
+                            <textarea name="comment"
+                                      id="comment"
+                                      rows="5"
+                                      required
+                                      maxlength="1000"
+                                      class="w-full px-3 py-2 border border-news-line text-news-ink focus:outline-none focus:ring-2 focus:ring-news-accent focus:border-transparent"
+                                      placeholder="Tulis komentar Anda di sini... (Maksimal 1000 karakter)">{{ old('comment') }}</textarea>
+                            <div class="flex justify-end mt-1">
+                                <span class="text-[11px] text-news-muted"><span id="char-count">0</span>/1000</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3 flex-wrap">
+                            <button type="submit"
+                                    id="submit-comment-btn"
+                                    class="bg-news-ink text-white px-6 py-2.5 text-sm font-semibold hover:bg-news-accent transition-colors inline-flex items-center gap-2">
+                                <i class="fas fa-paper-plane text-xs"></i>
+                                Kirim Komentar
+                            </button>
+                            @auth
                                 <button type="button"
                                         id="cancel-reply-btn"
                                         onclick="cancelReply()"
                                         class="hidden px-5 py-2.5 border border-news-line text-news-ink text-sm font-medium hover:border-news-ink transition-colors">
                                     Batal
                                 </button>
-                            </div>
-                        </form>
-                    @else
-                        <div class="border border-news-line px-5 py-8 text-center">
-                            <p class="text-news-ink mb-4 font-medium">Login terlebih dahulu untuk berkomentar.</p>
-                            <a href="{{ route('login') }}"
-                               class="inline-block bg-news-ink text-white px-5 py-2.5 text-sm font-semibold hover:bg-news-accent transition-colors">
-                                Login Sekarang
-                            </a>
-                            <p class="text-sm text-news-muted mt-3">
-                                Belum punya akun?
-                                <a href="{{ route('register') }}" class="text-news-accent font-medium hover:underline">Daftar di sini</a>
-                            </p>
+                            @else
+                                <p class="text-xs text-news-muted">
+                                    Belum punya akun?
+                                    <a href="{{ route('register') }}" class="text-news-accent font-medium hover:underline">Daftar</a>
+                                </p>
+                            @endauth
                         </div>
-                    @endauth
+                    </form>
                 </div>
 
                 <div id="comments-list" class="space-y-4">
@@ -319,13 +366,13 @@
         <aside class="lg:col-span-3 order-2 lg:order-3 space-y-8" aria-label="Sidebar kanan">
             @if($relatedArticles->count() > 0)
             <div class="border border-news-line">
-                <div class="bg-news-ink text-white px-4 py-2.5">
-                    <h2 class="text-xs font-bold uppercase tracking-[0.15em]">Berita Terkait</h2>
+                <div class="bg-news-ink text-white px-3 lg:px-4 py-2.5">
+                    <h2 class="text-[11px] lg:text-xs font-bold uppercase tracking-[0.15em]">Berita Terkait</h2>
                 </div>
-                <ul class="divide-y divide-news-line">
+                <ul class="grid grid-cols-2 lg:grid-cols-1 lg:divide-y lg:divide-news-line">
                     @foreach($relatedArticles as $relatedArticle)
-                    <li class="flex gap-3 px-4 py-3">
-                        <a href="{{ $relatedArticle->publicUrl() }}" class="w-16 h-16 shrink-0 overflow-hidden bg-news-line">
+                    <li class="flex flex-col lg:flex-row gap-2 lg:gap-3 p-2.5 lg:px-4 lg:py-3 border-b border-news-line lg:border-b-0 {{ $loop->odd ? 'border-r lg:border-r-0' : '' }}">
+                        <a href="{{ $relatedArticle->publicUrl() }}" class="w-full aspect-[4/3] lg:w-16 lg:h-16 lg:aspect-auto shrink-0 overflow-hidden bg-news-line">
                             <img
                                 src="{{ $relatedArticle->featured_image ? asset('storage/' . $relatedArticle->featured_image) : asset('images/default-news.jpg') }}"
                                 alt=""
@@ -334,12 +381,12 @@
                             >
                         </a>
                         <div class="min-w-0">
-                            <h3 class="text-sm font-bold leading-snug text-news-ink line-clamp-2">
+                            <h3 class="text-[11px] lg:text-sm font-bold leading-snug text-news-ink line-clamp-2">
                                 <a href="{{ $relatedArticle->publicUrl() }}" class="hover:text-news-accent transition-colors" title="{{ $relatedArticle->title }}">
                                     {{ $relatedArticle->title }}
                                 </a>
                             </h3>
-                            <time class="block mt-1 text-[11px] text-news-muted">
+                            <time class="block mt-1 text-[10px] lg:text-[11px] text-news-muted">
                                 {{ $relatedArticle->published_at ? $relatedArticle->published_at->format('d M Y') : 'Belum dipublikasi' }}
                             </time>
                         </div>
@@ -357,31 +404,40 @@
         </aside>
     </div>
 </div>
+@endsection
+
 @section('structured-data')
 <script type="application/ld+json">
 {!! json_encode(\App\Helpers\SeoHelper::generateArticleStructuredData($article), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
 </script>
 @endsection
 
-@section('scripts')
+@push('scripts')
 <script>
-// Toggle Bookmark
+// Toggle Bookmark (legacy helper — prefer data-bookmark-url handler di layout)
 function toggleBookmark(articleId) {
+    var btn = document.getElementById('bookmark-btn-' + articleId);
+    if (btn && btn.getAttribute('data-bookmark-url')) {
+        btn.click();
+        return;
+    }
+
     @guest
     window.location.href = '{{ route("login") }}';
     return;
     @endguest
 
-    const btn = document.getElementById(`bookmark-btn-${articleId}`);
     const text = document.getElementById(`bookmark-text-${articleId}`);
-    const icon = btn.querySelector('i');
+    const icon = btn && btn.querySelector('i');
     
+    if (!btn) return;
     btn.disabled = true;
     
-    fetch(`/articles/${articleId}/bookmark`, {
+    fetch(@json(url('/articles')) + '/' + articleId + '/bookmark', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
         }
     })
@@ -391,11 +447,11 @@ function toggleBookmark(articleId) {
             if (data.bookmarked) {
                 btn.classList.remove('bg-white', 'text-news-ink', 'border-news-line', 'hover:border-news-ink');
                 btn.classList.add('bg-yellow-50', 'text-yellow-800', 'border-yellow-300');
-                text.textContent = 'Bookmarked';
+                if (text) text.textContent = 'Bookmarked';
             } else {
                 btn.classList.remove('bg-yellow-50', 'text-yellow-800', 'border-yellow-300');
                 btn.classList.add('bg-white', 'text-news-ink', 'border-news-line', 'hover:border-news-ink');
-                text.textContent = 'Bookmark';
+                if (text) text.textContent = 'Bookmark';
             }
         }
     })
@@ -407,50 +463,13 @@ function toggleBookmark(articleId) {
     });
 }
 
-// Toggle Follow
+// Toggle Follow (legacy — handler utama di layout publik)
 function toggleFollow(userId) {
-    @guest
-    window.location.href = '{{ route("login") }}';
-    return;
-    @endguest
-
-    const btn = document.getElementById(`follow-btn-${userId}`);
-    const text = document.getElementById(`follow-text-${userId}`);
-    const icon = btn.querySelector('i');
-    
-    btn.disabled = true;
-    
-    fetch(`/users/${userId}/follow`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            if (data.following) {
-                btn.classList.remove('bg-white', 'text-news-ink', 'border-news-line', 'hover:border-news-accent', 'hover:text-news-accent');
-                btn.classList.add('bg-news-ink', 'text-white', 'border-news-ink');
-                icon.classList.remove('fa-user-plus');
-                icon.classList.add('fa-user-check');
-                text.textContent = 'Mengikuti';
-            } else {
-                btn.classList.remove('bg-news-ink', 'text-white', 'border-news-ink');
-                btn.classList.add('bg-white', 'text-news-ink', 'border-news-line', 'hover:border-news-accent', 'hover:text-news-accent');
-                icon.classList.remove('fa-user-check');
-                icon.classList.add('fa-user-plus');
-                text.textContent = 'Ikuti Penulis';
-            }
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    })
-    .finally(() => {
-        btn.disabled = false;
-    });
+    var btn = document.getElementById('follow-btn-' + userId);
+    if (btn && btn.getAttribute('data-follow-url')) {
+        btn.click();
+        return;
+    }
 }
 
 // CRITICAL: Define toggleLike FIRST before anything else to ensure it's always available
@@ -1145,22 +1164,40 @@ document.addEventListener('DOMContentLoaded', function() {
                     'Accept': 'application/json'
                 }
             })
-            .then(response => response.json())
+            .then(async (response) => {
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    let message = data.error || data.message || 'Terjadi kesalahan saat mengirim komentar.';
+                    if (data.errors) {
+                        message = Object.values(data.errors).flat().join(' ');
+                    }
+                    throw new Error(message);
+                }
+                return data;
+            })
             .then(data => {
                 if (data.success) {
-                    // Add comment to list immediately (semua komentar langsung disetujui)
-                    addCommentToDOM(data.comment);
-                    showNotification('Komentar berhasil dikirim!', 'success');
+                    if (data.is_approved && data.comment) {
+                        addCommentToDOM(data.comment);
+                    }
+                    showNotification(data.message || 'Komentar berhasil dikirim!', 'success');
+                    const guestName = document.getElementById('guest-name');
+                    const guestEmail = document.getElementById('guest-email');
+                    const savedName = guestName ? guestName.value : '';
+                    const savedEmail = guestEmail ? guestEmail.value : '';
                     commentForm.reset();
-                    document.getElementById('char-count').textContent = '0';
-                    cancelReply();
+                    if (guestName) guestName.value = savedName;
+                    if (guestEmail) guestEmail.value = savedEmail;
+                    const charCountEl = document.getElementById('char-count');
+                    if (charCountEl) charCountEl.textContent = '0';
+                    if (typeof cancelReply === 'function') cancelReply();
                 } else {
                     showNotification(data.error || 'Terjadi kesalahan saat mengirim komentar.', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showNotification('Terjadi kesalahan saat mengirim komentar. Silakan coba lagi.', 'error');
+                showNotification(error.message || 'Terjadi kesalahan saat mengirim komentar. Silakan coba lagi.', 'error');
             })
             .finally(() => {
                 submitBtn.disabled = false;
@@ -1747,5 +1784,4 @@ document.addEventListener('DOMContentLoaded', function() {
     pointer-events: none;
 }
 </style>
-@endsection
-@endsection
+@endpush

@@ -6,212 +6,126 @@
 
 @section('content')
 <div class="space-y-6">
-    <!-- Log Actions -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white border border-news-line p-6">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-                <h3 class="text-lg font-semibold text-gray-900">Log Laravel</h3>
-                <p class="text-sm text-gray-600">100 baris terakhir dari log aplikasi</p>
+                <h3 class="text-lg font-semibold text-news-ink">Log Laravel</h3>
+                <p class="text-sm text-news-muted">Hingga 100 baris terakhir (dari 500 baris paling baru)</p>
             </div>
             <div class="flex gap-2">
-                <button onclick="refreshLogs()" 
-                        class="bg-news-accent text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors flex items-center">
+                <a href="{{ route('admin.logs.index', array_filter(['level' => $level ?: null, 'q' => $search ?: null])) }}"
+                   class="bg-news-accent text-white px-4 py-2 hover:bg-news-ink transition-colors inline-flex items-center">
                     <i class="fas fa-sync-alt mr-2"></i>
                     Refresh
-                </button>
-                
-                <a href="{{ route('admin.logs.clear') }}" 
-                   class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center"
-                   onclick="event.preventDefault(); const href=this.href; window.pesbarConfirm('Apakah Anda yakin ingin menghapus semua log?', {danger:true}).then(ok=>{ if(ok) location.href=href; }); return false;">
-                    <i class="fas fa-trash mr-2"></i>
-                    Hapus Log
                 </a>
+
+                <form action="{{ route('admin.logs.clear') }}" method="POST" class="inline">
+                    @csrf
+                    <button type="button"
+                            class="bg-news-accent text-white px-4 py-2 hover:bg-news-ink transition-colors inline-flex items-center"
+                            onclick="window.pesbarConfirmSubmit(this.form, 'Hapus semua isi laravel.log?', {danger:true})">
+                        <i class="fas fa-trash mr-2"></i>
+                        Hapus Log
+                    </button>
+                </form>
             </div>
         </div>
     </div>
 
-    <!-- Log Content -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-900">Isi Log</h3>
+    <div class="bg-white border border-news-line p-6">
+        <h3 class="text-lg font-semibold text-news-ink mb-4">Filter Log</h3>
+        <form method="GET" action="{{ route('admin.logs.index') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-news-ink mb-1">Level</label>
+                <select name="level" class="w-full border border-news-line px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">
+                    <option value="">Semua Level</option>
+                    @foreach(['ERROR','WARNING','INFO','DEBUG'] as $lvl)
+                        <option value="{{ $lvl }}" {{ $level === $lvl ? 'selected' : '' }}>{{ $lvl }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-news-ink mb-1">Pencarian</label>
+                <input type="text" name="q" value="{{ $search }}" placeholder="Cari dalam log..."
+                       class="w-full border border-news-line px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">
+            </div>
+            <div class="flex items-end gap-2">
+                <button type="submit" class="flex-1 bg-news-ink text-white px-4 py-2 hover:bg-news-accent transition-colors">
+                    <i class="fas fa-search mr-2"></i>Filter
+                </button>
+                <a href="{{ route('admin.logs.index') }}" class="px-4 py-2 border border-news-line text-news-ink hover:bg-news-paper">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="bg-white border border-news-line p-6">
+            <p class="text-sm font-medium text-news-muted">Error</p>
+            <p class="text-2xl font-semibold text-news-ink">{{ collect($logs)->filter(fn($log) => str_contains(strtoupper($log), 'ERROR'))->count() }}</p>
         </div>
-        
+        <div class="bg-white border border-news-line p-6">
+            <p class="text-sm font-medium text-news-muted">Warning</p>
+            <p class="text-2xl font-semibold text-news-ink">{{ collect($logs)->filter(fn($log) => str_contains(strtoupper($log), 'WARNING'))->count() }}</p>
+        </div>
+        <div class="bg-white border border-news-line p-6">
+            <p class="text-sm font-medium text-news-muted">Info</p>
+            <p class="text-2xl font-semibold text-news-ink">{{ collect($logs)->filter(fn($log) => str_contains(strtoupper($log), 'INFO'))->count() }}</p>
+        </div>
+        <div class="bg-white border border-news-line p-6">
+            <p class="text-sm font-medium text-news-muted">Ditampilkan</p>
+            <p class="text-2xl font-semibold text-news-ink">{{ count($logs) }}</p>
+        </div>
+    </div>
+
+    <div class="bg-white border border-news-line">
+        <div class="px-6 py-4 border-b border-news-line">
+            <h3 class="text-lg font-semibold text-news-ink">Isi Log</h3>
+        </div>
+
         @if(count($logs) > 0)
         <div class="p-6">
-            <div class="bg-gray-900 rounded-lg p-4 overflow-x-auto">
-                <pre class="text-green-400 text-sm font-mono whitespace-pre-wrap">@foreach($logs as $log){{ $log }}@endforeach</pre>
+            <div class="bg-gray-900 p-4 overflow-x-auto max-h-[32rem] overflow-y-auto">
+                <pre class="text-sm font-mono whitespace-pre-wrap">@foreach($logs as $log)
+@php
+    $upper = strtoupper($log);
+    $color = str_contains($upper, 'ERROR') || str_contains($upper, 'CRITICAL')
+        ? 'text-red-400'
+        : (str_contains($upper, 'WARNING') ? 'text-yellow-400' : (str_contains($upper, 'INFO') ? 'text-blue-400' : 'text-green-400'));
+@endphp
+<span class="{{ $color }}">{{ $log }}</span>
+@endforeach</pre>
             </div>
         </div>
         @else
-        <div class="p-12 text-center">
-            <div class="text-gray-500">
-                <i class="fas fa-file-alt text-4xl mb-4"></i>
-                <p class="text-lg font-medium">Log kosong</p>
-                <p class="text-sm">Tidak ada log yang tersedia</p>
-            </div>
+        <div class="p-12 text-center text-news-muted">
+            <i class="fas fa-file-alt text-4xl mb-4"></i>
+            <p class="text-lg font-medium">Log kosong / tidak ada yang cocok filter</p>
         </div>
         @endif
     </div>
 
-    <!-- Log Statistics -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center">
-                <div class="p-3 rounded-full bg-red-100 text-red-600">
-                    <i class="fas fa-exclamation-circle text-xl"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Error</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ collect($logs)->filter(function($log) { return str_contains($log, 'ERROR'); })->count() }}</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center">
-                <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
-                    <i class="fas fa-exclamation-triangle text-xl"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Warning</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ collect($logs)->filter(function($log) { return str_contains($log, 'WARNING'); })->count() }}</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center">
-                <div class="p-3 rounded-full bg-blue-100 text-blue-600">
-                    <i class="fas fa-info-circle text-xl"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Info</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ collect($logs)->filter(function($log) { return str_contains($log, 'INFO'); })->count() }}</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center">
-                <div class="p-3 rounded-full bg-gray-100 text-gray-600">
-                    <i class="fas fa-list text-xl"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Total Log</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ count($logs) }}</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Log Filters -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Filter Log</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="bg-white border border-news-line p-6">
+        <h3 class="text-lg font-semibold text-news-ink mb-4">Informasi Log</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Level</label>
-                <select id="logLevel" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">
-                    <option value="">Semua Level</option>
-                    <option value="ERROR">Error</option>
-                    <option value="WARNING">Warning</option>
-                    <option value="INFO">Info</option>
-                    <option value="DEBUG">Debug</option>
-                </select>
+                <h4 class="font-medium text-news-ink mb-1">File</h4>
+                <p class="text-news-muted font-mono">storage/logs/laravel.log</p>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Pencarian</label>
-                <input type="text" id="logSearch" placeholder="Cari dalam log..."
-                       class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-news-accent focus:border-news-accent">
+                <h4 class="font-medium text-news-ink mb-1">Ukuran</h4>
+                <p class="text-news-muted">{{ number_format(($fileSize ?? 0) / 1024, 2) }} KB</p>
             </div>
-            <div class="flex items-end">
-                <button onclick="filterLogs()" class="w-full bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
-                    <i class="fas fa-search mr-2"></i>Filter
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- System Information -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Informasi Log</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-                <h4 class="text-sm font-medium text-gray-900 mb-2">File Log</h4>
-                <p class="text-sm text-gray-600 font-mono">storage/logs/laravel.log</p>
-            </div>
-            
-            <div>
-                <h4 class="text-sm font-medium text-gray-900 mb-2">Ukuran File</h4>
-                <p class="text-sm text-gray-600">
-                    @php
-                        $logFile = storage_path('logs/laravel.log');
-                        $fileSize = file_exists($logFile) ? filesize($logFile) : 0;
-                    @endphp
-                    {{ number_format($fileSize / 1024, 2) }} KB
+                <h4 class="font-medium text-news-ink mb-1">Terakhir diupdate</h4>
+                <p class="text-news-muted">
+                    {{ !empty($lastModified) ? date('d-m-Y H:i:s', $lastModified) : '—' }}
                 </p>
             </div>
-            
             <div>
-                <h4 class="text-sm font-medium text-gray-900 mb-2">Terakhir Diupdate</h4>
-                <p class="text-sm text-gray-600">
-                    @if(file_exists($logFile))
-                        {{ date('d-m-Y H:i:s', filemtime($logFile)) }}
-                    @else
-                        File tidak ditemukan
-                    @endif
-                </p>
-            </div>
-            
-            <div>
-                <h4 class="text-sm font-medium text-gray-900 mb-2">Log Level</h4>
-                <p class="text-sm text-gray-600">{{ config('logging.level', 'debug') }}</p>
+                <h4 class="font-medium text-news-ink mb-1">Default log level</h4>
+                <p class="text-news-muted">{{ config('logging.channels.stack.level', config('logging.default')) }}</p>
             </div>
         </div>
     </div>
 </div>
-
-@push('scripts')
-<script>
-function refreshLogs() {
-    window.location.reload();
-}
-
-function filterLogs() {
-    const level = document.getElementById('logLevel').value;
-    const search = document.getElementById('logSearch').value;
-    
-    // Here you would implement the filtering logic
-    // For now, just show an alert
-    alert('Fitur filter log akan segera tersedia.');
-}
-
-// Auto refresh logs every 30 seconds
-setInterval(function() {
-    // You can implement auto-refresh here if needed
-}, 30000);
-
-// Syntax highlighting for log levels
-document.addEventListener('DOMContentLoaded', function() {
-    const logContent = document.querySelector('pre');
-    if (logContent) {
-        const lines = logContent.textContent.split('\n');
-        let highlightedContent = '';
-        
-        lines.forEach(line => {
-            if (line.includes('ERROR')) {
-                highlightedContent += '<span class="text-red-400">' + line + '</span>\n';
-            } else if (line.includes('WARNING')) {
-                highlightedContent += '<span class="text-yellow-400">' + line + '</span>\n';
-            } else if (line.includes('INFO')) {
-                highlightedContent += '<span class="text-blue-400">' + line + '</span>\n';
-            } else {
-                highlightedContent += line + '\n';
-            }
-        });
-        
-        logContent.innerHTML = highlightedContent;
-    }
-});
-</script>
-@endpush
 @endsection

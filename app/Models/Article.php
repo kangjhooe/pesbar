@@ -30,6 +30,13 @@ class Article extends Model
         'published_at',
         'scheduled_at',
         'rejection_reason',
+        'suspension_reason',
+        'suspended_at',
+        'suspended_by',
+        'correction_notice',
+        'corrected_at',
+        'fact_checked_at',
+        'fact_checked_by',
     ];
 
     protected $casts = [
@@ -37,6 +44,9 @@ class Article extends Model
         'is_breaking' => 'boolean',
         'published_at' => 'datetime',
         'scheduled_at' => 'datetime',
+        'suspended_at' => 'datetime',
+        'corrected_at' => 'datetime',
+        'fact_checked_at' => 'datetime',
     ];
 
     protected static function boot()
@@ -46,6 +56,13 @@ class Article extends Model
         static::creating(function ($article) {
             if (empty($article->slug)) {
                 $article->slug = Str::slug($article->title);
+            }
+        });
+
+        // Artikel published wajib punya published_at (tidak boleh "terbit" tanpa tanggal).
+        static::saving(function (Article $article) {
+            if ($article->status === 'published' && empty($article->published_at)) {
+                $article->published_at = now();
             }
         });
     }
@@ -58,6 +75,26 @@ class Article extends Model
     public function author(): BelongsTo
     {
         return $this->belongsTo(User::class, 'author_id');
+    }
+
+    public function factChecker(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'fact_checked_by');
+    }
+
+    public function suspendedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'suspended_by');
+    }
+
+    public function reports(): HasMany
+    {
+        return $this->hasMany(ArticleReport::class);
+    }
+
+    public function hasCorrection(): bool
+    {
+        return filled($this->correction_notice);
     }
 
     public function tags(): BelongsToMany
@@ -91,29 +128,29 @@ class Article extends Model
                     ->whereNotNull('published_at');
     }
 
-    public function scopeRejected($query)
-    {
-        return $query->where('status', 'rejected');
-    }
-
     public function scopeArchived($query)
     {
         return $query->where('status', 'archived');
     }
 
-    public function getIsPublishedAttribute()
+    public function scopeSuspended($query)
     {
-        return $this->status === 'published';
+        return $query->where('status', 'suspended');
     }
 
-    public function getIsRejectedAttribute()
+    public function getIsPublishedAttribute()
     {
-        return $this->status === 'rejected';
+        return $this->status === 'published' && $this->published_at !== null;
     }
 
     public function getIsArchivedAttribute()
     {
         return $this->status === 'archived';
+    }
+
+    public function getIsSuspendedAttribute()
+    {
+        return $this->status === 'suspended';
     }
 
     public function scopeFeatured($query)

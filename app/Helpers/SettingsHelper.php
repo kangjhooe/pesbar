@@ -184,27 +184,52 @@ class SettingsHelper
 
     public static function autoApproveComments()
     {
-        return (bool) self::get('auto_approve_comments', false);
+        return self::asBool(self::get('auto_approve_comments'), false);
     }
 
     public static function requireCommentApproval()
     {
-        return (bool) self::get('require_comment_approval', true);
+        return self::asBool(self::get('require_comment_approval'), true);
+    }
+
+    /**
+     * Default approval for comments.
+     * Login users are always approved; guests always require moderation.
+     * Legacy settings are ignored for the public comment flow.
+     */
+    public static function commentsApprovedByDefault(bool $isGuest = false): bool
+    {
+        if ($isGuest) {
+            return false;
+        }
+
+        return true;
     }
 
     public static function enableRegistration()
     {
-        return (bool) self::get('enable_registration', true);
+        return self::asBool(self::get('enable_registration'), true);
     }
 
     public static function enableNewsletter()
     {
-        return (bool) self::get('enable_newsletter', true);
+        return self::asBool(self::get('enable_newsletter'), true);
     }
 
     public static function maintenanceMode()
     {
-        return (bool) self::get('maintenance_mode', false);
+        return self::asBool(self::get('maintenance_mode'), false);
+    }
+
+    protected static function asBool($value, bool $default = false): bool
+    {
+        if ($value === null || $value === '') {
+            return $default;
+        }
+
+        $parsed = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+
+        return $parsed === null ? $default : $parsed;
     }
 
     /**

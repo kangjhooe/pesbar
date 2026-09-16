@@ -5,7 +5,7 @@
     $tideStatus = $maritimeData['tide']['status'] ?? 'Pasang';
 @endphp
 
-<div class="border border-news-line" id="{{ $isHome ? 'home-maritime-widget' : 'maritime-widget' }}">
+<div class="public-widget border border-news-line" id="{{ $isHome ? 'home-maritime-widget' : 'maritime-widget' }}">
     <div class="bg-news-ink text-white px-4 py-2.5 flex items-center justify-between gap-2">
         <h2 class="text-xs font-bold uppercase tracking-[0.15em]">Informasi Maritim</h2>
         <span class="text-[10px] font-bold uppercase tracking-wider text-white/60 shrink-0">Live</span>

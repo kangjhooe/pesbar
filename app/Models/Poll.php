@@ -200,29 +200,39 @@ class Poll extends Model
     /**
      * Check if user can vote
      */
-    public function canUserVote($userId = null, $ipAddress = null)
+    public function canUserVote($userId = null, $ipAddress = null): bool
+    {
+        return $this->getVoteBlockReason($userId, $ipAddress) === null;
+    }
+
+    /**
+     * Why voting is blocked, or null if allowed.
+     * Logged-in: one account = one vote.
+     * Guest: only when allow_anonymous, and one IP = one vote.
+     */
+    public function getVoteBlockReason($userId = null, $ipAddress = null): ?string
     {
         if (!$this->is_active || $this->status !== 'running') {
-            return false;
+            return 'Polling ini tidak tersedia untuk voting';
         }
 
-        // Check if user already voted
+        if (!$userId && !$this->allow_anonymous) {
+            return 'Silakan login untuk memberikan suara';
+        }
+
         if ($userId) {
-            $existingVote = $this->votes()->where('user_id', $userId)->exists();
-            if ($existingVote) {
-                return false;
+            if ($this->votes()->where('user_id', $userId)->exists()) {
+                return 'Anda sudah memberikan suara untuk polling ini';
             }
+
+            return null;
         }
 
-        // Check if IP already voted (for anonymous)
-        if ($ipAddress && $this->allow_anonymous) {
-            $existingVote = $this->votes()->where('ip_address', $ipAddress)->exists();
-            if ($existingVote) {
-                return false;
-            }
+        if ($ipAddress && $this->votes()->where('ip_address', $ipAddress)->exists()) {
+            return 'Anda sudah memberikan suara untuk polling ini';
         }
 
-        return true;
+        return null;
     }
 
     /**

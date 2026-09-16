@@ -13,9 +13,9 @@
         ],
     ])
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-3">
-            <h3 class="text-lg font-semibold text-gray-900">{{ $contactImportant->name }}</h3>
+    <div class="bg-white rounded-xl shadow-sm border border-news-line overflow-hidden">
+        <div class="px-6 py-4 border-b border-news-line flex items-center justify-between gap-3">
+            <h3 class="text-lg font-semibold text-news-ink">{{ $contactImportant->name }}</h3>
             <a href="{{ route('admin.contact-importants.index') }}" class="btn-secondary">
                 <i class="fas fa-arrow-left mr-2"></i>Kembali
             </a>
@@ -23,13 +23,13 @@
 
         <div class="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2">
-                <dl class="divide-y divide-gray-100">
+                <dl class="divide-y divide-news-line">
                     <div class="py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
-                        <dt class="text-sm font-medium text-gray-500">Nama</dt>
-                        <dd class="sm:col-span-2 text-sm text-gray-900">{{ $contactImportant->name }}</dd>
+                        <dt class="text-sm font-medium text-news-muted">Nama</dt>
+                        <dd class="sm:col-span-2 text-sm text-news-ink">{{ $contactImportant->name }}</dd>
                     </div>
                     <div class="py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
-                        <dt class="text-sm font-medium text-gray-500">Jenis</dt>
+                        <dt class="text-sm font-medium text-news-muted">Jenis</dt>
                         <dd class="sm:col-span-2">
                             <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-50 text-news-accent">
                                 {{ ucwords(str_replace('_', ' ', $contactImportant->type)) }}
@@ -37,53 +37,53 @@
                         </dd>
                     </div>
                     <div class="py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
-                        <dt class="text-sm font-medium text-gray-500">Telepon</dt>
-                        <dd class="sm:col-span-2 text-sm text-gray-900">
+                        <dt class="text-sm font-medium text-news-muted">Telepon</dt>
+                        <dd class="sm:col-span-2 text-sm text-news-ink">
                             @if($contactImportant->phone)
                                 <a href="tel:{{ $contactImportant->phone }}" class="text-news-accent hover:underline">
                                     <i class="fas fa-phone mr-1"></i>{{ $contactImportant->formatted_phone }}
                                 </a>
                             @else
-                                <span class="text-gray-400">-</span>
+                                <span class="text-news-muted">-</span>
                             @endif
                         </dd>
                     </div>
                     <div class="py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
-                        <dt class="text-sm font-medium text-gray-500">Alamat</dt>
-                        <dd class="sm:col-span-2 text-sm text-gray-900">{{ $contactImportant->address ?: '-' }}</dd>
+                        <dt class="text-sm font-medium text-news-muted">Alamat</dt>
+                        <dd class="sm:col-span-2 text-sm text-news-ink">{{ $contactImportant->address ?: '-' }}</dd>
                     </div>
                     <div class="py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
-                        <dt class="text-sm font-medium text-gray-500">Deskripsi</dt>
-                        <dd class="sm:col-span-2 text-sm text-gray-900">{{ $contactImportant->description ?: '-' }}</dd>
+                        <dt class="text-sm font-medium text-news-muted">Deskripsi</dt>
+                        <dd class="sm:col-span-2 text-sm text-news-ink">{{ $contactImportant->description ?: '-' }}</dd>
                     </div>
                     <div class="py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
-                        <dt class="text-sm font-medium text-gray-500">Status</dt>
+                        <dt class="text-sm font-medium text-news-muted">Status</dt>
                         <dd class="sm:col-span-2">
                             @if($contactImportant->is_active)
-                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Aktif</span>
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-800">Aktif</span>
                             @else
-                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-700">Tidak Aktif</span>
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-news-paper text-news-ink">Tidak Aktif</span>
                             @endif
                         </dd>
                     </div>
                     <div class="py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
-                        <dt class="text-sm font-medium text-gray-500">Urutan</dt>
-                        <dd class="sm:col-span-2 text-sm text-gray-900">{{ $contactImportant->sort_order }}</dd>
+                        <dt class="text-sm font-medium text-news-muted">Urutan</dt>
+                        <dd class="sm:col-span-2 text-sm text-news-ink">{{ $contactImportant->sort_order }}</dd>
                     </div>
                     <div class="py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
-                        <dt class="text-sm font-medium text-gray-500">Dibuat</dt>
-                        <dd class="sm:col-span-2 text-sm text-gray-900">{{ $contactImportant->created_at->format('d-m-Y H:i') }}</dd>
+                        <dt class="text-sm font-medium text-news-muted">Dibuat</dt>
+                        <dd class="sm:col-span-2 text-sm text-news-ink">{{ $contactImportant->created_at->format('d-m-Y H:i') }}</dd>
                     </div>
                     <div class="py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
-                        <dt class="text-sm font-medium text-gray-500">Diperbarui</dt>
-                        <dd class="sm:col-span-2 text-sm text-gray-900">{{ $contactImportant->updated_at->format('d-m-Y H:i') }}</dd>
+                        <dt class="text-sm font-medium text-news-muted">Diperbarui</dt>
+                        <dd class="sm:col-span-2 text-sm text-news-ink">{{ $contactImportant->updated_at->format('d-m-Y H:i') }}</dd>
                     </div>
                 </dl>
             </div>
 
             <div class="space-y-4">
-                <div class="rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-3">
-                    <h4 class="text-sm font-semibold text-gray-900">Aksi</h4>
+                <div class="rounded-xl border border-news-line bg-news-paper p-4 space-y-3">
+                    <h4 class="text-sm font-semibold text-news-ink">Aksi</h4>
                     <a href="{{ route('admin.contact-importants.edit', $contactImportant) }}"
                        class="w-full btn-secondary justify-center">
                         <i class="fas fa-edit mr-2"></i>Edit Kontak
@@ -100,15 +100,15 @@
                           onsubmit="return window.pesbarConfirmForm(event, 'Apakah Anda yakin ingin menghapus kontak ini?')">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="w-full inline-flex items-center justify-center rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
+                        <button type="submit" class="w-full btn-primary justify-center">
                             <i class="fas fa-trash mr-2"></i>Hapus Kontak
                         </button>
                     </form>
                 </div>
 
                 @if($contactImportant->phone)
-                    <div class="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                        <h4 class="text-sm font-semibold text-gray-900 mb-3">Test Telepon</h4>
+                    <div class="rounded-xl border border-news-line bg-news-paper p-4">
+                        <h4 class="text-sm font-semibold text-news-ink mb-3">Test Telepon</h4>
                         <a href="tel:{{ $contactImportant->phone }}" class="w-full btn-primary justify-center">
                             <i class="fas fa-phone mr-2"></i>Hubungi Sekarang
                         </a>

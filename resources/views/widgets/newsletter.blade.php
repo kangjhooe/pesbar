@@ -1,4 +1,5 @@
-<div class="border border-news-line bg-news-ink text-white p-5">
+@if(\App\Helpers\SettingsHelper::enableNewsletter())
+<div class="public-widget border border-news-line bg-news-ink text-white p-5">
     <h2 class="text-xs font-bold uppercase tracking-[0.15em] mb-2">Newsletter</h2>
     <p class="text-sm text-white/70 mb-4">Dapatkan berita terbaru langsung di email Anda.</p>
     <form action="{{ route('newsletter.subscribe') }}" method="POST" class="space-y-3">
@@ -14,3 +15,4 @@
         </button>
     </form>
 </div>
+@endif

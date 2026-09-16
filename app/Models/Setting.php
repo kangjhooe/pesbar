@@ -26,9 +26,23 @@ class Setting extends Model
 
     public static function set($key, $value)
     {
-        return static::updateOrCreate(
+        if (is_bool($value)) {
+            $value = $value ? '1' : '0';
+        } elseif (is_array($value) || is_object($value)) {
+            $value = json_encode($value);
+        } elseif ($value !== null) {
+            $value = (string) $value;
+        }
+
+        $setting = static::updateOrCreate(
             ['setting_key' => $key],
             ['setting_value' => $value]
         );
+
+        if (class_exists(\App\Helpers\CacheHelper::class)) {
+            \App\Helpers\CacheHelper::clearSettingsCache();
+        }
+
+        return $setting;
     }
 }

@@ -80,7 +80,7 @@ class AdminArticleController extends Controller
     public function create()
     {
         $categories = Category::where('is_active', true)->get();
-        $tags = Tag::all();
+        $tags = Tag::orderBy('name')->get();
         
         return view('admin.articles.create', compact('categories', 'tags'));
     }
@@ -96,11 +96,12 @@ class AdminArticleController extends Controller
             'content' => 'required|string',
             'category_id' => 'required|exists:categories,id',
             'featured_image' => UploadValidation::image(false, 2048),
-            'status' => 'required|in:draft,pending_review,published,rejected,archived',
+            'status' => 'required|in:draft,published,archived,suspended',
             'is_featured' => 'boolean',
             'is_breaking' => 'boolean',
-            'tags' => 'array',
+            'tags' => 'nullable|array',
             'tags.*' => 'exists:tags,id',
+            'new_tags' => 'nullable|string|max:500',
             'published_at' => 'nullable|date',
             'slug' => 'nullable|string|max:255|unique:articles,slug',
             'meta_description' => 'nullable|string|max:500',
@@ -108,7 +109,7 @@ class AdminArticleController extends Controller
         ]);
 
         $data = $request->all();
-        unset($data['type'], $data['views'], $data['tags']);
+        unset($data['type'], $data['views'], $data['tags'], $data['new_tags']);
         $data['author_id'] = Auth::id();
         
         // Handle slug - use custom slug if provided, otherwise generate from title
@@ -142,11 +143,7 @@ class AdminArticleController extends Controller
         }
 
         $article = Article::create($data);
-
-        // Attach tags
-        if ($request->has('tags')) {
-            $article->tags()->attach($request->tags);
-        }
+        $article->tags()->sync($this->resolveTagIds($request));
 
         return redirect()->route('admin.articles.index')
             ->with('success', 'Artikel berhasil dibuat!');
@@ -170,7 +167,7 @@ class AdminArticleController extends Controller
         $this->authorize('update', $article);
         
         $categories = Category::where('is_active', true)->get();
-        $tags = Tag::all();
+        $tags = Tag::orderBy('name')->get();
         $article->load('tags');
         
         return view('admin.articles.edit', compact('article', 'categories', 'tags'));
@@ -189,19 +186,21 @@ class AdminArticleController extends Controller
             'content' => 'required|string',
             'category_id' => 'required|exists:categories,id',
             'featured_image' => UploadValidation::image(false, 2048),
-            'status' => 'required|in:draft,pending_review,published,rejected,archived',
+            'status' => 'required|in:draft,published,archived,suspended',
             'is_featured' => 'boolean',
             'is_breaking' => 'boolean',
-            'tags' => 'array',
+            'tags' => 'nullable|array',
             'tags.*' => 'exists:tags,id',
+            'new_tags' => 'nullable|string|max:500',
             'published_at' => 'nullable|date',
             'slug' => 'nullable|string|max:255|unique:articles,slug,' . $article->id,
             'meta_description' => 'nullable|string|max:500',
             'meta_keywords' => 'nullable|string|max:255',
+            'correction_notice' => 'nullable|string|max:2000',
         ]);
 
         $data = $request->all();
-        unset($data['type'], $data['author_id'], $data['views'], $data['tags']);
+        unset($data['type'], $data['author_id'], $data['views'], $data['tags'], $data['new_tags'], $data['fact_checked_at'], $data['fact_checked_by']);
         
         // Handle slug - use custom slug if provided and changed, otherwise keep existing or generate from title
         if ($request->slug && $request->slug !== $article->slug) {
@@ -247,14 +246,40 @@ class AdminArticleController extends Controller
             $data['published_at'] = now();
         }
 
-        $article->update($data);
-
-        // Sync tags
-        if ($request->has('tags')) {
-            $article->tags()->sync($request->tags);
-        } else {
-            $article->tags()->detach();
+        // Clear suspension metadata when leaving suspended
+        if ($request->status !== 'suspended') {
+            $data['suspension_reason'] = null;
+            $data['suspended_at'] = null;
+            $data['suspended_by'] = null;
         }
+
+        // Kolom rejection_reason tidak dipakai lagi
+        $data['rejection_reason'] = null;
+
+        $notice = trim((string) $request->input('correction_notice', ''));
+        if ($notice !== '') {
+            $data['correction_notice'] = $notice;
+            if ($article->correction_notice !== $notice) {
+                $data['corrected_at'] = now();
+            }
+        } else {
+            $data['correction_notice'] = null;
+            $data['corrected_at'] = null;
+        }
+
+        $oldStatus = $article->status;
+        $isOwnArticle = (int) $article->author_id === (int) Auth::id();
+
+        $article->update($data);
+        $article->tags()->sync($this->resolveTagIds($request));
+
+        ActivityLogHelper::logArticle(
+            'article.updated',
+            $article,
+            $isOwnArticle
+                ? "Admin memperbarui artikel sendiri '{$article->title}' (status: {$oldStatus} → {$article->status})"
+                : "Admin memperbarui artikel penulis #{$article->author_id} '{$article->title}' (status: {$oldStatus} → {$article->status})"
+        );
 
         return redirect()->route('admin.articles.index')
             ->with('success', 'Artikel berhasil diperbarui!');
@@ -348,6 +373,12 @@ class AdminArticleController extends Controller
 
         $article->update(['status' => 'archived']);
 
+        ActivityLogHelper::logArticle(
+            'article.archived',
+            $article,
+            "Artikel '{$article->title}' diarsipkan oleh admin"
+        );
+
         // Clear article cache to reflect changes immediately
         CacheHelper::clearArticleCache();
 
@@ -364,11 +395,98 @@ class AdminArticleController extends Controller
     }
 
     /**
+     * Tangguhkan penayangan artikel publik (moderasi — bukan edit konten).
+     */
+    public function suspend(Request $request, Article $article)
+    {
+        $this->authorize('suspend', $article);
+
+        if (!in_array($article->status, ['published', 'archived'], true)) {
+            return back()->with('error', 'Hanya artikel yang sudah tayang (atau diarsipkan) yang dapat ditangguhkan.');
+        }
+
+        $request->validate([
+            'reason' => 'required|string|max:1000',
+        ], [
+            'reason.required' => 'Alasan penangguhan wajib diisi.',
+        ]);
+
+        $article->update([
+            'status' => 'suspended',
+            'suspension_reason' => $request->reason,
+            'suspended_at' => now(),
+            'suspended_by' => Auth::id(),
+            'is_featured' => false,
+            'is_breaking' => false,
+        ]);
+
+        CacheHelper::clearArticleCache();
+        CacheHelper::clearDashboardCache();
+
+        ActivityLogHelper::logArticle(
+            'article.suspended',
+            $article,
+            "Penayangan '{$article->title}' ditangguhkan: {$request->reason}"
+        );
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Penayangan artikel ditangguhkan.',
+                'status' => 'suspended',
+            ]);
+        }
+
+        return redirect()
+            ->route('admin.articles.detail', $article)
+            ->with('success', 'Penayangan artikel ditangguhkan.');
+    }
+
+    /**
+     * Pulihkan penayangan artikel yang ditangguhkan.
+     */
+    public function unsuspend(Article $article)
+    {
+        $this->authorize('suspend', $article);
+
+        if ($article->status !== 'suspended') {
+            return back()->with('error', 'Artikel ini tidak dalam status ditangguhkan.');
+        }
+
+        $article->update([
+            'status' => 'published',
+            'published_at' => $article->published_at ?? now(),
+            'suspension_reason' => null,
+            'suspended_at' => null,
+            'suspended_by' => null,
+        ]);
+
+        CacheHelper::clearArticleCache();
+        CacheHelper::clearDashboardCache();
+
+        ActivityLogHelper::logArticle(
+            'article.unsuspended',
+            $article,
+            "Penayangan '{$article->title}' dipulihkan"
+        );
+
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Penayangan artikel dipulihkan.',
+                'status' => 'published',
+            ]);
+        }
+
+        return back()->with('success', 'Penayangan artikel dipulihkan.');
+    }
+
+    /**
      * Toggle featured status
      */
     public function toggleFeatured(Article $article)
     {
-        $this->authorize('update', $article);
+        $this->authorize('curate', $article);
 
         $article->update(['is_featured' => !$article->is_featured]);
         
@@ -394,7 +512,7 @@ class AdminArticleController extends Controller
      */
     public function toggleBreaking(Article $article)
     {
-        $this->authorize('update', $article);
+        $this->authorize('curate', $article);
 
         $article->update(['is_breaking' => !$article->is_breaking]);
         
@@ -430,13 +548,27 @@ class AdminArticleController extends Controller
             $articleIds = $request->articles;
             $articles = Article::whereIn('id', $articleIds)->get();
 
-            foreach ($articles as $article) {
+            // Publish pending = moderasi (boleh artikel penulis). Featured = curate (admin/editor).
+            // Mutasi lain = hanya artikel milik admin.
+            if ($request->action === 'publish') {
+                $allowed = $articles;
+                $skippedOwnership = 0;
+            } elseif ($request->action === 'featured') {
+                $allowed = $articles->filter(fn (Article $article) => Auth::user()->can('curate', $article));
+                $skippedOwnership = $articles->count() - $allowed->count();
+            } else {
                 $ability = $request->action === 'delete' ? 'delete' : 'update';
-                $this->authorize($ability, $article);
+                $allowed = $articles->filter(fn (Article $article) => Auth::user()->can($ability, $article));
+                $skippedOwnership = $articles->count() - $allowed->count();
             }
 
+            $articles = $allowed;
+            $articleIds = $articles->pluck('id')->all();
+
             if ($articles->isEmpty()) {
-                $errorMessage = 'Tidak ada artikel yang ditemukan.';
+                $errorMessage = $skippedOwnership > 0
+                    ? 'Tidak ada artikel yang boleh diubah. Artikel penulis hanya bisa dimoderasi lewat approve/reject.'
+                    : 'Tidak ada artikel yang ditemukan.';
                 
                 // Return JSON for AJAX requests
                 if ($request->wantsJson() || $request->ajax()) {
@@ -499,10 +631,14 @@ class AdminArticleController extends Controller
                         // Log activity
                         ActivityLogHelper::log('article.bulk_deleted', $count . ' artikel dihapus secara massal', [
                             'count' => $count,
+                            'skipped_ownership' => $skippedOwnership,
                             'article_ids' => $articleIds
                         ]);
                         
                         $message = $count . ' artikel berhasil dihapus!';
+                        if ($skippedOwnership > 0) {
+                            $message .= " {$skippedOwnership} dilewati (bukan milik Anda).";
+                        }
                     } catch (\Exception $e) {
                         DB::rollBack();
                         throw $e;
@@ -510,38 +646,80 @@ class AdminArticleController extends Controller
                     break;
 
                 case 'publish':
-                    $count = Article::whereIn('id', $articleIds)->update([
-                        'status' => 'published',
-                        'published_at' => now()
-                    ]);
-                    
-                    // Clear cache
+                    // Admin boleh publikasi massal draft (bukan suspended).
+                    $publishable = $articles->where('status', 'draft');
+                    $skipped = $articles->count() - $publishable->count();
+                    $publishedCount = 0;
+                    $scheduledCount = 0;
+
+                    foreach ($publishable as $article) {
+                        $hasFutureSchedule = $article->scheduled_at && $article->scheduled_at->isFuture();
+
+                        if ($hasFutureSchedule) {
+                            $article->update([
+                                'status' => 'draft',
+                                'published_at' => null,
+                            ]);
+                            $scheduledCount++;
+                        } else {
+                            $article->update([
+                                'status' => 'published',
+                                'published_at' => $article->published_at ?? now(),
+                                'scheduled_at' => null,
+                            ]);
+                            $publishedCount++;
+                        }
+                    }
+
+                    $count = $publishedCount + $scheduledCount;
+
                     CacheHelper::clearArticleCache();
                     CacheHelper::clearDashboardCache();
-                    
-                    // Log activity
+
                     ActivityLogHelper::log('article.bulk_published', $count . ' artikel dipublikasi secara massal', [
                         'count' => $count,
-                        'article_ids' => $articleIds
+                        'published' => $publishedCount,
+                        'scheduled' => $scheduledCount,
+                        'skipped' => $skipped,
+                        'article_ids' => $publishable->pluck('id')->all(),
                     ]);
-                    
-                    $message = $count . ' artikel berhasil dipublikasi!';
+
+                    if ($count === 0) {
+                        $message = 'Tidak ada draft yang dapat dipublikasi massal.';
+                    } elseif ($scheduledCount > 0) {
+                        $message = "{$publishedCount} dipublikasi, {$scheduledCount} tetap dijadwalkan.";
+                        if ($skipped > 0) {
+                            $message .= " {$skipped} dilewati.";
+                        }
+                    } elseif ($skipped > 0) {
+                        $message = "{$count} artikel dipublikasi. {$skipped} dilewati.";
+                    } else {
+                        $message = $count . ' artikel berhasil dipublikasi!';
+                    }
                     break;
 
                 case 'draft':
-                    $count = Article::whereIn('id', $articleIds)->update(['status' => 'draft']);
-                    
-                    // Clear cache
+                    $count = 0;
+                    foreach ($articles as $article) {
+                        $article->update([
+                            'status' => 'draft',
+                        ]);
+                        $count++;
+                    }
+
                     CacheHelper::clearArticleCache();
                     CacheHelper::clearDashboardCache();
-                    
-                    // Log activity
+
                     ActivityLogHelper::log('article.bulk_drafted', $count . ' artikel diubah ke draft secara massal', [
                         'count' => $count,
-                        'article_ids' => $articleIds
+                        'skipped_ownership' => $skippedOwnership,
+                        'article_ids' => $articleIds,
                     ]);
-                    
+
                     $message = $count . ' artikel berhasil diubah ke draft!';
+                    if ($skippedOwnership > 0) {
+                        $message .= " {$skippedOwnership} dilewati (bukan milik Anda).";
+                    }
                     break;
 
                 case 'featured':
@@ -553,10 +731,14 @@ class AdminArticleController extends Controller
                     // Log activity
                     ActivityLogHelper::log('article.bulk_featured', $count . ' artikel ditandai sebagai featured secara massal', [
                         'count' => $count,
+                        'skipped_ownership' => $skippedOwnership,
                         'article_ids' => $articleIds
                     ]);
                     
                     $message = $count . ' artikel berhasil ditandai sebagai featured!';
+                    if ($skippedOwnership > 0) {
+                        $message .= " {$skippedOwnership} dilewati (bukan milik Anda).";
+                    }
                     break;
             }
 
@@ -569,6 +751,16 @@ class AdminArticleController extends Controller
             }
             
             return back()->with('success', $message);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => collect($e->errors())->flatten()->first() ?? 'Validasi gagal.',
+                    'errors' => $e->errors(),
+                ], 422);
+            }
+
+            return back()->withErrors($e->errors());
         } catch (\Exception $e) {
             \Log::error('Bulk Action Error: ' . $e->getMessage(), [
                 'action' => $request->action,
@@ -588,5 +780,54 @@ class AdminArticleController extends Controller
             
             return back()->with('error', $errorMessage);
         }
+    }
+
+    /**
+     * Merge checkbox tag IDs with newly typed tag names.
+     *
+     * @return array<int, int>
+     */
+    private function resolveTagIds(Request $request): array
+    {
+        $tagIds = collect($request->input('tags', []))
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->all();
+
+        if (!$request->filled('new_tags')) {
+            return array_values(array_unique($tagIds));
+        }
+
+        $names = collect(explode(',', $request->new_tags))
+            ->map(fn ($name) => trim($name))
+            ->filter()
+            ->unique(fn ($name) => mb_strtolower($name));
+
+        foreach ($names as $name) {
+            if (mb_strlen($name) > 50) {
+                $name = mb_substr($name, 0, 50);
+            }
+
+            $tag = Tag::whereRaw('LOWER(name) = ?', [mb_strtolower($name)])->first();
+
+            if (!$tag) {
+                $baseSlug = Str::slug($name) ?: 'tag';
+                $slug = $baseSlug;
+                $counter = 1;
+                while (Tag::where('slug', $slug)->exists()) {
+                    $slug = $baseSlug . '-' . $counter;
+                    $counter++;
+                }
+
+                $tag = Tag::create([
+                    'name' => $name,
+                    'slug' => $slug,
+                ]);
+            }
+
+            $tagIds[] = $tag->id;
+        }
+
+        return array_values(array_unique($tagIds));
     }
 }

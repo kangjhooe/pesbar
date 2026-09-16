@@ -1,0 +1,12 @@
+---
+description: Jangan buat file test atau temporary tanpa persetujuan user
+alwaysApply: true
+---
+
+# No Test / Temporary Files Without Approval
+
+- Jangan membuat file test (mis. `*Test.php`, `*.spec.js`, Pest/PHPUnit baru) tanpa persetujuan eksplisit.
+- Jangan membuat file temporary yang tidak perlu (mis. `tmp_*`, `debug_*`, scratch scripts, dump files, one-off helpers) tanpa persetujuan eksplisit.
+- Jangan men-seed / menjalankan perintah “test” hanya untuk keperluan agen, kecuali user meminta.
+- Jika perlu file test atau temporary untuk menyelesaikan tugas, minta izin dulu sebelum membuatnya.
+- Preferensi ini berlaku untuk semua pekerjaan di repo ini.

@@ -11,6 +11,7 @@ use App\Http\Controllers\UserFeatureController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\ArticleReportController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\SearchController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\WidgetController;
 use App\Http\Controllers\Admin\ContactImportantController;
 use App\Http\Controllers\EventPopupController;
 use App\Http\Controllers\StaticPageController;
+use App\Http\Controllers\ImpersonationController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
@@ -40,6 +42,9 @@ Route::get('/robots.txt', [\App\Http\Controllers\RobotsController::class, 'index
 // Article routes — listing tunggal; /artikel diarahkan ke /berita
 Route::get('/berita', [ArticleController::class, 'index'])->name('articles.index');
 Route::redirect('/artikel', '/berita')->name('articles.artikel');
+Route::post('/berita/{article}/report', [ArticleReportController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('articles.report');
 
 // Events routes
 Route::get('/agenda', [WidgetController::class, 'eventsIndex'])->name('events.index');
@@ -61,9 +66,9 @@ Route::get('/search', [SearchController::class, 'index'])->name('search.index');
 Route::get('/search/suggestions', [SearchController::class, 'suggestions'])->name('search.suggestions');
 Route::get('/search/popular', [SearchController::class, 'popular'])->name('search.popular');
 
-// Comment routes (only for authenticated users)
+// Comment routes — store terbuka untuk guest (moderasi); like/edit/hapus tetap auth
 Route::post('/comments', [CommentController::class, 'store'])
-    ->middleware(['auth', 'rate.limit.comments'])
+    ->middleware(['rate.limit.comments'])
     ->name('comments.store');
 Route::post('/comments/{comment}/like', [CommentController::class, 'like'])
     ->middleware(['auth'])
@@ -112,22 +117,21 @@ Route::get('/dashboard', function () {
     }
 })->middleware(['auth'])->name('dashboard');
 
-// User routes
-Route::middleware(['auth'])->group(function () {
+// User-only area (admin/editor/penulis redirected away — no accidental fall-in)
+Route::middleware(['auth', 'role:user'])->group(function () {
     Route::get('/user/dashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
     Route::get('/upgrade-request', [UserProfileController::class, 'upgradeRequest'])->name('user.upgrade-request');
     Route::post('/upgrade-request', [UserProfileController::class, 'submitUpgradeRequest'])->name('user.submit-upgrade-request');
-    
-    // User comment management
+    Route::post('/user/ban-appeal', [UserDashboardController::class, 'submitBanAppeal'])->name('user.ban-appeal');
     Route::put('/user/comments/{comment}', [UserDashboardController::class, 'updateComment'])->name('user.comments.update');
     Route::delete('/user/comments/{comment}', [UserDashboardController::class, 'destroyComment'])->name('user.comments.destroy');
-    
-    // User features: Bookmarks, Reading History, Follow
+});
+
+// Shared authenticated user features (any logged-in role)
+Route::middleware(['auth'])->group(function () {
     Route::post('/articles/{article}/bookmark', [UserFeatureController::class, 'toggleBookmark'])->name('articles.bookmark');
     Route::get('/user/bookmarks', [UserFeatureController::class, 'bookmarks'])->name('user.bookmarks');
-    
     Route::get('/user/reading-history', [UserFeatureController::class, 'readingHistory'])->name('user.reading-history');
-    
     Route::post('/users/{user}/follow', [UserFeatureController::class, 'toggleFollow'])->name('users.follow');
     Route::get('/user/following', [UserFeatureController::class, 'following'])->name('user.following');
     Route::get('/user/followers', [UserFeatureController::class, 'followers'])->name('user.followers');
@@ -184,10 +188,22 @@ Route::middleware(['auth', 'role:penulis'])->prefix('penulis')->name('penulis.')
 // Public penulis profile route (must be after penulis group to avoid conflicts)
 Route::get('/penulis/{username}', [UserProfileController::class, 'show'])->name('penulis.public-profile');
 
-// Admin routes
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+// Shared admin panel (admin + editor): dashboard, suspended list, reports, suspend/unsuspend
+// Must be registered BEFORE admin-only routes so these URIs are not shadowed.
+Route::middleware(['auth', 'role:admin,editor'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-    
+    Route::get('/articles/suspended', [AdminDashboardController::class, 'suspendedArticles'])->name('articles.suspended');
+    Route::get('/articles/moderate', [AdminDashboardController::class, 'moderateArticles'])->name('articles.moderate');
+    Route::get('/articles/{article}/detail', [AdminDashboardController::class, 'articleDetail'])->name('articles.detail');
+    Route::post('/articles/{article}/suspend', [AdminArticleController::class, 'suspend'])->name('articles.suspend');
+    Route::post('/articles/{article}/unsuspend', [AdminArticleController::class, 'unsuspend'])->name('articles.unsuspend');
+    Route::get('/article-reports', [AdminDashboardController::class, 'articleReports'])->name('article-reports.index');
+    Route::post('/article-reports/{articleReport}/dismiss', [AdminDashboardController::class, 'dismissArticleReport'])->name('article-reports.dismiss');
+    Route::post('/article-reports/{articleReport}/resolve', [AdminDashboardController::class, 'resolveArticleReport'])->name('article-reports.resolve');
+});
+
+// Admin-only routes (full panel)
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     // Widget Management Routes
     Route::resource('events', \App\Http\Controllers\Admin\EventController::class);
     Route::post('events/bulk-action', [\App\Http\Controllers\Admin\EventController::class, 'bulkAction'])->name('events.bulk-action');
@@ -199,18 +215,16 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('polls/{poll}/reset-votes', [\App\Http\Controllers\Admin\PollController::class, 'resetVotes'])->name('polls.reset-votes');
     Route::get('/users', [AdminDashboardController::class, 'users'])->name('users');
     Route::post('/users/bulk', [AdminDashboardController::class, 'bulkUsers'])->name('users.bulk');
-    Route::post('/users/{user}/upgrade', [AdminDashboardController::class, 'upgradeUser'])->name('users.upgrade');
+    Route::post('/users/{user}/mark-redaksi', [AdminDashboardController::class, 'markAsRedaksi'])->name('users.mark-redaksi');
     Route::post('/users/{user}/toggle-verified', [AdminDashboardController::class, 'toggleVerified'])->name('users.toggle-verified');
     Route::get('/verification-requests', [AdminDashboardController::class, 'verificationRequests'])->name('verification-requests');
     Route::post('/verification-requests/bulk', [AdminDashboardController::class, 'bulkVerificationRequests'])->name('verification-requests.bulk');
     Route::post('/verification-requests/{user}/approve', [AdminDashboardController::class, 'approveVerification'])->name('verification-requests.approve');
     Route::post('/verification-requests/{user}/reject', [AdminDashboardController::class, 'rejectVerification'])->name('verification-requests.reject');
-    Route::get('/articles/pending', [AdminDashboardController::class, 'pendingArticles'])->name('articles.pending');
-    Route::post('/articles/{article}/approve', [AdminDashboardController::class, 'approveArticle'])->name('articles.approve');
-    Route::post('/articles/{article}/reject', [AdminDashboardController::class, 'rejectArticle'])->name('articles.reject');
-    Route::get('/articles/{article}/detail', [AdminDashboardController::class, 'articleDetail'])->name('articles.detail');
-    Route::post('/articles/bulk-approve', [AdminDashboardController::class, 'bulkApprove'])->name('articles.bulk-approve');
-    Route::post('/articles/bulk-reject', [AdminDashboardController::class, 'bulkReject'])->name('articles.bulk-reject');
+    Route::get('/ban-appeals', [AdminDashboardController::class, 'banAppeals'])->name('ban-appeals');
+    Route::post('/ban-appeals/{user}/approve', [AdminDashboardController::class, 'approveBanAppeal'])->name('ban-appeals.approve');
+    Route::post('/ban-appeals/{user}/reject', [AdminDashboardController::class, 'rejectBanAppeal'])->name('ban-appeals.reject');
+    Route::post('/users/{user}/lift-ban', [AdminDashboardController::class, 'liftBan'])->name('users.lift-ban');
     
     // Admin Article CRUD
     Route::get('/articles', [AdminArticleController::class, 'index'])->name('articles.index');
@@ -243,11 +257,18 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Penulis Management
     Route::get('/penulis', [AdminDashboardController::class, 'penulis'])->name('penulis.index');
     Route::post('/penulis/bulk', [AdminDashboardController::class, 'bulkPenulis'])->name('penulis.bulk');
-    Route::post('/penulis/{user}/promote', [AdminDashboardController::class, 'promoteToPenulis'])->name('penulis.promote');
+    Route::post('/penulis/{user}/mark-redaksi', [AdminDashboardController::class, 'markAsRedaksi'])->name('penulis.mark-redaksi');
+    Route::post('/penulis/{user}/unmark-redaksi', [AdminDashboardController::class, 'unmarkRedaksi'])->name('penulis.unmark-redaksi');
     Route::post('/penulis/{user}/demote', [AdminDashboardController::class, 'demoteFromPenulis'])->name('penulis.demote');
+    Route::post('/penulis/{user}/warn', [AdminDashboardController::class, 'warnPenulis'])->name('penulis.warn');
+    Route::post('/penulis/{user}/restrict-publish', [AdminDashboardController::class, 'restrictPenulisPublish'])->name('penulis.restrict-publish');
+    Route::post('/penulis/{user}/clear-publish-restriction', [AdminDashboardController::class, 'clearPenulisPublishRestriction'])->name('penulis.clear-publish-restriction');
+    Route::post('/penulis/{user}/revoke-verified', [AdminDashboardController::class, 'revokePenulisVerified'])->name('penulis.revoke-verified');
+    Route::post('/penulis/{user}/impersonate', [ImpersonationController::class, 'start'])->name('penulis.impersonate');
     
     // Newsletter Management
     Route::get('/newsletter', [AdminDashboardController::class, 'newsletter'])->name('newsletter.index');
+    Route::get('/newsletter/export', [AdminDashboardController::class, 'exportNewsletter'])->name('newsletter.export');
     Route::post('/newsletter/send', [AdminDashboardController::class, 'sendNewsletter'])->name('newsletter.send');
     Route::post('/newsletter/bulk', [AdminDashboardController::class, 'bulkNewsletter'])->name('newsletter.bulk');
     Route::delete('/newsletter/{subscriber}', [AdminDashboardController::class, 'removeSubscriber'])->name('newsletter.remove');
@@ -255,7 +276,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Media Library
     Route::get('/media', [AdminDashboardController::class, 'media'])->name('media.index');
     Route::post('/media/upload', [AdminDashboardController::class, 'uploadMedia'])->name('media.upload');
-    Route::delete('/media/{media}', [AdminDashboardController::class, 'deleteMedia'])->name('media.delete');
+    Route::delete('/media/delete', [AdminDashboardController::class, 'deleteMedia'])->name('media.delete');
     
     // Analytics
     Route::get('/analytics', [AdminDashboardController::class, 'analytics'])->name('analytics.index');
@@ -272,15 +293,15 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     
     // System Logs
     Route::get('/logs', [AdminDashboardController::class, 'logs'])->name('logs.index');
-    Route::get('/logs/clear', [AdminDashboardController::class, 'clearLogs'])->name('logs.clear');
+    Route::post('/logs/clear', [AdminDashboardController::class, 'clearLogs'])->name('logs.clear');
     
-    // Contact Importants Management
-    Route::resource('contact-importants', ContactImportantController::class);
-    Route::patch('/contact-importants/{contactImportant}/toggle-status', [ContactImportantController::class, 'toggleStatus'])->name('contact-importants.toggle-status');
+    // Contact Importants Management (export/bulk BEFORE resource so /export is not captured as {id})
+    Route::get('/contact-importants/export', [ContactImportantController::class, 'export'])->name('contact-importants.export');
     Route::post('/contact-importants/bulk-activate', [ContactImportantController::class, 'bulkActivate'])->name('contact-importants.bulk-activate');
     Route::post('/contact-importants/bulk-deactivate', [ContactImportantController::class, 'bulkDeactivate'])->name('contact-importants.bulk-deactivate');
     Route::post('/contact-importants/bulk-delete', [ContactImportantController::class, 'bulkDelete'])->name('contact-importants.bulk-delete');
-    Route::get('/contact-importants/export', [ContactImportantController::class, 'export'])->name('contact-importants.export');
+    Route::resource('contact-importants', ContactImportantController::class);
+    Route::patch('/contact-importants/{contactImportant}/toggle-status', [ContactImportantController::class, 'toggleStatus'])->name('contact-importants.toggle-status');
     
     // Event Popup Management
     Route::resource('event-popups', EventPopupController::class);
@@ -295,18 +316,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/settings/editorial', [AdminSettingsController::class, 'updateEditorial'])->name('settings.editorial');
     Route::post('/settings/seo', [AdminSettingsController::class, 'updateSeo'])->name('settings.seo');
     Route::post('/settings/system', [AdminSettingsController::class, 'updateSystem'])->name('settings.system');
-    Route::get('/settings/clear-cache', [AdminSettingsController::class, 'clearCache'])->name('settings.clear-cache');
-});
-
-// Editor routes (can access admin dashboard)
-Route::middleware(['auth', 'role:editor'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/articles/pending', [AdminDashboardController::class, 'pendingArticles'])->name('articles.pending');
-    Route::post('/articles/{article}/approve', [AdminDashboardController::class, 'approveArticle'])->name('articles.approve');
-    Route::post('/articles/{article}/reject', [AdminDashboardController::class, 'rejectArticle'])->name('articles.reject');
-    Route::get('/articles/{article}/detail', [AdminDashboardController::class, 'articleDetail'])->name('articles.detail');
-    Route::post('/articles/bulk-approve', [AdminDashboardController::class, 'bulkApprove'])->name('articles.bulk-approve');
-    Route::post('/articles/bulk-reject', [AdminDashboardController::class, 'bulkReject'])->name('articles.bulk-reject');
+    Route::post('/settings/clear-cache', [AdminSettingsController::class, 'clearCache'])->name('settings.clear-cache');
 });
 
 // Default auth routes
@@ -314,6 +324,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Leave impersonation while acting as the target user (must not sit behind role:admin)
+    Route::post('/impersonation/leave', [ImpersonationController::class, 'leave'])->name('impersonation.leave');
 });
 
 // Error testing routes (only in development)
