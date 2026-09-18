@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 class UserProfileController extends Controller
 {
@@ -71,14 +72,34 @@ class UserProfileController extends Controller
     public function submitUpgradeRequest(Request $request)
     {
         try {
-            $request->validate([
+            $type = $request->input('verification_type');
+            $requiredDocs = User::requiredUpgradeDocumentKeys(is_string($type) ? $type : '');
+
+            $rules = [
                 'verification_type' => 'required|in:perorangan,lembaga',
-                'verification_document' => UploadValidation::verificationDocument(true, 5120),
+                'organization_name' => [
+                    Rule::requiredIf($type === 'lembaga'),
+                    'nullable',
+                    'string',
+                    'max:255',
+                ],
                 'bio' => 'required|string|max:1000',
                 'avatar' => UploadValidation::image(false, 2048),
                 'website' => 'nullable|url',
                 'location' => 'nullable|string|max:255',
                 'social_links' => 'nullable|array',
+            ];
+
+            foreach ($requiredDocs as $key) {
+                $rules['documents.'.$key] = UploadValidation::verificationDocument(true, 5120);
+            }
+
+            $request->validate($rules, [
+                'organization_name.required' => 'Nama lembaga wajib diisi untuk pengajuan tipe lembaga.',
+                'documents.ktp.required' => 'Unggah KTP wajib.',
+                'documents.application_letter.required' => 'Unggah surat permohonan wajib.',
+                'documents.operational_permit.required' => 'Unggah izin operasional / SK pendirian wajib.',
+                'documents.assignment_letter.required' => 'Unggah surat tugas dari pimpinan lembaga wajib.',
             ]);
 
             $user = Auth::user();
@@ -99,19 +120,31 @@ class UserProfileController extends Controller
                     ->with('info', 'Anda sudah memiliki permintaan upgrade yang sedang ditinjau. Mohon tunggu konfirmasi dari admin.');
             }
 
-            $verificationDocumentPath = null;
-            if ($request->hasFile('verification_document')) {
-                if ($user->verification_document && Storage::disk('public')->exists($user->verification_document)) {
-                    Storage::disk('public')->delete($user->verification_document);
-                }
+            $this->deleteStoredUpgradeDocuments($user);
 
-                $verificationDocumentPath = $request->file('verification_document')->store('upgrade-documents', 'public');
+            $storedDocs = [];
+            foreach ($requiredDocs as $key) {
+                if ($request->hasFile('documents.'.$key)) {
+                    $storedDocs[$key] = $request->file('documents.'.$key)->store('upgrade-documents', 'public');
+                }
             }
+
+            // Compat: kolom lama menyimpan dokumen identitas utama
+            $primaryDocument = $storedDocs['ktp']
+                ?? $storedDocs['operational_permit']
+                ?? (reset($storedDocs) ?: null);
+
+            $organizationName = $type === 'lembaga'
+                ? trim((string) $request->organization_name)
+                : null;
 
             // Gate ketat: role tetap 'user' sampai admin menyetujui
             $user->update([
-                'verification_type' => $request->verification_type,
-                'verification_document' => $verificationDocumentPath,
+                'verification_type' => $type,
+                'organization_name' => $organizationName,
+                'display_name' => null,
+                'verification_document' => $primaryDocument,
+                'verification_documents' => $storedDocs,
                 'verification_requested_at' => now(),
                 'verification_request_status' => 'pending',
                 'verification_rejection_reason' => null,
@@ -142,7 +175,8 @@ class UserProfileController extends Controller
             ActivityLogHelper::logUser('upgrade.requested', $user, "User {$user->name} mengajukan permintaan upgrade ke penulis");
             ActivityLogHelper::logSecurity('upgrade.requested', 'Permintaan upgrade ke penulis', [
                 'user_id' => $user->id,
-                'verification_type' => $request->verification_type
+                'verification_type' => $type,
+                'organization_name' => $organizationName,
             ]);
 
             return redirect()->route('user.dashboard')
@@ -167,6 +201,32 @@ class UserProfileController extends Controller
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Terjadi kesalahan saat mengirim permintaan upgrade. Silakan coba lagi.');
+        }
+    }
+
+    /**
+     * Hapus file dokumen upgrade lama dari storage.
+     */
+    private function deleteStoredUpgradeDocuments(User $user): void
+    {
+        $paths = [];
+
+        if (is_array($user->verification_documents)) {
+            foreach ($user->verification_documents as $path) {
+                if (is_string($path) && $path !== '') {
+                    $paths[] = $path;
+                }
+            }
+        }
+
+        if (is_string($user->verification_document) && $user->verification_document !== '') {
+            $paths[] = $user->verification_document;
+        }
+
+        foreach (array_unique($paths) as $path) {
+            if (Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+            }
         }
     }
 }

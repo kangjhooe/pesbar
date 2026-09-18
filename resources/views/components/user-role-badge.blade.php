@@ -51,13 +51,6 @@
                 'icon' => 'fas fa-check-circle',
             ];
         }
-    } elseif ($user->role === 'penulis') {
-        // Penulis belum terverifikasi: tetap centang merah
-        $config = [
-            'label' => 'Penulis',
-            'class' => 'bg-red-500 text-white',
-            'icon' => 'fas fa-check-circle',
-        ];
     } elseif ($user->role === 'editor') {
         // Editor: tetap dengan icon pencil
         $config = [
@@ -65,19 +58,15 @@
             'class' => 'bg-yellow-500 text-white',
             'icon' => 'fas fa-pencil',
         ];
-    } else {
-        // User biasa: centang merah
-        $config = [
-            'label' => 'User',
-            'class' => 'bg-red-500 text-white',
-            'icon' => 'fas fa-check-circle',
-        ];
     }
+    // User biasa & penulis belum terverifikasi: tanpa badge
 @endphp
 
+@if($config)
 <span class="relative inline-flex items-center justify-center {{ $sizeConfig['container'] }} rounded-full {{ $config['class'] }} transition-all shadow-sm" 
       title="{{ $config['label'] }}">
     <i class="{{ $config['icon'] }} {{ $sizeConfig['icon'] }}"></i>
 </span>
+@endif
 @endif
 

@@ -25,7 +25,7 @@
  <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
  <div>
  <label for="name" class="block text-sm font-medium text-news-ink mb-2">
- Nama Lengkap
+ Nama Lengkap (akun)
  </label>
  <input 
  type="text" 
@@ -35,6 +35,7 @@
  required
  class="w-full px-3 py-2 border border-news-line rounded-md focus:outline-none focus:ring-2 focus:ring-news-accent/30 focus:border-news-accent @error('name') border-news-accent @enderror"
  >
+ <p class="mt-1 text-xs text-news-muted">Nama identitas pemegang akun (tidak mengubah byline lembaga).</p>
  @error('name')
  <p class="mt-1 text-sm text-news-accent">{{ $message }}</p>
  @enderror
@@ -48,22 +49,26 @@
  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
  <span class="text-news-muted text-sm">@</span>
  </div>
- <input 
- type="text" 
- id="username" 
- name="username" 
- value="{{ old('username', $user->username) }}"
- required
- class="w-full pl-8 px-3 py-2 border border-news-line rounded-md focus:outline-none focus:ring-2 focus:ring-news-accent/30 focus:border-news-accent lowercase @error('username') border-news-accent @enderror"
- oninput="this.value = this.value.toLowerCase().replace(/[^a-z0-9_-]/g, '')"
+ <input
+ type="text"
+ id="username"
+ value="{{ $user->username }}"
+ disabled
+ readonly
+ class="w-full pl-8 px-3 py-2 border border-news-line rounded-md bg-news-paper text-news-muted cursor-not-allowed lowercase"
  >
  </div>
- <p class="mt-1 text-xs text-news-muted">Hanya huruf kecil, angka, dan tanda hubung (-_)</p>
- @error('username')
- <p class="mt-1 text-sm text-news-accent">{{ $message }}</p>
- @enderror
+ <p class="mt-1 text-xs text-news-muted">Username bersifat permanen (URL profil) dan tidak dapat diubah. Nama tampilan tetap bisa diubah lewat Nama Lengkap.</p>
  </div>
  </div>
+
+ @if($user->isLembaga() && $user->display_name)
+ <div class="mb-6 border border-news-line bg-news-paper p-4">
+ <p class="text-xs uppercase tracking-wider text-news-muted mb-1">Nama tampil publik</p>
+ <p class="text-sm font-semibold text-news-ink">{{ $user->display_name }}</p>
+ <p class="mt-1 text-xs text-news-muted">Nama lembaga di byline. Perubahan nama lembaga hanya melalui admin / pengajuan ulang.</p>
+ </div>
+ @endif
 
  <div class="mb-6">
  <label for="email" class="block text-sm font-medium text-news-ink mb-2">

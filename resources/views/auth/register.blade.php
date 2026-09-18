@@ -17,7 +17,7 @@
         <div>
             <x-input-label for="username" :value="__('Username')" class="text-sm font-semibold text-news-ink" />
             <x-text-input id="username" class="block mt-1.5 w-full px-3 py-2.5 border-news-line rounded-sm shadow-none placeholder:text-news-muted/70 focus:border-news-accent focus:ring-news-accent" type="text" name="username" :value="old('username')" required autocomplete="username" placeholder="contoh: johndoe" pattern="[a-zA-Z0-9_-]+" minlength="3" maxlength="30" />
-            <p class="mt-1 text-xs text-news-muted">Hanya huruf, angka, dash (-), dan underscore (_). Minimal 3 karakter.</p>
+            <p class="mt-1 text-xs text-news-muted">Hanya huruf, angka, dash (-), dan underscore (_). Minimal 3 karakter. Username tidak dapat diubah setelah daftar.</p>
             <x-input-error :messages="$errors->get('username')" class="mt-1" />
         </div>
 

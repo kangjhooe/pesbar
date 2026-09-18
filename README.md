@@ -42,13 +42,13 @@ Platform informasi Kabupaten Pesisir Barat yang dibangun dengan Laravel. Aplikas
 ### Backend & Admin Panel
 - ✅ **Sistem Autentikasi** - Login dengan Laravel Breeze; OAuth Google (backend siap; tombol UI dapat disembunyikan hingga kredensial `.env` siap)
 - ✅ **Login Tunggal** - Satu URL login (`/login`); setelah login dialihkan otomatis menurut role (admin/editor → dashboard admin, penulis → dashboard penulis, user → dashboard user)
-- ✅ **Role Management** - User, Penulis, Editor, Admin dengan hak akses berbeda
-- ✅ **Dashboard Admin** - Statistik dan overview sistem
-- ✅ **Manajemen Artikel** - CRUD artikel dengan status (`draft` / `pending_review` / `published` / `rejected` / `archived`)
-- ✅ **Sistem Review Artikel** - Penulis unverified harus melalui review editor/admin
+- ✅ **Role Management** - User, Penulis (selalu terverifikasi), Editor, Admin dengan hak akses berbeda
+- ✅ **Dashboard Admin** - Statistik dan overview sistem (admin penuh; editor memakai panel moderasi)
+- ✅ **Manajemen Artikel** - CRUD artikel dengan status (`draft` / `published` / `archived` / `suspended`)
+- ✅ **Moderasi Konten** - Admin/editor menangguhkan artikel, kelola laporan, dan kurasi featured; penulis publish langsung (tanpa antrean review)
 - ✅ **Manajemen Kategori & Tag** - Kelola kategori dan tagging artikel
 - ✅ **Manajemen Komentar** - Approve/reject/hapus komentar
-- ✅ **Manajemen User & Penulis** - Kelola pengguna, upgrade role, dan verifikasi penulis
+- ✅ **Manajemen User & Penulis** - Kelola pengguna; user mengajukan upgrade ke penulis (dokumen); admin menyetujui/menolak
 - ✅ **Media Library** - Upload dan kelola media
 - ✅ **Analytics & Reports** - Analitik dan laporan (termasuk export)
 - ✅ **Backup** - Buat, unduh, dan hapus backup
@@ -61,9 +61,13 @@ Platform informasi Kabupaten Pesisir Barat yang dibangun dengan Laravel. Aplikas
 - ✅ **Email Notifications** - Notifikasi email untuk berbagai event
 
 ### Dashboard Penulis
-- ✅ Manajemen artikel (CRUD, draft, duplicate, export)
+- ✅ Manajemen artikel (CRUD, draft, publish langsung, duplicate, export)
 - ✅ Moderasi komentar pada artikel sendiri
 - ✅ Media library, analytics, dan tools SEO
+
+### Dashboard User
+- ✅ Bookmark, riwayat baca, dan profil
+- ✅ Pengajuan upgrade ke penulis (`/upgrade-request`) dengan dokumen pendukung
 
 ### Teknologi & Performa
 - ✅ **Redis Integration** - Caching, Session, dan Queue dengan Redis (opsional)
@@ -700,16 +704,16 @@ Semua akun demo memakai password: `password`. Login melalui `/login`.
 | Email | Role | Catatan |
 |-------|------|---------|
 | `admin@pesbar.com` | Admin | Akun admin tambahan (beda dari default) |
-| `editor@pesbar.com` | Editor | Login ke dashboard admin |
-| `penulis@pesbar.com` | Penulis | Terverifikasi |
-| `penulis2@pesbar.com` | Penulis | Belum terverifikasi |
-| `user@pesbar.com` | Penulis (belum terverifikasi) | Label di seeder “User Biasa”, role di DB: `penulis` |
+| `editor@pesbar.com` | Editor | Login ke dashboard admin (panel moderasi) |
+| `penulis@pesbar.com` | Penulis | Redaksi (`is_internal`), terverifikasi |
+| `user@pesbar.com` | User | User biasa; bisa ajukan upgrade ke penulis |
 
 > ⚠️ **PENTING**:
 > - Segera ubah password default setelah pertama kali login!
 > - Email admin default dari `DatabaseSeeder` adalah `admin@pesisirbarat.id`
 > - Jangan jalankan `AdminUserSeeder` di production kecuali memang dibutuhkan untuk demo
-> - User biasa baru biasanya dibuat lewat registrasi (`/register`) atau upgrade request
+> - Role `penulis` selalu terverifikasi; tidak ada penulis unverified. Menjadi penulis hanya lewat upgrade dari `user` (atau penunjukan redaksi oleh admin)
+> - User biasa baru biasanya dibuat lewat registrasi (`/register`)
 
 ## 🔒 Keamanan
 

@@ -130,10 +130,10 @@
                         <span>
                             @if($article->author && $article->author->isPenulis() && $article->author->username)
                                 <a href="{{ route('penulis.public-profile', $article->author->username) }}" class="font-semibold text-news-ink hover:text-news-accent">
-                                    {{ $article->author->name ?? 'Admin' }}
+                                    {{ $article->author->publicName() }}
                                 </a>
                             @else
-                                <span class="font-semibold text-news-ink">{{ $article->author->name ?? 'Admin' }}</span>
+                                <span class="font-semibold text-news-ink">{{ $article->author?->publicName() ?? 'Admin' }}</span>
                             @endif
                             @if($article->author)
                                 <x-user-role-badge :user="$article->author" size="xs" />

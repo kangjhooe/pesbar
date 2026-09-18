@@ -60,7 +60,7 @@
  
  <div class="meta">
  <div class="meta-item"><strong>Kategori:</strong> {{ $article->category->name ?? 'Tidak ada kategori' }}</div>
- <div class="meta-item"><strong>Penulis:</strong> {{ $article->author->name ?? 'Tidak diketahui' }}</div>
+ <div class="meta-item"><strong>Penulis:</strong> {{ $article->author?->publicName() ?? 'Tidak diketahui' }}</div>
  <div class="meta-item"><strong>Tanggal:</strong> {{ $article->created_at->format('d F Y, H:i') }}</div>
  @if($article->published_at)
  <div class="meta-item"><strong>Diterbitkan:</strong> {{ $article->published_at->format('d F Y, H:i') }}</div>

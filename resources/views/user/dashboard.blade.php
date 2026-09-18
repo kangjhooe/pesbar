@@ -73,6 +73,11 @@
                         <p class="font-semibold text-news-ink">Permintaan upgrade sedang direview</p>
                         <p class="text-sm text-news-muted mt-1">
                             Akun Anda tetap sebagai pembaca sampai admin menyetujui.
+                            @if(auth()->user()->verification_type === 'lembaga' && auth()->user()->organization_name)
+                                <span class="block mt-1">Tipe: Lembaga — {{ auth()->user()->organization_name }}</span>
+                            @elseif(auth()->user()->verification_type === 'perorangan')
+                                <span class="block mt-1">Tipe: Perorangan</span>
+                            @endif
                             @if(auth()->user()->verification_requested_at)
                                 Dikirim: {{ auth()->user()->verification_requested_at->format('d M Y, H:i') }}
                             @endif
@@ -121,24 +126,12 @@
     @endif
 @endauth
 
-{{-- Stats --}}
-<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
+{{-- Stats & pintasan --}}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
     <div class="bg-white border border-news-line border-t-2 border-t-news-ink p-4 sm:p-5">
         <p class="text-[11px] font-bold uppercase tracking-wider text-news-muted">Total Komentar</p>
         <p class="text-3xl font-bold text-news-ink mt-1 tabular-nums">{{ $stats['total_comments'] }}</p>
     </div>
-    <div class="bg-white border border-news-line border-t-2 border-t-emerald-600 p-4 sm:p-5">
-        <p class="text-[11px] font-bold uppercase tracking-wider text-news-muted">Disetujui</p>
-        <p class="text-3xl font-bold text-news-ink mt-1 tabular-nums">{{ $stats['approved_comments'] }}</p>
-    </div>
-    <div class="bg-white border border-news-line border-t-2 border-t-amber-500 p-4 sm:p-5">
-        <p class="text-[11px] font-bold uppercase tracking-wider text-news-muted">Menunggu</p>
-        <p class="text-3xl font-bold text-news-ink mt-1 tabular-nums">{{ $stats['pending_comments'] }}</p>
-    </div>
-</div>
-
-{{-- Pintasan angka (menu lengkap ada di sub-nav) --}}
-<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
     <a href="{{ route('user.bookmarks') }}"
        class="bg-white border border-news-line p-4 hover:border-news-ink transition-colors flex items-center justify-between group">
         <div>
@@ -165,37 +158,6 @@
     </a>
 </div>
 
-{{-- Filter --}}
-<div class="bg-white border border-news-line p-4 sm:p-5 mb-5">
-    <h2 class="text-sm font-bold uppercase tracking-wider text-news-ink mb-4">Filter Komentar</h2>
-    <form method="GET" action="{{ route('user.dashboard') }}" class="grid grid-cols-1 md:grid-cols-4 gap-3">
-        <div class="md:col-span-2">
-            <label for="status" class="block text-sm font-medium text-news-muted mb-1.5">Status</label>
-            <select
-                id="status"
-                name="status"
-                class="w-full border border-news-line px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-news-accent/30 focus:border-news-accent"
-            >
-                <option value="">Semua Status</option>
-                <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Disetujui</option>
-                <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Menunggu Persetujuan</option>
-            </select>
-        </div>
-        <div class="md:col-span-2 flex items-end gap-2">
-            <button type="submit"
-                    class="flex-1 bg-news-ink hover:bg-news-accent text-white px-4 py-2.5 text-sm font-semibold transition-colors">
-                Terapkan
-            </button>
-            @if(request()->has('status'))
-                <a href="{{ route('user.dashboard') }}"
-                   class="inline-flex items-center border border-news-line px-4 py-2.5 text-sm font-semibold text-news-muted hover:text-news-ink hover:border-news-ink transition-colors">
-                    Reset
-                </a>
-            @endif
-        </div>
-    </form>
-</div>
-
 {{-- Comments --}}
 <div class="bg-white border border-news-line overflow-hidden">
     <div class="px-4 sm:px-5 py-4 border-b border-news-line flex flex-wrap items-center justify-between gap-2">
@@ -211,7 +173,6 @@
                 <tr>
                     <th class="px-4 sm:px-5 py-3 text-left text-[11px] font-bold text-news-muted uppercase tracking-wider">Artikel</th>
                     <th class="px-4 sm:px-5 py-3 text-left text-[11px] font-bold text-news-muted uppercase tracking-wider">Komentar</th>
-                    <th class="px-4 sm:px-5 py-3 text-left text-[11px] font-bold text-news-muted uppercase tracking-wider">Status</th>
                     <th class="px-4 sm:px-5 py-3 text-left text-[11px] font-bold text-news-muted uppercase tracking-wider">Tanggal</th>
                     <th class="px-4 sm:px-5 py-3 text-left text-[11px] font-bold text-news-muted uppercase tracking-wider">Aksi</th>
                 </tr>
@@ -241,17 +202,6 @@
                         </p>
                     </td>
                     <td class="px-4 sm:px-5 py-4 whitespace-nowrap align-top">
-                        @if($comment->is_approved)
-                            <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                                Disetujui
-                            </span>
-                        @else
-                            <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
-                                Menunggu
-                            </span>
-                        @endif
-                    </td>
-                    <td class="px-4 sm:px-5 py-4 whitespace-nowrap align-top">
                         <div class="text-sm text-news-ink">{{ $comment->created_at->format('d M Y') }}</div>
                         <div class="text-xs text-news-muted mt-0.5">{{ $comment->created_at->format('H:i') }}</div>
                     </td>
@@ -276,20 +226,10 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" class="px-5 py-12 text-center">
-                        <p class="text-news-ink font-medium mb-1">
-                            @if(request()->has('status'))
-                                Tidak ada komentar yang sesuai filter
-                            @else
-                                Belum ada komentar
-                            @endif
-                        </p>
+                    <td colspan="4" class="px-5 py-12 text-center">
+                        <p class="text-news-ink font-medium mb-1">Belum ada komentar</p>
                         <p class="text-sm text-news-muted">
-                            @if(request()->has('status'))
-                                <a href="{{ route('user.dashboard') }}" class="text-news-accent hover:underline font-medium">Reset filter</a>
-                            @else
-                                <a href="{{ route('articles.index') }}" class="text-news-accent hover:underline font-medium">Lihat artikel dan berkomentar</a>
-                            @endif
+                            <a href="{{ route('articles.index') }}" class="text-news-accent hover:underline font-medium">Lihat artikel dan berkomentar</a>
                         </p>
                     </td>
                 </tr>

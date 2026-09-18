@@ -16,7 +16,7 @@
                 Ajukan Menjadi Penulis
             </h1>
             <p class="text-news-muted text-sm">
-                Lengkapi data di bawah. Role penulis baru aktif setelah admin menyetujui permintaan Anda.
+                Akun tetap atas nama Anda. Untuk tipe lembaga, nama lembaga dipakai sebagai nama tampil publik setelah disetujui.
             </p>
         </div>
 
@@ -25,7 +25,7 @@
 
             <div class="border border-news-line bg-news-paper p-4 sm:p-5">
                 <label class="block text-sm font-semibold text-news-ink mb-3">
-                    Pilih Tipe Akun <span class="text-news-accent">*</span>
+                    Pilih Tipe Akun Penulis <span class="text-news-accent">*</span>
                 </label>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <label class="relative flex items-start gap-3 p-4 border-2 border-news-line bg-white cursor-pointer hover:border-news-ink transition-colors" id="perorangan-label">
@@ -34,12 +34,12 @@
                                value="perorangan"
                                required
                                class="sr-only peer"
-                               {{ old('verification_type') === 'perorangan' ? 'checked' : '' }}
-                               onchange="toggleDocumentFields()">
+                               {{ old('verification_type', 'perorangan') === 'perorangan' ? 'checked' : '' }}
+                               onchange="toggleUpgradeType()">
                         <div class="flex-1 min-w-0">
                             <div class="font-semibold text-news-ink">Perorangan</div>
-                            <div class="text-sm text-news-muted mt-0.5">Untuk individu</div>
-                            <div class="text-xs text-news-muted mt-2">Dokumen: KTP</div>
+                            <div class="text-sm text-news-muted mt-0.5">Menulis atas nama pribadi</div>
+                            <div class="text-xs text-news-muted mt-2">KTP + surat permohonan</div>
                         </div>
                         <span class="mt-1 w-4 h-4 border-2 border-news-line rounded-full peer-checked:border-news-accent peer-checked:bg-news-accent shrink-0"></span>
                     </label>
@@ -51,11 +51,11 @@
                                required
                                class="sr-only peer"
                                {{ old('verification_type') === 'lembaga' ? 'checked' : '' }}
-                               onchange="toggleDocumentFields()">
+                               onchange="toggleUpgradeType()">
                         <div class="flex-1 min-w-0">
                             <div class="font-semibold text-news-ink">Lembaga</div>
-                            <div class="text-sm text-news-muted mt-0.5">Untuk organisasi</div>
-                            <div class="text-xs text-news-muted mt-2">Dokumen: Izin / SK Pendirian</div>
+                            <div class="text-sm text-news-muted mt-0.5">Menulis mewakili organisasi</div>
+                            <div class="text-xs text-news-muted mt-2">SK + permohonan + surat tugas</div>
                         </div>
                         <span class="mt-1 w-4 h-4 border-2 border-news-line rounded-full peer-checked:border-news-accent peer-checked:bg-news-accent shrink-0"></span>
                     </label>
@@ -65,36 +65,68 @@
                 @enderror
             </div>
 
-            <div id="document-section" class="hidden">
-                <div class="border border-amber-200 bg-amber-50 p-4 sm:p-5">
-                    <h3 class="text-sm font-semibold text-news-ink mb-3" id="document-title">
-                        Unggah Dokumen Identitas
+            <div id="organization-section" class="hidden">
+                <label for="organization_name" class="block text-sm font-medium text-news-ink mb-1.5">
+                    Nama Lembaga <span class="text-news-accent">*</span>
+                </label>
+                <input type="text"
+                       name="organization_name"
+                       id="organization_name"
+                       value="{{ old('organization_name') }}"
+                       class="w-full px-3 py-2.5 border border-news-line text-sm focus:outline-none focus:ring-2 focus:ring-news-accent/30 focus:border-news-accent @error('organization_name') border-news-accent @enderror"
+                       placeholder="Contoh: Dinas Komunikasi dan Informatika">
+                <p class="mt-1 text-xs text-news-muted">Nama ini akan tampil di byline artikel dan profil publik setelah disetujui.</p>
+                @error('organization_name')
+                    <p class="mt-1 text-sm text-news-accent">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div id="document-section" class="space-y-4">
+                <div class="border border-amber-200 bg-amber-50 p-4 sm:p-5 space-y-5">
+                    <h3 class="text-sm font-semibold text-news-ink" id="document-title">
+                        Unggah Dokumen
                     </h3>
-                    <label for="verification_document" class="block text-sm font-medium text-news-ink mb-2">
-                        <span id="document-label-text">Upload Dokumen</span> <span class="text-news-accent">*</span>
-                    </label>
-                    <div class="border-2 border-dashed border-news-line bg-white p-6 text-center hover:border-news-accent transition-colors" id="upload-area">
-                        <input type="file"
-                               name="verification_document"
-                               id="verification_document"
-                               accept=".pdf,.jpg,.jpeg,.png"
-                               class="hidden"
-                               onchange="handleFileSelect(this)">
-                        <label for="verification_document" class="cursor-pointer">
-                            <i class="fas fa-cloud-upload-alt text-3xl text-news-muted mb-2"></i>
-                            <p class="text-sm text-news-muted mb-1">
-                                <span id="upload-text" class="text-news-accent font-semibold">Klik untuk upload</span> atau drag and drop
-                            </p>
-                            <p class="text-xs text-news-muted">PDF, JPG, PNG — maks. 5MB</p>
-                        </label>
-                        <div id="file-name" class="mt-2 text-sm text-news-ink hidden"></div>
+
+                    <div id="docs-perorangan" class="space-y-4 hidden">
+                        @include('user.partials.upgrade-document-field', [
+                            'name' => 'documents[ktp]',
+                            'id' => 'doc_ktp',
+                            'label' => 'KTP',
+                            'hint' => 'Pastikan KTP jelas terbaca dan masih berlaku',
+                            'errorKey' => 'documents.ktp',
+                        ])
+                        @include('user.partials.upgrade-document-field', [
+                            'name' => 'documents[application_letter]',
+                            'id' => 'doc_application_perorangan',
+                            'label' => 'Surat permohonan menjadi penulis',
+                            'hint' => 'Surat resmi bermaterai atau bertanda tangan pemohon',
+                            'errorKey' => 'documents.application_letter',
+                        ])
                     </div>
-                    <p class="mt-2 text-xs text-news-muted" id="document-hint">
-                        <span id="document-hint-text">Pastikan dokumen jelas terbaca dan masih berlaku</span>
-                    </p>
-                    @error('verification_document')
-                        <p class="mt-2 text-sm text-news-accent">{{ $message }}</p>
-                    @enderror
+
+                    <div id="docs-lembaga" class="space-y-4 hidden">
+                        @include('user.partials.upgrade-document-field', [
+                            'name' => 'documents[operational_permit]',
+                            'id' => 'doc_operational_permit',
+                            'label' => 'Izin operasional / SK pendirian',
+                            'hint' => 'Dokumen resmi lembaga yang masih berlaku',
+                            'errorKey' => 'documents.operational_permit',
+                        ])
+                        @include('user.partials.upgrade-document-field', [
+                            'name' => 'documents[application_letter]',
+                            'id' => 'doc_application_lembaga',
+                            'label' => 'Surat permohonan menjadi penulis',
+                            'hint' => 'Permohonan atas nama lembaga',
+                            'errorKey' => 'documents.application_letter',
+                        ])
+                        @include('user.partials.upgrade-document-field', [
+                            'name' => 'documents[assignment_letter]',
+                            'id' => 'doc_assignment_letter',
+                            'label' => 'Surat tugas dari pimpinan lembaga',
+                            'hint' => 'Menugaskan Anda (pemegang akun) sebagai penulis mewakili lembaga',
+                            'errorKey' => 'documents.assignment_letter',
+                        ])
+                    </div>
                 </div>
             </div>
 
@@ -120,7 +152,7 @@
                        id="avatar"
                        accept="image/*"
                        class="w-full px-3 py-2 border border-news-line text-sm focus:outline-none focus:ring-2 focus:ring-news-accent/30 focus:border-news-accent @error('avatar') border-news-accent @enderror">
-                <p class="mt-1 text-xs text-news-muted">JPG, PNG, GIF — maks. 2MB</p>
+                <p class="mt-1 text-xs text-news-muted">JPG, PNG, GIF — maks. 2MB. Untuk lembaga, gunakan logo jika tersedia.</p>
                 @error('avatar')
                     <p class="mt-1 text-sm text-news-accent">{{ $message }}</p>
                 @enderror
@@ -177,6 +209,7 @@
                     <li>Artikel melalui review sebelum dipublikasikan</li>
                     <li>Admin berhak menolak atau meminta revisi</li>
                     <li>Penulis bertanggung jawab atas keaslian konten</li>
+                    <li>Untuk lembaga, pemegang akun adalah orang yang ditugaskan dan bertanggung jawab atas akun</li>
                 </ul>
             </div>
 
@@ -195,40 +228,45 @@
 </div>
 
 <script>
-function toggleDocumentFields() {
+function toggleUpgradeType() {
     const perorangan = document.querySelector('input[name="verification_type"][value="perorangan"]');
     const lembaga = document.querySelector('input[name="verification_type"][value="lembaga"]');
-    const documentSection = document.getElementById('document-section');
+    const orgSection = document.getElementById('organization-section');
+    const orgInput = document.getElementById('organization_name');
+    const docsPerorangan = document.getElementById('docs-perorangan');
+    const docsLembaga = document.getElementById('docs-lembaga');
     const documentTitle = document.getElementById('document-title');
-    const documentLabelText = document.getElementById('document-label-text');
-    const documentHintText = document.getElementById('document-hint-text');
-    const verificationDocument = document.getElementById('verification_document');
+
+    const peroranganInputs = docsPerorangan.querySelectorAll('input[type="file"]');
+    const lembagaInputs = docsLembaga.querySelectorAll('input[type="file"]');
 
     if (perorangan.checked) {
-        documentSection.classList.remove('hidden');
-        documentTitle.textContent = 'Unggah KTP';
-        documentLabelText.textContent = 'Upload KTP';
-        documentHintText.textContent = 'Pastikan KTP jelas terbaca dan masih berlaku';
-        verificationDocument.setAttribute('required', 'required');
+        orgSection.classList.add('hidden');
+        orgInput.removeAttribute('required');
+        docsPerorangan.classList.remove('hidden');
+        docsLembaga.classList.add('hidden');
+        documentTitle.textContent = 'Dokumen Perorangan';
+        peroranganInputs.forEach(function (el) { el.setAttribute('required', 'required'); el.disabled = false; });
+        lembagaInputs.forEach(function (el) { el.removeAttribute('required'); el.disabled = true; el.value = ''; });
     } else if (lembaga.checked) {
-        documentSection.classList.remove('hidden');
-        documentTitle.textContent = 'Unggah Izin Operasional / SK Pendirian';
-        documentLabelText.textContent = 'Upload Izin Operasional / SK Pendirian';
-        documentHintText.textContent = 'Pastikan dokumen resmi dan masih berlaku';
-        verificationDocument.setAttribute('required', 'required');
-    } else {
-        documentSection.classList.add('hidden');
-        verificationDocument.removeAttribute('required');
+        orgSection.classList.remove('hidden');
+        orgInput.setAttribute('required', 'required');
+        docsPerorangan.classList.add('hidden');
+        docsLembaga.classList.remove('hidden');
+        documentTitle.textContent = 'Dokumen Lembaga';
+        lembagaInputs.forEach(function (el) { el.setAttribute('required', 'required'); el.disabled = false; });
+        peroranganInputs.forEach(function (el) { el.removeAttribute('required'); el.disabled = true; el.value = ''; });
     }
 }
 
 function handleFileSelect(input) {
-    const fileNameDiv = document.getElementById('file-name');
+    const fileNameDiv = document.getElementById(input.id + '_name');
+    if (!fileNameDiv) return;
 
     if (input.files && input.files[0]) {
         const file = input.files[0];
         const fileSize = (file.size / 1024 / 1024).toFixed(2);
-        fileNameDiv.textContent = `File terpilih: ${file.name} (${fileSize} MB)`;
+        fileNameDiv.textContent = 'File terpilih: ' + file.name + ' (' + fileSize + ' MB)';
         fileNameDiv.classList.remove('hidden');
 
         if (file.size > 5 * 1024 * 1024) {
@@ -242,7 +280,7 @@ function handleFileSelect(input) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    toggleDocumentFields();
+    toggleUpgradeType();
 
     document.querySelectorAll('input[name="verification_type"]').forEach(function (radio) {
         radio.addEventListener('change', function () {

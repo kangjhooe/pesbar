@@ -98,8 +98,8 @@ class SeoHelper
             'description' => $article->excerpt,
             'image' => $article->featured_image ? asset('storage/' . $article->featured_image) : asset('images/default-news.jpg'),
             'author' => [
-                '@type' => 'Person',
-                'name' => $article->author->name ?? 'Admin'
+                '@type' => ($article->author && $article->author->isLembaga()) ? 'Organization' : 'Person',
+                'name' => $article->author ? $article->author->publicName() : 'Admin',
             ],
             'publisher' => [
                 '@type' => 'Organization',

@@ -177,7 +177,7 @@
                                             </p>
                                         @endif
                                         <div class="mt-3 text-xs text-white/60 flex items-center gap-3">
-                                            <span>{{ $slide->author->name ?? 'Redaksi' }}</span>
+                                            <span>{{ $slide->author?->publicName() ?? 'Redaksi' }}</span>
                                             <span aria-hidden="true">·</span>
                                             <time datetime="{{ optional($slide->published_at)->toIso8601String() }}">{{ $slide->formatted_date }}</time>
                                         </div>
@@ -378,16 +378,16 @@
                                 @if($author->profile && $author->profile->avatar)
                                     <img
                                         src="{{ asset('storage/' . $author->profile->avatar) }}"
-                                        alt="{{ $author->name }}"
+                                        alt="{{ $author->publicName() }}"
                                         class="w-16 h-16 mx-auto object-cover border border-news-line group-hover:border-news-accent transition-colors"
                                         loading="lazy"
                                     >
                                 @else
                                     <div class="w-16 h-16 mx-auto bg-news-ink text-white flex items-center justify-center font-display text-xl font-bold group-hover:bg-news-accent transition-colors">
-                                        {{ strtoupper(substr($author->name, 0, 1)) }}
+                                        {{ strtoupper(substr($author->publicName(), 0, 1)) }}
                                     </div>
                                 @endif
-                                <p class="mt-2 text-sm font-bold text-news-ink group-hover:text-news-accent transition-colors line-clamp-1">{{ $author->name }}</p>
+                                <p class="mt-2 text-sm font-bold text-news-ink group-hover:text-news-accent transition-colors line-clamp-1">{{ $author->publicName() }}</p>
                                 <p class="text-[11px] text-news-muted">{{ $author->articles_count }} artikel</p>
                             </a>
                             <x-follow-button :user="$author" compact />

@@ -1,13 +1,14 @@
 @extends('layouts.public')
 
-@section('title', 'Profil ' . $user->name)
-@section('description', optional($user->profile)->bio ?: ('Profil penulis ' . $user->name . ' di Pesisir Barat Hub'))
+@section('title', 'Profil ' . $user->publicName())
+@section('description', optional($user->profile)->bio ?: ('Profil penulis ' . $user->publicName() . ' di Pesisir Barat Hub'))
 
 @section('content')
 @php
     $socialLinks = collect(is_array($user->profile?->social_links) ? $user->profile->social_links : [])
         ->filter(fn ($url) => filled($url));
     $hasSocial = $socialLinks->isNotEmpty() || filled($user->profile?->website);
+    $publicName = $user->publicName();
 @endphp
 
 <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
@@ -17,7 +18,7 @@
         <span aria-hidden="true" class="text-news-line">/</span>
         <span class="text-news-ink font-medium">Penulis</span>
         <span aria-hidden="true" class="text-news-line">/</span>
-        <span class="text-news-ink font-medium line-clamp-1">{{ $user->name }}</span>
+        <span class="text-news-ink font-medium line-clamp-1">{{ $publicName }}</span>
     </nav>
 
     {{-- Admin verification panel (admin only) --}}
@@ -69,24 +70,26 @@
                 </p>
             @endif
 
-            @if($user->verification_document)
-                @php
-                    $documentPath = Storage::url($user->verification_document);
-                    $documentExtension = strtolower(pathinfo($user->verification_document, PATHINFO_EXTENSION));
-                @endphp
-                <div class="mb-4 border border-news-line bg-white p-3">
-                    <p class="text-[11px] uppercase tracking-wider text-news-muted mb-2">Dokumen verifikasi</p>
-                    @if(in_array($documentExtension, ['jpg', 'jpeg', 'png', 'gif', 'webp']))
-                        <a href="{{ $documentPath }}" target="_blank" rel="noopener" class="block">
-                            <img src="{{ $documentPath }}" alt="Dokumen verifikasi" class="max-h-56 w-auto mx-auto border border-news-line object-contain">
-                        </a>
-                    @else
-                        <a href="{{ $documentPath }}" target="_blank" rel="noopener"
-                           class="inline-flex items-center gap-2 px-3 py-2 text-sm border border-news-ink text-news-ink hover:bg-news-ink hover:text-white transition-colors">
-                            <i class="fas fa-file-alt"></i>
-                            Buka dokumen
-                        </a>
+            @if(count($user->upgradeDocuments()) > 0)
+                <div class="mb-4 border border-news-line bg-white p-3 space-y-3">
+                    <p class="text-[11px] uppercase tracking-wider text-news-muted">Dokumen verifikasi</p>
+                    @if($user->organization_name)
+                        <p class="text-sm text-news-ink"><span class="text-news-muted">Lembaga:</span> {{ $user->organization_name }}</p>
                     @endif
+                    <p class="text-sm text-news-ink"><span class="text-news-muted">Pemegang akun:</span> {{ $user->name }}</p>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($user->upgradeDocuments() as $doc)
+                            @php
+                                $documentPath = Storage::url($doc['path']);
+                                $documentExtension = strtolower(pathinfo($doc['path'], PATHINFO_EXTENSION));
+                            @endphp
+                            <a href="{{ $documentPath }}" target="_blank" rel="noopener"
+                               class="inline-flex items-center gap-2 px-3 py-2 text-sm border border-news-ink text-news-ink hover:bg-news-ink hover:text-white transition-colors">
+                                <i class="fas {{ in_array($documentExtension, ['jpg', 'jpeg', 'png', 'gif', 'webp']) ? 'fa-file-image' : 'fa-file-alt' }}"></i>
+                                {{ $doc['label'] }}
+                            </a>
+                        @endforeach
+                    </div>
                 </div>
             @endif
 
@@ -162,12 +165,12 @@
                     @if($user->profile?->avatar)
                         <img
                             src="{{ asset('storage/' . $user->profile->avatar) }}"
-                            alt="{{ $user->name }}"
+                            alt="{{ $publicName }}"
                             class="w-20 h-20 sm:w-24 sm:h-24 object-cover border border-news-line bg-news-line"
                         >
                     @else
                         <div class="w-20 h-20 sm:w-24 sm:h-24 border border-news-line bg-news-ink text-white flex items-center justify-center font-display text-3xl font-bold">
-                            {{ strtoupper(substr($user->name, 0, 1)) }}
+                            {{ strtoupper(substr($publicName, 0, 1)) }}
                         </div>
                     @endif
                 </div>
@@ -177,11 +180,14 @@
                         <div class="min-w-0">
                             <div class="flex flex-wrap items-center gap-2">
                                 <h1 class="font-display text-2xl sm:text-3xl font-bold text-news-ink leading-tight">
-                                    {{ $user->name }}
+                                    {{ $publicName }}
                                 </h1>
                                 <x-user-role-badge :user="$user" size="md" />
                             </div>
                             <p class="mt-1 text-sm text-news-muted">{{ '@' . $user->username }}</p>
+                            @if($user->isLembaga() && $user->isVerified())
+                                <p class="mt-1 text-xs text-news-muted">Akun dikelola oleh penugasan resmi lembaga</p>
+                            @endif
                         </div>
 
                         <div class="flex flex-wrap items-center gap-2">
@@ -236,8 +242,8 @@
                         @endif
                         @if($user->isVerified())
                             <span class="inline-flex items-center gap-1.5 text-news-ink">
-                                <i class="fas fa-check-circle text-blue-500 text-xs"></i>
-                                Penulis terverifikasi
+                                <i class="fas fa-check-circle {{ $user->isLembaga() ? 'text-green-500' : 'text-blue-500' }} text-xs"></i>
+                                {{ $user->isLembaga() ? 'Penulis lembaga terverifikasi' : 'Penulis terverifikasi' }}
                             </span>
                         @endif
                     </div>

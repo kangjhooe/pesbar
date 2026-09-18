@@ -293,9 +293,21 @@ class AdminDashboardController extends Controller
             throw new \RuntimeException('Pengajuan tidak lengkap: tipe verifikasi wajib diisi.');
         }
 
+        if ($user->verification_type === 'lembaga') {
+            $org = is_string($user->organization_name) ? trim($user->organization_name) : '';
+            if ($org === '') {
+                throw new \RuntimeException('Pengajuan lembaga tidak lengkap: nama lembaga wajib diisi.');
+            }
+        }
+
+        $displayName = $user->verification_type === 'lembaga'
+            ? trim((string) $user->organization_name)
+            : null;
+
         $user->update([
             'role' => 'penulis',
             'verified' => true,
+            'display_name' => $displayName,
             'verification_request_status' => 'approved',
             'verification_rejection_reason' => null,
         ]);
@@ -308,7 +320,9 @@ class AdminDashboardController extends Controller
                 'rejection_reason' => null,
             ]);
 
-        $logMessage = "Upgrade user {$user->name} ke penulis terverifikasi disetujui";
+        $logMessage = $displayName
+            ? "Upgrade user {$user->name} ke penulis lembaga \"{$displayName}\" disetujui"
+            : "Upgrade user {$user->name} ke penulis terverifikasi disetujui";
 
         ActivityLogHelper::logUser('upgrade.approved', $user, $logMessage);
         ActivityLogHelper::logSecurity('upgrade.approved', $logMessage, ['user_id' => $user->id]);

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 
 class UserDashboardController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
         $user = Auth::user();
 
@@ -21,27 +21,16 @@ class UserDashboardController extends Controller
                 ->orWhere('email', $user->email);
         })->whereHas('article');
 
-        $commentsQuery = (clone $commentsBase)
+        $comments = (clone $commentsBase)
             ->with(['article' => function ($query) {
                 $query->select('id', 'title', 'slug', 'category_id')
                     ->with('category:id,name,slug');
             }])
-            ->orderBy('created_at', 'desc');
-
-        if ($request->filled('status')) {
-            if ($request->status === 'approved') {
-                $commentsQuery->where('is_approved', true);
-            } elseif ($request->status === 'pending') {
-                $commentsQuery->where('is_approved', false);
-            }
-        }
-
-        $comments = $commentsQuery->paginate(15)->withQueryString();
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
 
         $stats = [
             'total_comments' => (clone $commentsBase)->count(),
-            'approved_comments' => (clone $commentsBase)->where('is_approved', true)->count(),
-            'pending_comments' => (clone $commentsBase)->where('is_approved', false)->count(),
             'bookmarks' => Bookmark::where('user_id', $user->id)->whereHas('article')->count(),
             'reading_history' => ReadingHistory::where('user_id', $user->id)->whereHas('article')->count(),
             'following' => Follow::where('follower_id', $user->id)->count(),
@@ -87,11 +76,10 @@ class UserDashboardController extends Controller
 
         $comment->update([
             'comment' => $request->comment,
-            'is_approved' => false,
         ]);
 
         return redirect()->route('user.dashboard')
-            ->with('success', 'Komentar berhasil diperbarui. Komentar akan ditinjau ulang oleh admin.');
+            ->with('success', 'Komentar berhasil diperbarui.');
     }
 
     public function destroyComment(Comment $comment)

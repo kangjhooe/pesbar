@@ -28,8 +28,6 @@
     </div>
 </div>
 
-@endauth
-
 {{-- Stats --}}
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
     <a href="{{ route('penulis.articles.index') }}" class="bg-white border border-news-line border-t-2 border-t-news-ink p-4 sm:p-5 hover:border-news-ink transition-colors">

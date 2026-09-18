@@ -67,10 +67,9 @@
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <span class="text-gray-400 text-sm">@</span>
                     </div>
-                    <x-text-input id="username" name="username" type="text" class="pl-8 block w-full lowercase" :value="old('username', $user->username)" required autocomplete="username" oninput="this.value = this.value.toLowerCase().replace(/[^a-z0-9_-]/g, '')" />
+                    <x-text-input id="username" type="text" class="pl-8 block w-full lowercase bg-gray-50 text-gray-600 cursor-not-allowed" :value="$user->username" disabled readonly />
                 </div>
-                <p class="mt-1 text-xs text-gray-500">Hanya huruf kecil, angka, dan tanda hubung (-_)</p>
-                <x-input-error class="mt-2" :messages="$errors->get('username')" />
+                <p class="mt-1 text-xs text-gray-500">Username bersifat permanen dan tidak dapat diubah. Gunakan nama lengkap untuk tampilan publik.</p>
             </div>
         </div>
 

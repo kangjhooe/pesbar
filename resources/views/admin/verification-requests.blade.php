@@ -43,6 +43,11 @@
                         @endif
                         <div class="ml-4">
                             <div class="text-sm font-medium text-news-ink">{{ $user->name }}</div>
+                            @if($user->verification_type === 'lembaga' && $user->organization_name)
+                                <div class="text-xs text-news-ink font-medium mt-0.5">
+                                    <i class="fas fa-building mr-1 text-news-muted"></i>{{ $user->organization_name }}
+                                </div>
+                            @endif
                             @if($user->profile && $user->profile->bio)
                                 <div class="text-sm text-news-muted">{{ \Illuminate\Support\Str::limit($user->profile->bio, 50) }}</div>
                             @endif
@@ -68,20 +73,25 @@
                     @endif
                 </td>
                 <td class="px-4 py-4 whitespace-nowrap text-sm">
-                    @if($user->verification_document)
-                        @php
-                            $extension = pathinfo($user->verification_document, PATHINFO_EXTENSION);
-                            $isPdf = strtolower($extension) === 'pdf';
-                            $isImage = in_array(strtolower($extension), ['jpg', 'jpeg', 'png']);
-                            $docIcon = $isPdf ? 'fas fa-file-pdf' : ($isImage ? 'fas fa-file-image' : 'fas fa-file');
-                        @endphp
-                        <x-admin.action-icon
-                            :href="asset('storage/' . $user->verification_document)"
-                            :icon="$docIcon"
-                            color="blue"
-                            title="Lihat Dokumen"
-                            target="_blank"
-                        />
+                    @php $upgradeDocs = $user->upgradeDocuments(); @endphp
+                    @if(count($upgradeDocs) > 0)
+                        <div class="flex flex-wrap gap-1">
+                            @foreach($upgradeDocs as $doc)
+                                @php
+                                    $extension = pathinfo($doc['path'], PATHINFO_EXTENSION);
+                                    $isPdf = strtolower($extension) === 'pdf';
+                                    $isImage = in_array(strtolower($extension), ['jpg', 'jpeg', 'png']);
+                                    $docIcon = $isPdf ? 'fas fa-file-pdf' : ($isImage ? 'fas fa-file-image' : 'fas fa-file');
+                                @endphp
+                                <x-admin.action-icon
+                                    :href="asset('storage/' . $doc['path'])"
+                                    :icon="$docIcon"
+                                    color="blue"
+                                    :title="$doc['label']"
+                                    target="_blank"
+                                />
+                            @endforeach
+                        </div>
                     @else
                         <span class="text-news-muted text-xs">Tidak ada</span>
                     @endif

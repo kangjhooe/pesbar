@@ -411,13 +411,6 @@ class PenulisDashboardController extends Controller
         
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'username' => [
-                'required',
-                'string',
-                'max:255',
-                'regex:/^[a-z0-9_-]+$/',
-                Rule::unique(User::class)->ignore($user->id),
-            ],
             'email' => [
                 'required',
                 'string',
@@ -433,11 +426,8 @@ class PenulisDashboardController extends Controller
             'social_links' => 'nullable|array',
         ]);
 
-        // Update basic user info
-        $userData = $request->only(['name', 'email']);
-        $userData['username'] = strtolower($request->username); // Ensure username is lowercase
-        
-        $user->fill($userData);
+        // Username is permanent after registration — only name/email here
+        $user->fill($request->only(['name', 'email']));
 
         if ($user->isDirty('email')) {
             $user->email_verified_at = null;

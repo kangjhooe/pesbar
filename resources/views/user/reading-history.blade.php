@@ -45,7 +45,7 @@
                 <div class="flex items-center justify-between text-xs text-news-muted pt-3 border-t border-news-line">
                     <span>
                         @if($item->article->author)
-                            {{ $item->article->author->name }}
+                            {{ $item->article->author?->publicName() }}
                         @else
                             —
                         @endif

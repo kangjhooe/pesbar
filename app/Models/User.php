@@ -22,6 +22,8 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'display_name',
+        'organization_name',
         'username',
         'email',
         'password',
@@ -34,6 +36,7 @@ class User extends Authenticatable
         'verification_request_status',
         'verification_type',
         'verification_document',
+        'verification_documents',
         'verification_rejection_reason',
         'content_warning_count',
         'publish_restricted_until',
@@ -42,6 +45,16 @@ class User extends Authenticatable
         'ban_appeal_message',
         'ban_appeal_at',
         'ban_appeal_rejection_reason',
+    ];
+
+    /**
+     * Label dokumen upgrade per kunci file.
+     */
+    public const UPGRADE_DOCUMENT_LABELS = [
+        'ktp' => 'KTP',
+        'application_letter' => 'Surat permohonan menjadi penulis',
+        'operational_permit' => 'Izin operasional / SK pendirian',
+        'assignment_letter' => 'Surat tugas dari pimpinan lembaga',
     ];
 
     /**
@@ -66,6 +79,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'verified' => 'boolean',
             'is_internal' => 'boolean',
+            'verification_documents' => 'array',
             'verification_requested_at' => 'datetime',
             'publish_restricted_until' => 'datetime',
             'banned_until' => 'datetime',
@@ -75,6 +89,16 @@ class User extends Authenticatable
 
     protected static function booted(): void
     {
+        // Username permanen setelah pernah di-set (URL profil publik).
+        static::updating(function (User $user) {
+            if ($user->isDirty('username')) {
+                $original = $user->getOriginal('username');
+                if (is_string($original) && $original !== '') {
+                    $user->username = $original;
+                }
+            }
+        });
+
         // Invariant: tidak boleh ada penulis belum terverifikasi.
         static::saving(function (User $user) {
             if ($user->role === 'penulis' && !$user->verified) {
@@ -223,6 +247,73 @@ class User extends Authenticatable
     }
 
     /**
+     * Nama publik penulis (byline, profil publik).
+     * Untuk lembaga: nama lembaga; selain itu nama akun orang.
+     */
+    public function publicName(): string
+    {
+        $display = is_string($this->display_name) ? trim($this->display_name) : '';
+
+        return $display !== '' ? $display : (string) $this->name;
+    }
+
+    /**
+     * Apakah penulis terverifikasi sebagai lembaga.
+     */
+    public function isLembaga(): bool
+    {
+        return $this->verification_type === 'lembaga';
+    }
+
+    /**
+     * Dokumen upgrade yang tersedia (path relatif storage), berlabel.
+     *
+     * @return array<string, array{key:string,label:string,path:string}>
+     */
+    public function upgradeDocuments(): array
+    {
+        $docs = is_array($this->verification_documents) ? $this->verification_documents : [];
+        $result = [];
+
+        foreach (self::UPGRADE_DOCUMENT_LABELS as $key => $label) {
+            $path = $docs[$key] ?? null;
+            if (!is_string($path) || $path === '') {
+                continue;
+            }
+            $result[$key] = [
+                'key' => $key,
+                'label' => $label,
+                'path' => $path,
+            ];
+        }
+
+        // Fallback data lama: satu file di verification_document
+        if ($result === [] && is_string($this->verification_document) && $this->verification_document !== '') {
+            $result['legacy'] = [
+                'key' => 'legacy',
+                'label' => 'Dokumen verifikasi',
+                'path' => $this->verification_document,
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * Kunci dokumen wajib menurut tipe upgrade.
+     *
+     * @return list<string>
+     */
+    public static function requiredUpgradeDocumentKeys(string $type): array
+    {
+        return match ($type) {
+            'perorangan' => ['ktp', 'application_letter'],
+            'lembaga' => ['operational_permit', 'application_letter', 'assignment_letter'],
+            default => [],
+        };
+    }
+
+    /**
      * Penulis staf redaksi (dibuat/ditandai admin, bukan lewat upgrade publik).
      */
     public function isRedaksi(): bool
@@ -310,6 +401,7 @@ class User extends Authenticatable
             'role' => 'user',
             'verified' => false,
             'is_internal' => false,
+            'display_name' => null,
             'verification_request_status' => null,
             'verification_rejection_reason' => null,
             'publish_restricted_until' => null,
@@ -344,6 +436,7 @@ class User extends Authenticatable
         $this->role = 'user';
         $this->verified = false;
         $this->is_internal = false;
+        $this->display_name = null;
         $this->verification_request_status = null;
         $this->verification_rejection_reason = null;
         $this->publish_restricted_until = null;
@@ -563,6 +656,7 @@ class User extends Authenticatable
             'role' => 'user',
             'verified' => false,
             'is_internal' => false,
+            'display_name' => null,
             'verification_request_status' => $keepUpgradePending ? 'pending' : null,
             'verification_rejection_reason' => $keepUpgradePending ? null : $this->verification_rejection_reason,
             'publish_restricted_until' => null,

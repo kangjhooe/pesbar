@@ -51,11 +51,8 @@ class ProfileController extends Controller
                 ->with('error', 'Silakan gunakan halaman profil penulis untuk mengupdate profil Anda.');
         }
         
-        // Update basic user info
-        $userData = $request->only(['name', 'email']);
-        $userData['username'] = strtolower($request->username); // Ensure username is lowercase
-        
-        $user->fill($userData);
+        // Username is permanent after registration — only name/email here
+        $user->fill($request->only(['name', 'email']));
 
         if ($user->isDirty('email')) {
             $user->email_verified_at = null;

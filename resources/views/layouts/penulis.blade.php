@@ -121,6 +121,19 @@
                             Profil Saya
                         </a>
 
+                        @if(auth()->user()->isPenulis() && !auth()->user()->isVerified())
+                            @if(auth()->user()->canRequestVerification())
+                                <a href="{{ route('penulis.verification.request') }}"
+                                   class="flex items-center px-3 py-2.5 text-sm font-medium transition-colors touch-target {{ request()->routeIs('penulis.verification.*') ? 'bg-news-paper text-news-accent border-l-2 border-news-accent' : 'text-news-ink hover:bg-news-paper hover:text-news-accent border-l-2 border-transparent' }}">
+                                    <i class="fas fa-check-circle mr-3 w-4 text-center text-xs"></i>
+                                    Ajukan Verifikasi
+                                </a>
+                            @elseif(auth()->user()->hasPendingVerificationRequest())
+                                <div class="flex items-center px-3 py-2.5 text-sm font-medium text-news-muted bg-news-paper border-l-2 border-news-ink">
+                                    <i class="fas fa-clock mr-3 w-4 text-center text-xs"></i>
+                                    Verifikasi Pending
+                                </div>
+                            @endif
                         @elseif(auth()->user()->isVerified())
                             <div class="flex items-center px-3 py-2.5 text-sm font-medium text-news-ink bg-news-paper border-l-2 border-news-ink">
                                 <i class="fas fa-check-circle mr-3 w-4 text-center text-xs"></i>
