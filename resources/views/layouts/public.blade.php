@@ -104,30 +104,60 @@
                         : null;
                     $isMoreActive = $activeCategoryId && $navMore->contains('id', $activeCategoryId);
                 @endphp
-                {{-- Scroll horizontal hanya di strip kategori; "Lainnya" di luar supaya dropdown tidak terpotong --}}
-                <div class="hidden lg:flex items-center flex-1 mx-2 xl:mx-4 min-w-0 gap-1 xl:gap-2">
-                    <div class="flex items-center space-x-1 xl:space-x-2 flex-1 min-w-0 overflow-x-auto overflow-y-hidden nav-scroll portal-nav-strip">
-                        @foreach($navCategories ?? [] as $navCategory)
-                            <a href="{{ route('categories.show', $navCategory) }}"
-                               class="portal-nav-link text-news-ink px-1 py-2 text-xs xl:text-sm font-bold uppercase tracking-wide whitespace-nowrap {{ $activeCategoryId === $navCategory->id ? 'is-active' : '' }}">
-                                {{ $navCategory->name }}
-                            </a>
-                        @endforeach
-                    </div>
+                {{-- Lainnya ikut scroll horizontal; dropdown fixed agar tidak terpotong overflow strip --}}
+                <div class="hidden lg:flex items-center space-x-1 xl:space-x-2 flex-1 mx-2 xl:mx-4 overflow-x-auto overflow-y-hidden nav-scroll portal-nav-strip min-w-0">
+                    @foreach($navCategories ?? [] as $navCategory)
+                        <a href="{{ route('categories.show', $navCategory) }}"
+                           class="portal-nav-link text-news-ink px-1 py-2 text-xs xl:text-sm font-bold uppercase tracking-wide whitespace-nowrap {{ $activeCategoryId === $navCategory->id ? 'is-active' : '' }}">
+                            {{ $navCategory->name }}
+                        </a>
+                    @endforeach
                     @if($navMore->isNotEmpty())
-                        <div class="relative flex-shrink-0" x-data="{ open: false }">
+                        <div class="relative flex-shrink-0"
+                             x-data="{
+                                open: false,
+                                menuStyle: '',
+                                toggle() {
+                                    this.open = !this.open;
+                                    if (this.open) this.$nextTick(() => this.place());
+                                },
+                                place() {
+                                    const btn = this.$refs.btn;
+                                    const menu = this.$refs.menu;
+                                    if (!btn || !menu) return;
+                                    const r = btn.getBoundingClientRect();
+                                    const menuW = Math.max(menu.offsetWidth, 192);
+                                    let left = r.left;
+                                    left = Math.min(left, window.innerWidth - menuW - 8);
+                                    left = Math.max(8, left);
+                                    this.menuStyle = 'top:' + (r.bottom + 4) + 'px;left:' + left + 'px';
+                                },
+                                close() { this.open = false; },
+                                init() {
+                                    const strip = this.$el.closest('.portal-nav-strip');
+                                    if (strip) {
+                                        strip.addEventListener('scroll', () => { if (this.open) this.close(); }, { passive: true });
+                                    }
+                                }
+                             }"
+                             @click.away="close()"
+                             @keydown.escape.window="close()"
+                             @scroll.window="if (open) close()"
+                             @resize.window="if (open) place()">
                             <button type="button"
-                                    @click="open = !open"
-                                    @click.away="open = false"
+                                    x-ref="btn"
+                                    @click="toggle()"
                                     class="portal-nav-link text-news-ink px-1 py-2 text-xs xl:text-sm font-bold uppercase tracking-wide whitespace-nowrap inline-flex items-center gap-1 {{ $isMoreActive ? 'is-active' : '' }}"
                                     :aria-expanded="open.toString()">
                                 Lainnya
                                 <i class="fas fa-chevron-down text-[10px]" :class="{ 'rotate-180': open }"></i>
                             </button>
                             <div x-show="open"
+                                 x-ref="menu"
                                  x-cloak
                                  x-transition
-                                 class="absolute right-0 top-full mt-1 min-w-[12rem] max-h-72 overflow-y-auto bg-white border border-news-line shadow-lg py-1 z-50">
+                                 :style="menuStyle"
+                                 class="fixed min-w-[12rem] max-h-72 overflow-y-auto bg-white border border-news-line shadow-lg py-1 z-[60]">
                                 @foreach($navMore as $moreCategory)
                                     <a href="{{ route('categories.show', $moreCategory) }}"
                                        class="block px-4 py-2 text-xs xl:text-sm font-bold uppercase tracking-wide whitespace-nowrap {{ $activeCategoryId === $moreCategory->id ? 'text-news-accent bg-news-paper' : 'text-news-ink hover:bg-news-paper hover:text-news-accent' }}">
