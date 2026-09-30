@@ -245,9 +245,15 @@
             
             <div class="p-3 border-t border-news-line flex-shrink-0">
                 <div class="flex items-center gap-2.5 px-1">
-                    <div class="w-8 h-8 bg-news-ink flex items-center justify-center text-white text-sm font-semibold shrink-0">
-                        {{ substr(Auth::user()->name, 0, 1) }}
-                    </div>
+                    @if(Auth::user()->profile && Auth::user()->profile->avatar)
+                        <img src="{{ asset('storage/' . Auth::user()->profile->avatar) }}"
+                             alt="{{ Auth::user()->name }}"
+                             class="w-8 h-8 rounded-full object-cover border border-news-line shrink-0">
+                    @else
+                        <div class="w-8 h-8 bg-news-ink rounded-full flex items-center justify-center text-white text-sm font-semibold shrink-0">
+                            {{ substr(Auth::user()->name, 0, 1) }}
+                        </div>
+                    @endif
                     <div class="flex-1 min-w-0">
                         <p class="text-sm font-semibold text-news-ink truncate">{{ Auth::user()->name }}</p>
                         <p class="text-[11px] text-news-muted uppercase tracking-wider">{{ $isFullAdmin ? 'Administrator' : 'Editor' }}</p>
