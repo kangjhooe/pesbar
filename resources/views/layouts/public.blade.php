@@ -104,13 +104,16 @@
                         : null;
                     $isMoreActive = $activeCategoryId && $navMore->contains('id', $activeCategoryId);
                 @endphp
-                <div class="hidden lg:flex items-center space-x-1 xl:space-x-2 flex-1 mx-2 xl:mx-4 overflow-x-auto nav-scroll portal-nav-strip min-w-0">
-                    @foreach($navCategories ?? [] as $navCategory)
-                        <a href="{{ route('categories.show', $navCategory) }}"
-                           class="portal-nav-link text-news-ink px-1 py-2 text-xs xl:text-sm font-bold uppercase tracking-wide whitespace-nowrap {{ $activeCategoryId === $navCategory->id ? 'is-active' : '' }}">
-                            {{ $navCategory->name }}
-                        </a>
-                    @endforeach
+                {{-- Scroll horizontal hanya di strip kategori; "Lainnya" di luar supaya dropdown tidak terpotong --}}
+                <div class="hidden lg:flex items-center flex-1 mx-2 xl:mx-4 min-w-0 gap-1 xl:gap-2">
+                    <div class="flex items-center space-x-1 xl:space-x-2 flex-1 min-w-0 overflow-x-auto overflow-y-hidden nav-scroll portal-nav-strip">
+                        @foreach($navCategories ?? [] as $navCategory)
+                            <a href="{{ route('categories.show', $navCategory) }}"
+                               class="portal-nav-link text-news-ink px-1 py-2 text-xs xl:text-sm font-bold uppercase tracking-wide whitespace-nowrap {{ $activeCategoryId === $navCategory->id ? 'is-active' : '' }}">
+                                {{ $navCategory->name }}
+                            </a>
+                        @endforeach
+                    </div>
                     @if($navMore->isNotEmpty())
                         <div class="relative flex-shrink-0" x-data="{ open: false }">
                             <button type="button"
@@ -124,7 +127,7 @@
                             <div x-show="open"
                                  x-cloak
                                  x-transition
-                                 class="absolute left-0 top-full mt-1 min-w-[12rem] max-h-72 overflow-y-auto bg-white border border-news-line shadow-lg py-1 z-50">
+                                 class="absolute right-0 top-full mt-1 min-w-[12rem] max-h-72 overflow-y-auto bg-white border border-news-line shadow-lg py-1 z-50">
                                 @foreach($navMore as $moreCategory)
                                     <a href="{{ route('categories.show', $moreCategory) }}"
                                        class="block px-4 py-2 text-xs xl:text-sm font-bold uppercase tracking-wide whitespace-nowrap {{ $activeCategoryId === $moreCategory->id ? 'text-news-accent bg-news-paper' : 'text-news-ink hover:bg-news-paper hover:text-news-accent' }}">
