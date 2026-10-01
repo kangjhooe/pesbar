@@ -20,7 +20,7 @@
                     <p class="text-[11px] font-bold uppercase tracking-wider text-news-muted">Ditangguhkan</p>
                     <p class="mt-1 text-2xl font-bold tabular-nums text-news-ink">{{ $stats['suspended_articles'] }}</p>
                 </div>
-                <span class="inline-flex items-center text-xs font-semibold text-news-accent opacity-0 group-hover:opacity-100 transition-opacity">
+                <span class="inline-flex items-center text-xs font-semibold text-news-accent">
                     Lihat <i class="fas fa-arrow-right ml-1.5 text-[10px]"></i>
                 </span>
             </a>
@@ -32,7 +32,7 @@
                     <p class="text-[11px] font-bold uppercase tracking-wider text-news-muted">Komentar pending</p>
                     <p class="mt-1 text-2xl font-bold tabular-nums text-news-ink">{{ $stats['pending_comments'] }}</p>
                 </div>
-                <span class="inline-flex items-center text-xs font-semibold text-news-accent opacity-0 group-hover:opacity-100 transition-opacity">
+                <span class="inline-flex items-center text-xs font-semibold text-news-accent">
                     Moderasi <i class="fas fa-arrow-right ml-1.5 text-[10px]"></i>
                 </span>
             </a>
@@ -43,7 +43,7 @@
                     <p class="text-[11px] font-bold uppercase tracking-wider text-news-muted">Upgrade / verifikasi</p>
                     <p class="mt-1 text-2xl font-bold tabular-nums text-news-ink">{{ $stats['pending_verification_requests'] }}</p>
                 </div>
-                <span class="inline-flex items-center text-xs font-semibold text-news-accent opacity-0 group-hover:opacity-100 transition-opacity">
+                <span class="inline-flex items-center text-xs font-semibold text-news-accent">
                     Tinjau <i class="fas fa-arrow-right ml-1.5 text-[10px]"></i>
                 </span>
             </a>

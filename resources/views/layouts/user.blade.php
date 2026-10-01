@@ -190,7 +190,7 @@
     <footer class="border-t border-news-line mt-10 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
             <p class="text-center text-sm text-news-muted">
-                &copy; {{ date('Y') }} {{ \App\Helpers\SettingsHelper::siteName() }}
+                &copy; {{ date('Y') }} {{ \App\Helpers\SettingsHelper::siteName() }}. Hak cipta dilindungi undang-undang.
             </p>
         </div>
     </footer>

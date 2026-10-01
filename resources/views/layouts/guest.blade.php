@@ -44,7 +44,7 @@
                 </div>
 
                 <p class="mt-8 text-center text-sm text-news-muted">
-                    &copy; {{ date('Y') }} {{ \App\Helpers\SettingsHelper::siteName() }}
+                    &copy; {{ date('Y') }} {{ \App\Helpers\SettingsHelper::siteName() }}. Hak cipta dilindungi undang-undang.
                 </p>
             </div>
         </div>

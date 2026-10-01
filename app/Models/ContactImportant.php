@@ -45,13 +45,14 @@ class ContactImportant extends Model
         if (!$this->phone) {
             return null;
         }
-        
-        // Format nomor telepon Indonesia
+
+        // Format nomor telepon Indonesia (0823… / +62823… → 0823…)
         $phone = preg_replace('/[^0-9]/', '', $this->phone);
-        if (strlen($phone) >= 10) {
-            return '0' . substr($phone, -10);
+
+        if (str_starts_with($phone, '62')) {
+            $phone = '0' . substr($phone, 2);
         }
-        
-        return $this->phone;
+
+        return $phone !== '' ? $phone : $this->phone;
     }
 }

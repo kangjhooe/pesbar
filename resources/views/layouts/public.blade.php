@@ -324,7 +324,7 @@
                         <a href="{{ \App\Helpers\SettingsHelper::twitterUrl() }}" target="_blank" rel="noopener noreferrer" class="text-white/70 hover:text-white" aria-label="Twitter"><i class="fab fa-x-twitter text-lg"></i></a>
                     @endif
                 </div>
-                <p class="text-white/50 text-sm">&copy; {{ date('Y') }} {{ \App\Helpers\SettingsHelper::siteName() }}. Semua hak dilindungi.</p>
+                <p class="text-white/50 text-sm">&copy; {{ date('Y') }} {{ \App\Helpers\SettingsHelper::siteName() }}. Hak cipta dilindungi undang-undang.</p>
             </div>
         </div>
     </footer>
